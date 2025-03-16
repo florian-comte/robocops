@@ -1,0 +1,18 @@
+version: '1'
+
+services:
+  tools-cli:
+    build: .
+    environment:
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      MONGO_URI: ${MONGO_URI}
+      AWS_BUCKET: ${AWS_BUCKET}
+      MLFLOW_S3_BUCKET: luxonis-mlflow
+      MLFLOW_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL}
+    volumes:
+      - C:/Users/floco/OneDrive - epfl.ch/MA2/Robot compet/tools/shared:/app/shared_with_container
+      - C:/Users/floco/OneDrive - epfl.ch/MA2/Robot compet/tools/shared/default.yaml:/usr/local/lib/python3.11/site-packages/tools/yolo/ultralytics/ultralytics/cfg/default.yaml
+

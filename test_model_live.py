@@ -8,12 +8,12 @@ import numpy as np
 import time
 
 # Path of the model
-MODEL_PATH = './trained_models/yolo11n_1.blob'
+MODEL_PATH = './trained_models/yolo11n_2.blob'
 
 # Number of classes
-NUM_CLASSES = 2
+NUM_CLASSES = 1
 
-LABEL_MAP = ['duplo', 'obstacle']
+LABEL_MAP = ['duplo']
 
 syncNN = True
 

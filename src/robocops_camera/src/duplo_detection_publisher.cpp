@@ -71,8 +71,6 @@ dai::Pipeline create_pipeline(const std::string rgb_resolution_str, const std::s
         RGB_RESOLUTION_MAP.at(rgb_resolution_str) : 
         dai::ColorCameraProperties::SensorResolution::THE_1080_P;
 
-        
-
     // Configure RGB camera
     rgb_camera->setPreviewSize(416, 416);
     rgb_camera->setResolution(rgb_resolution);

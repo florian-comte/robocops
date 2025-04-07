@@ -58,11 +58,11 @@ def generate_launch_description():
     )
 
     # Node for detections display publisher
-    detections_display_publisher = launch_ros.actions.Node(
-        package='robocops_camera', executable='detections_display_publisher',
-        output='screen',
-        condition=IfCondition(with_display)
-    )
+    # detections_display_publisher = launch_ros.actions.Node(
+    #     package='robocops_camera', executable='detections_display_publisher',
+    #     output='screen',
+    #     condition=IfCondition(with_display)
+    # )
     
     # Launch description
     ld = LaunchDescription()
@@ -75,6 +75,6 @@ def generate_launch_description():
     ld.add_action(declare_queue_size_cmd)
     
     ld.add_action(duplo_detection_publisher)
-    ld.add_action(detections_display_publisher)
+    //ld.add_action(detections_display_publisher)
 
     return ld

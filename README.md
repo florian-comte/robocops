@@ -45,7 +45,7 @@ ros2 launch robocops_camera duplo_detector.py
 
 If you want to visualize the camera feed along with the bounding boxes and other detections, use this command:
 ```bash
-ros2 launch robocops_camera duplo_detector_with_display.py with_display:=true
+ros2 launch robocops_camera duplo_detector.py with_display:=true
 ```
 
 #### Step 4: Customize parameters

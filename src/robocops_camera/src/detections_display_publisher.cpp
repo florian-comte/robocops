@@ -12,6 +12,8 @@
  * image to the `/camera/rgb_with_detections` topic.
  */
 
+#include <chrono>
+#include "depthai/depthai.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -75,6 +77,16 @@ private:
             RCLCPP_WARN(this->get_logger(), "RGB frame is empty, skipping detection overlay.");
             return;
         }
+        
+        // Compute FPS
+        counter++;
+        auto currentTime = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::duration<float>>(currentTime - startTime);
+        if(elapsed > std::chrono::seconds(1)) {
+            fps = counter / elapsed.count();
+            counter = 0;
+            startTime = currentTime;
+        }
 
         // Loop through each detection and overlay it on the image
         for (const auto& detection : detections->detections) {
@@ -96,6 +108,10 @@ private:
             cv::putText(m_rgbFrame, depthZ, cv::Point(box.x, box.y - 70), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
         }
 
+        std::stringstream fpsStr;
+        fpsStr << std::fixed << std::setprecision(2) << fps;
+        cv::putText(m_rgbFrame, fpsStr.str(), cv::Point(2,  2), cv::FONT_HERSHEY_TRIPLEX, 0.4, cv::Scalar(255, 255, 255));
+
         // Publish the image with detections overlayed
         sensor_msgs::msg::Image::SharedPtr outputMsg = cv_bridge::CvImage(
             std_msgs::msg::Header(), "bgr8", m_rgbFrame).toImageMsg();
@@ -113,6 +129,11 @@ private:
 
     // CV Frame from RGB stream
     cv::Mat m_rgbFrame;
+
+    // FPS handling
+    std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+    int counter = 0;
+    float fps = 0;
 };
 
 int main(int argc, char** argv) {

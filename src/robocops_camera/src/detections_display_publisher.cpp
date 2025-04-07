@@ -110,7 +110,7 @@ private:
 
         std::stringstream fpsStr;
         fpsStr << std::fixed << std::setprecision(2) << fps;
-        cv::putText(m_rgbFrame, fpsStr.str(), cv::Point(2,  10), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
+        cv::putText(m_rgbFrame, fpsStr.str(), cv::Point(2,  10), cv::FONT_HERSHEY_TRIPLEX, 3, cv::Scalar(0, 255, 0), 2);
 
         // Publish the image with detections overlayed
         sensor_msgs::msg::Image::SharedPtr outputMsg = cv_bridge::CvImage(

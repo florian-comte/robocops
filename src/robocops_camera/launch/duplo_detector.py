@@ -14,7 +14,7 @@ def generate_launch_description():
     rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='1080p')
     with_display         = LaunchConfiguration('with_display', default='false')
 
-    queue_size = LaunchConfiguration('queue_size', default=30)
+    queue_size = LaunchConfiguration('queue_size', default=4)
 
     declare_nn_name_cmd = DeclareLaunchArgument(
         'nn_name',
@@ -58,11 +58,11 @@ def generate_launch_description():
     )
 
     # Node for detections display publisher
-    # detections_display_publisher = launch_ros.actions.Node(
-    #     package='robocops_camera', executable='detections_display_publisher',
-    #     output='screen',
-    #     condition=IfCondition(with_display)
-    # )
+    duplo_detection_viewer = launch_ros.actions.Node(
+        package='robocops_camera', executable='duplo_detection_viewer',
+        output='screen',
+        condition=IfCondition(with_display)
+    )
     
     # Launch description
     ld = LaunchDescription()
@@ -75,6 +75,6 @@ def generate_launch_description():
     ld.add_action(declare_queue_size_cmd)
     
     ld.add_action(duplo_detection_publisher)
-    #ld.add_action(detections_display_publisher)
+    ld.add_action(duplo_detection_viewer)
 
     return ld

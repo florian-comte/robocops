@@ -38,14 +38,6 @@
 #include "depthai/pipeline/node/StereoDepth.hpp"
 #include "depthai/pipeline/node/XLinkOut.hpp"
 
-// Mapping of resolution strings to DepthAI sensor resolution enum
-static const std::unordered_map<std::string, dai::ColorCameraProperties::SensorResolution> RGB_RESOLUTION_MAP = {
-   {"720p", dai::ColorCameraProperties::SensorResolution::THE_720_P},
-   {"800p", dai::ColorCameraProperties::SensorResolution::THE_800_P},
-   {"1080p", dai::ColorCameraProperties::SensorResolution::THE_1080_P},
-   {"1200p", dai::ColorCameraProperties::SensorResolution::THE_1200_P}
-};
-
 /**
 * @brief Creates a DepthAI pipeline for object detection.
 * @param rgb_resolution_str Desired resolution of the RGB camera.
@@ -53,7 +45,7 @@ static const std::unordered_map<std::string, dai::ColorCameraProperties::SensorR
 * @param with_display True if you want to have out links for depth and raw rgb
 * @return Configured DepthAI pipeline.
 */
-dai::Pipeline create_pipeline(const std::string rgb_resolution_str, const std::string nn_name, bool with_display) {
+dai::Pipeline create_pipeline(const std::string nn_name, bool with_display) {
    dai::Pipeline pipeline;
    
    // Define camera and processing nodes
@@ -66,14 +58,9 @@ dai::Pipeline create_pipeline(const std::string rgb_resolution_str, const std::s
    auto xout_nn = pipeline.create<dai::node::XLinkOut>();
    xout_nn->setStreamName("detections");
 
-   // Set RGB camera resolution
-   auto rgb_resolution = RGB_RESOLUTION_MAP.count(rgb_resolution_str) ? 
-       RGB_RESOLUTION_MAP.at(rgb_resolution_str) : 
-       dai::ColorCameraProperties::SensorResolution::THE_720_P;
-
    // Configure RGB camera
    rgb_camera->setPreviewSize(416, 416);
-   rgb_camera->setResolution(rgb_resolution);
+   rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
    rgb_camera->setInterleaved(false);
    rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
    
@@ -151,7 +138,7 @@ int main(int argc, char** argv) {
    node->get_parameter("queue_size", queue_size);
 
    // Create the pipeline and device
-   dai::Pipeline pipeline = create_pipeline(rgb_resolution_str, resource_base_folder + "/" + nn_name, with_display);
+   dai::Pipeline pipeline = create_pipeline(resource_base_folder + "/" + nn_name, with_display);
    dai::Device device(pipeline);
 
    // Set up detection queue
@@ -180,21 +167,22 @@ int main(int argc, char** argv) {
            std::string("camera/detections"),
            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
            queue_size);
-
-       dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
-       // width and height based on 480p mono resolution
-       auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);
-       dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depth_publish(
-           depth_queue,
-           node,
-           std::string("camera/depth"),
-           std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &depth_converter, std::placeholders::_1, std::placeholders::_2),
-           queue_size,
-           right_camera_info,
-           "camera");
+    
+    // We don't need the depth stream but it's here commented in cas.
+    //    dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
+    //    // width and height based on 480p mono resolution
+    //    auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);
+    //    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depth_publish(
+    //        depth_queue,
+    //        node,
+    //        std::string("camera/depth"),
+    //        std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &depth_converter, std::placeholders::_1, std::placeholders::_2),
+    //        queue_size,
+    //        right_camera_info,
+    //        "camera");
 
        detection_publish.addPublisherCallback();
-       depth_publish.addPublisherCallback();
+       //depth_publish.addPublisherCallback();
        rgb_publish.addPublisherCallback();
 
        rclcpp::spin(node);

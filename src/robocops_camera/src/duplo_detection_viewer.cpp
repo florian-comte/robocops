@@ -7,18 +7,21 @@
 class DetectionsViewer : public rclcpp::Node {
 public:
     DetectionsViewer()
-    : Node("detections_viewer") {
+    : Node("duplo_detection_viewer") {
         // Create subscribers for detection and RGB image topics
         m_detections_subscriber = this->create_subscription<depthai_ros_msgs::msg::SpatialDetectionArray>(
             "/camera/detections", 4, std::bind(&DetectionsViewer::detections_callback, this, std::placeholders::_1));
         m_image_subscriber = this->create_subscription<sensor_msgs::msg::Image>(
-            "/camera/raw_rgb", 4, std::bind(&DetectionsViewer::image_callback, this, std::placeholders::_1));
+            "/camera/raw_rgb/compressed", 4, std::bind(&DetectionsViewer::image_callback, this, std::placeholders::_1));
     }
 
 private:
     void detections_callback(const depthai_ros_msgs::msg::SpatialDetectionArray::SharedPtr msg) {
-        if (!m_image) return; // Wait for the image to be available
-
+        if (!m_image) {
+            // Print no image available
+            RCLCPP_WARN(this->get_logger(), "No image available to overlay detections.");
+            return; // Wait for the image to be available
+        }
         // Visualize detections on the RGB image
         cv::Mat img = cv_bridge::toCvShare(m_image, "bgr8")->image;
 

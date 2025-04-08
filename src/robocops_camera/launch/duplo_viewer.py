@@ -10,7 +10,7 @@ from launch.conditions import IfCondition
 def generate_launch_description():
     # Node for detections display publisher
     detections_display_publisher = launch_ros.actions.Node(
-        package='robocops_camera', executable='detections_display_publisher',
+        package='robocops_camera', executable='duplo_detection_viewer',
         output='screen',
     )
     

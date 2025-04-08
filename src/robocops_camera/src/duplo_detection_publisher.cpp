@@ -40,7 +40,7 @@
 
 // Mapping of resolution strings to DepthAI sensor resolution enum
 static const std::unordered_map<std::string, dai::ColorCameraProperties::SensorResolution> RGB_RESOLUTION_MAP = {
-   {"720", dai::ColorCameraProperties::SensorResolution::THE_720_P},
+   {"720p", dai::ColorCameraProperties::SensorResolution::THE_720_P},
    {"800p", dai::ColorCameraProperties::SensorResolution::THE_800_P},
    {"1080p", dai::ColorCameraProperties::SensorResolution::THE_1080_P},
    {"1200p", dai::ColorCameraProperties::SensorResolution::THE_1200_P}

@@ -11,10 +11,10 @@ def generate_launch_description():
     nn_name             = LaunchConfiguration('nn_name', default="yolo11n_3.blob")
     resource_base_folder = LaunchConfiguration('resource_base_folder', default=
                                                os.path.join(get_package_share_directory('robocops_camera'), 'resources'))
-    rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='1080p')
+    rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')
     with_display         = LaunchConfiguration('with_display', default='false')
 
-    queue_size = LaunchConfiguration('queue_size', default=4)
+    queue_size = LaunchConfiguration('queue_size', default=30)
 
     declare_nn_name_cmd = DeclareLaunchArgument(
         'nn_name',

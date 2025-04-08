@@ -36,7 +36,7 @@
       */
      DetectionsDisplayPublisher() : Node("duplo_detection_viewer") {
          m_rgbSub = this->create_subscription<sensor_msgs::msg::Image>(
-             "/camera/raw_rgb", 30, std::bind(&DetectionsDisplayPublisher::rgbCallback, this, std::placeholders::_1));
+             "/camera/raw_rgb/compressed", 30, std::bind(&DetectionsDisplayPublisher::rgbCallback, this, std::placeholders::_1));
          
          // Subscription to the spatial detections stream
          m_detectionsSub = this->create_subscription<depthai_ros_msgs::msg::SpatialDetectionArray>(

@@ -4,7 +4,7 @@
 
 class MessageSizeSubscriber : public rclcpp::Node {
 public:
-    MessageSizeSubscriber() : Node("test") {
+    MessageSizeSubscriber() : Node("duplo_image_size") {
         subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/camera/raw_rgb", 10, std::bind(&MessageSizeSubscriber::topic_callback, this, std::placeholders::_1));
     }

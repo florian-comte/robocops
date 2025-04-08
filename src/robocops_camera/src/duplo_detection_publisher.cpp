@@ -69,7 +69,7 @@ dai::Pipeline create_pipeline(const std::string rgb_resolution_str, const std::s
     // Set RGB camera resolution
     auto rgb_resolution = RGB_RESOLUTION_MAP.count(rgb_resolution_str) ? 
         RGB_RESOLUTION_MAP.at(rgb_resolution_str) : 
-        dai::ColorCameraProperties::SensorResolution::THE_1080_P;
+        dai::ColorCameraProperties::SensorResolution::THE_720_P;
 
     // Configure RGB camera
     rgb_camera->setPreviewSize(416, 416);
@@ -141,7 +141,7 @@ dai::Pipeline create_pipeline(const std::string rgb_resolution_str, const std::s
     node->declare_parameter("nn_name", "");
     node->declare_parameter("resource_base_folder", "");
     node->declare_parameter("with_display", false);
-    node->declare_parameter("queue_size", 30);
+    node->declare_parameter("queue_size", 4);
 
     // Get parameters from ROS2 parameter server
     node->get_parameter("rgb_resolution_str", rgb_resolution_str);

@@ -69,7 +69,7 @@ macro(dai_add_node_ros2 node_name node_src)
 endmacro()
 
 dai_add_node_ros2(duplo_detection_publisher src/duplo_detection_publisher.cpp)
-dai_add_node_ros2(detections_display_publisher src/detections_display_publisher.cpp)
+dai_add_node_ros2(duplo_detection_viewer src/duplo_detection_viewer.cpp)
 
 install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
 #install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
@@ -78,7 +78,7 @@ FILES_MATCHING PATTERN "*.py")
 
 install(TARGETS
         duplo_detection_publisher
-        detections_display_publisher
+        duplo_detection_viewer
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

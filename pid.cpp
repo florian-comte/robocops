@@ -115,7 +115,7 @@ void do_pid(motor_position motor, float speed_target) {
     next_speeds[motor] = abs(next_speeds[motor]);
 
     // Map output to valid PWM range
-    next_speeds[motor] = map_float(next_speeds[motor], 0, MAX_ENCODER_SPEED, MIN_PWM, MAX_PWM);
+    next_speeds[motor] = map_float(next_speeds[motor], 0, MAX_MOTOR_SPEED, MIN_PWM, MAX_PWM);
 
     // Clamp PWM output within range
     if (next_speeds[motor] > MAX_PWM) {

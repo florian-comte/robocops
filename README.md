@@ -55,3 +55,7 @@ You should also define the pins for the motors and encoders in maxon_driver.cpp 
 - PID controller runs at fixed 20Hz interval (50ms), can be change (see Configuration section)
 - Encoder feedback provides closed-loop speed control, motor speeds are maintained automatically once set
 - System designed for expansion to additional motor types and sensors
+
+## Test using python_serial_tester
+
+You can test the program using the script in python_serial_tester folder that send serial message.

@@ -23,14 +23,19 @@
 #define MAX_PWM 220 // Approx. 90% of full scale (255), defined in firmware of maxon driver
 
 /**
+ * @brief Maximum speed value in RPM.
+ */
+#define MAX_MOTOR_SPEED 7500
+
+/**
  * @enum motor_position
  * @brief Enumerates the positions of motors on a 4-wheeled robot.
  */
 enum motor_position {
-    FRONT_LEFT = 0,
-    FRONT_RIGHT,
-    REAR_LEFT,
-    REAR_RIGHT,
+    //FRONT_LEFT = 0,
+    //FRONT_RIGHT,
+    //REAR_LEFT,
+    REAR_RIGHT = 0,
     MOTOR_COUNT  ///< Total number of motors
 };
 

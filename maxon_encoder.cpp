@@ -5,10 +5,10 @@
  * These pins are used to read the encoder voltage corresponding to motor RPM.
  */
 const int MOTOR_ENCODER_SPEED_PINS[MOTOR_COUNT] = {
-    40, // FRONT_LEFT
-    41, // FRONT_RIGHT
-    41, // REAR_LEFT
-    40  // REAR_RIGHT
+//    40, // FRONT_LEFT
+   // 41, // FRONT_RIGHT
+    //41, // REAR_LEFT
+    63  // REAR_RIGHT
 };
 
 /**

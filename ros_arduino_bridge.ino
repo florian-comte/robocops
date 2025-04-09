@@ -12,6 +12,12 @@
 // Time tracking for periodic PID updates
 unsigned long last_loop_time = 0;
 
+// a String to hold incoming data
+String input_string = "";   
+
+// whether the string is complete
+bool is_string_completed = false;  
+
 /**
  * @brief Handle incoming serial commands to control motor behavior.
  *
@@ -22,55 +28,52 @@ unsigned long last_loop_time = 0;
  * the target speeds (RPM) for each motor.
  */
 void handle_serial_command() {
-  if (Serial.available()) {
-    // Read the incoming command line up to newline
-    String line = Serial.readStringUntil('\n'); 
-    line.trim(); // Remove leading/trailing whitespace
+  input_string.trim(); // Remove leading/trailing whitespace
 
-    if (line.length() == 0) return; // Ignore empty lines
+  if (input_string.length() == 0) return;
 
-    // Extract command character (e.g. 's')
-    char cmd = line.charAt(0);
-    // Remove the command character from the line
-    line = line.substring(1);
-    line.trim(); // Trim again to clean up spaces
+  // Extract command character (e.g. 's')
+  char cmd = input_string.charAt(0);
+  // Remove the command character from the line
+  input_string = input_string.substring(1);
+  input_string.trim();
 
-    int values[MOTOR_COUNT]; // Array to store parsed motor values
-    int i = 0;
+  int values[MOTOR_COUNT];
+  int i = 0;
 
-    // Tokenize the rest of the line by space
-    char *token = strtok((char*)line.c_str(), " ");
-    
-    // Parse each value and store it
-    while (token != NULL && i < MOTOR_COUNT) {
-      values[i++] = atoi(token); // Convert string to int
-      token = strtok(NULL, " ");
-    }
+  // Tokenize the rest of the line by space
+  char *token = strtok((char*)input_string.c_str(), " ");
+  
+  // Parse each value and store it
+  while (token != NULL && i < MOTOR_COUNT) {
+    values[i++] = atoi(token); // Convert string to int
+    token = strtok(NULL, " ");
+  }
 
-    // Check if correct number of motor values were received
-    if (i != MOTOR_COUNT) {
-      Serial.println("Error: Invalid number of values");
-      return;
-    }
+  // Check if correct number of motor values were received
+  if (i != MOTOR_COUNT) {
+    Serial.println("Error: Invalid number of values");
+    return;
+  }
 
-    // Handle the parsed command
-    switch (cmd) {
-      case MOTOR_SPEEDS: // 's' command for setting motor speeds
-        for (int j = 0; j < MOTOR_COUNT; j++) {
-          if (values[j] == 0) {
-            is_moving[j] = 0; // Mark motor as idle
-          } else {
-            is_moving[j] = 1; // Mark motor as active
-          }
-          target_speeds[j] = values[j]; // Set new target speed
+  // Handle the parsed command
+  switch (cmd) {
+    case MOTOR_SPEEDS: // 's' command for setting motor speeds
+      for (int j = 0; j < MOTOR_COUNT; j++) {
+        if (values[j] == 0) {
+          is_moving[j] = 0; // Mark motor as idle
+        } else {
+          is_moving[j] = 1; // Mark motor as active
         }
-        Serial.println("Updated motor speeds.");
-        break;
 
-      default:
-        Serial.println("Error: Unknown command");
-        break;
-    }
+        target_speeds[j] = values[j]; // Set new target speed
+      }
+      Serial.println("Updated motor speeds.");
+      break;
+
+    default:
+      Serial.println("Error: Unknown command");
+      break;
   }
 }
 
@@ -80,6 +83,8 @@ void handle_serial_command() {
  */
 void setup() {
   Serial.begin(BAUDRATE);
+
+  input_string.reserve(200);
   
   init_motor_drivers();
   init_motor_encoders();
@@ -95,7 +100,11 @@ void setup() {
  * at a fixed interval for each motor.
  */
 void loop() {
-  handle_serial_command(); // Handle any new commands from serial
+  if (is_string_completed) {
+    handle_serial_command();
+    input_string = "";
+    is_string_completed = false;
+  }
 
   unsigned long now = millis();
 
@@ -107,4 +116,19 @@ void loop() {
       update_pid(i);
     }
   }  
+}
+
+/*
+  SerialEvent occurs whenever a new data comes in the hardware serial RX. This
+  routine is run between each time loop() runs, so using delay inside loop can
+  delay response. Multiple bytes of data may be available.
+*/
+void serialEvent() {
+  if (Serial.available()) {
+    char inChar = (char)Serial.read();
+    input_string += inChar;
+    if (inChar == '\n') {
+      is_string_completed = true;
+    }
+  }
 }

@@ -18,13 +18,13 @@
  * @brief Minimum encoder speed in RPM.
  * Corresponds to 0V from the encoder output, defined in firmware of maxon driver.
  */
-#define MIN_ENCODER_SPEED -3500
+#define MIN_ENCODER_SPEED -7500
 
 /**
  * @brief Maximum encoder speed in RPM.
  * Corresponds to 4V from the encoder output, defined in firmware of maxon driver.
  */
-#define MAX_ENCODER_SPEED 3500
+#define MAX_ENCODER_SPEED 7500
 
 /**
  * @brief Minimum voltage from encoder (in Volts), defined in firmware of maxon driver.

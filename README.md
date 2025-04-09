@@ -39,6 +39,8 @@ Key parameters can be adjusted in these header files:
 | `pid.h` | PID constants (`KP`, `KI`, `KD`) |
 | `ros_arduino_bridge.ino` | PID updates interval (`LOOP_INTERVAL`) |
 
+You should also define the pins for the motors and encoders in maxon_driver.cpp (for enable, direction, pwm) and maxon_encoder.h (for averaged speed).
+
 ## File Structure
 | File | Description |
 |------|-------------|

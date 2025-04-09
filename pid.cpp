@@ -64,6 +64,13 @@ void update_pid(motor_position motor) {
          * See: http://brettbeauregard.com/blog/2011/04/improving-the-beginner%E2%80%99s-pid-initialization/
          */
         reset_pid(motor);
+
+        set_motor_state(
+            motor,
+            false,                              // enabled
+            next_directions[motor],            // direction
+            (int)next_speeds[motor]            // PWM
+        );
         return;
     }
 

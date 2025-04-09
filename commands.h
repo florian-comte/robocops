@@ -16,8 +16,4 @@
 // Usage: 's' MOTOR_SPEED_1, MOTOR_SPEED_2, ..., MOTOR_SPEED_(MOTOR_COUNT)
 #define MOTOR_SPEEDS   's'
 
-// Command to set raw PWM values to motors (between MIN_PWM and MAX_PWM, see maxon_driver.h).
-// Usage: 'r' MOTOR_PWM_1, MOTOR_PWM_2, ..., MOTOR_PWM_(MOTOR_COUNT)
-#define MOTOR_RAW_PWM  'r'
-
 #endif // COMMANDS_H

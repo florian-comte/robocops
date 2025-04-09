@@ -3,12 +3,14 @@
 #include "pid.h"
 #include "commands.h"
 
+// Communication baudrate
 #define BAUDRATE 57600
+
+// Interval between PID updates in milliseconds
+#define LOOP_INTERVAL 50
 
 // Time tracking for periodic PID updates
 unsigned long last_loop_time = 0;
-// Interval between PID updates in milliseconds
-const unsigned long loop_interval = 50; // ms
 
 /**
  * @brief Handle incoming serial commands to control motor behavior.
@@ -98,7 +100,7 @@ void loop() {
   unsigned long now = millis();
 
   // Run PID update every loop_interval milliseconds
-  if (now - last_loop_time >= loop_interval) {
+  if (now - last_loop_time >= LOOP_INTERVAL) {
     last_loop_time = now;
 
     for (int i = 0; i < MOTOR_COUNT; i++) {

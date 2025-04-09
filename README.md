@@ -24,10 +24,29 @@ s 1000 1000 1000 1000
 
 **Parameters:**
 - Integer values representing target speeds (RPM) for each motor
-- Motor order: Front Left, Front Right, Rear Left, Rear Right (to be updated when more)
+- Motor order matches maxon_encoder.h order
 - `0` RPM stops the motor
 - Valid RPM range: `-3500` to `3500` (as defined in firmware, see configuration section)
 - Negative values indicate reverse rotation
+
+
+### Get encoder feedback
+
+**Command format:**
+
+```
+e
+```
+
+**Response format:**
+```
+<pos1> <pos2> <...> <posn>
+```
+
+**Informations:** 
+- No parameters needed
+- Returns current encoder positions (in RPM) for all motors
+- Motor order matches maxon_encoder.h order
 
 ## Configuration
 Key parameters can be adjusted in these header files:

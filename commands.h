@@ -14,6 +14,10 @@
 
 // Command to set target motor speeds (between MIN_RPM and MAX_RPM, see maxon_driver.h).
 // Usage: 's' MOTOR_SPEED_1, MOTOR_SPEED_2, ..., MOTOR_SPEED_(MOTOR_COUNT)
-#define MOTOR_SPEEDS   's'
+#define MOTOR_SPEEDS 's'
+
+// Command to get the current encoder values in RPM
+// Usage: 'e' 
+#define ENCODERS_FEEDBACK 'e'
 
 #endif // COMMANDS_H

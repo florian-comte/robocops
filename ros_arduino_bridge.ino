@@ -70,7 +70,23 @@ void handle_serial_command() {
       }
       Serial.println("Updated motor speeds.");
       break;
-
+      
+     case ENCODERS_FEEDBACK: // 'e' command
+        // Create a string to hold encoder values
+        String encoder_output = "";
+        
+        // Read and append each encoder's position
+        for (int j = 0; j < MOTOR_COUNT; j++) {
+          long position = read_encoder(j);
+          encoder_output += " ";
+          encoder_output += String(position);
+        }
+        
+        // Send the encoder data back over serial
+        Serial.println(encoder_output);
+     
+      break;
+    
     default:
       Serial.println("Error: Unknown command");
       break;

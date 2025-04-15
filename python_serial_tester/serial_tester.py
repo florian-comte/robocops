@@ -4,7 +4,7 @@ import time
 COM_PORT = 'COM3'
 BAUDRATE = 57600
 
-speeds = [0]  # RPM
+speeds = [-2000]  # RPM
 
 # Format: s <speed1> <...> <speedn>
 command = f"s {' '.join(map(str, speeds))}\n"

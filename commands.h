@@ -13,11 +13,19 @@
  */
 
 // Command to set target motor speeds (between MIN_RPM and MAX_RPM, see maxon_driver.h).
-// Usage: 's' MOTOR_SPEED_1, MOTOR_SPEED_2, ..., MOTOR_SPEED_(MOTOR_COUNT)
-#define MOTOR_SPEEDS 's'
+// Usage: 'm' MOTOR_SPEED_1, MOTOR_SPEED_2, ..., MOTOR_SPEED_(MOTOR_COUNT)
+#define MOTOR_SPEEDS 'm'
+
+// Command to set target motor speeds grouped: left wheels and right wheels are one group (between MIN_RPM and MAX_RPM, see maxon_driver.h).
+// Usage: 'g' LEFT_MOTORS_SPEED, RIGHT_MOTORS_SPEED
+#define MOTOR_GROUPED_SPEEDS 'g'
 
 // Command to get the current encoder values in RPM
 // Usage: 'e' 
 #define ENCODERS_FEEDBACK 'e'
+
+// Command to define the PID values
+// Usage 'p k_p k_d k_i k_o'
+#define PID_VALUES 'p'
 
 #endif // COMMANDS_H

@@ -17,6 +17,11 @@
 extern int is_moving[MOTOR_COUNT];
 extern float target_speeds[MOTOR_COUNT];
 
+extern int k_p;
+extern int k_d;
+extern int k_i;
+extern int k_o;
+
 void reset_pid(motor_position motor);
 void do_pid(motor_position motor, float speed_target);
 void update_pid(motor_position motor);

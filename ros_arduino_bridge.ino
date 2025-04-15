@@ -6,6 +6,9 @@
 // Communication baudrate
 #define BAUDRATE 57600
 
+// Max args for serial commands
+#define MAX_ARGS 4
+
 // Interval between PID updates in milliseconds
 #define LOOP_INTERVAL 50
 
@@ -28,70 +31,78 @@ bool is_string_completed = false;
  * the target speeds (RPM) for each motor.
  */
 void handle_serial_command() {
-  input_string.trim(); // Remove leading/trailing whitespace
-
+  input_string.trim();
   if (input_string.length() == 0) return;
 
-  // Extract command character (e.g. 's')
   char cmd = input_string.charAt(0);
-  // Remove the command character from the line
   input_string = input_string.substring(1);
   input_string.trim();
 
-  int values[MOTOR_COUNT];
-  int i = 0;
+  long args[MAX_ARGS];
+  int arg_count = 0;
 
-  // Tokenize the rest of the line by space
-  char *token = strtok((char*)input_string.c_str(), " ");
-  
-  // Parse each value and store it
-  while (token != NULL && i < MOTOR_COUNT) {
-    values[i++] = atoi(token); // Convert string to int
+  // Tokenize using strtok
+  char *token = strtok((char *)input_string.c_str(), " ");
+  while (token != NULL && arg_count < MAX_ARGS) {
+    char *endptr;
+    long val = strtol(token, &endptr, 10);
+
+    // Check for parsing errors
+    if (*endptr != '\0') {
+      Serial.println("Error: Invalid numeric value");
+      return;
+    }
+
+    args[arg_count++] = val;
     token = strtok(NULL, " ");
   }
 
-  // Check if correct number of motor values were received
-  if (i != MOTOR_COUNT) {
-    Serial.println("Error: Invalid number of values");
-    return;
-  }
-
-  // Handle the parsed command
   switch (cmd) {
-    case MOTOR_SPEEDS: // 's' command for setting motor speeds
-      for (int j = 0; j < MOTOR_COUNT; j++) {
-        if (values[j] == 0) {
-          is_moving[j] = 0; // Mark motor as idle
-        } else {
-          is_moving[j] = 1; // Mark motor as active
-        }
-
-        target_speeds[j] = values[j]; // Set new target speed
+    case MOTOR_SPEEDS: // 's' command
+      if (arg_count != MOTOR_COUNT) {
+        Serial.println("Error: Expected motor speeds for each motor");
+        return;
       }
+
+      for (int i = 0; i < MOTOR_COUNT; i++) {
+        int speed = (int)args[i];
+        target_speeds[i] = speed;
+        is_moving[i] = (speed != 0) ? 1 : 0;
+      }
+
       Serial.println("Updated motor speeds.");
       break;
-      
-     case ENCODERS_FEEDBACK: // 'e' command
-        // Create a string to hold encoder values
+
+    case ENCODERS_FEEDBACK: // 'e' command
+      {
         String encoder_output = "";
-        
-        // Read and append each encoder's position
-        for (int j = 0; j < MOTOR_COUNT; j++) {
-          long position = read_encoder(j);
+        for (int i = 0; i < MOTOR_COUNT; i++) {
           encoder_output += " ";
-          encoder_output += String(position);
+          encoder_output += String(read_encoder(i));
         }
-        
-        // Send the encoder data back over serial
         Serial.println(encoder_output);
-     
+      }
       break;
-    
+
+    case PID_VALUES: // 'p' command, expects 4 values: k_p, k_d, k_i, k_o
+      if (arg_count != 4) {
+        Serial.println("Error: Expected 4 PID values");
+        return;
+      }
+
+      k_p = (int)args[0];
+      k_d = (int)args[1];
+      k_i = (int)args[2];
+      k_o = (int)args[3];
+      Serial.println("Updated PID values.");
+      break;
+
     default:
       Serial.println("Error: Unknown command");
       break;
   }
 }
+
 
 /**
  * @brief Arduino setup function. Initializes serial communication,

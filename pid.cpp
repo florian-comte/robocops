@@ -2,16 +2,16 @@
 
 
 /// Proportional gain constant for the PID controller.
-const int k_p = 20;
+int k_p = 20;
 
 /// Derivative gain constant for the PID controller.
-const int k_d = 12;
+int k_d = 12;
 
 /// Integral gain constant for the PID controller.
-const int k_i = 0;
+int k_i = 0;
 
 /// Output scaling factor to map PID output to PWM range.
-const int k_o = 50;
+int k_o = 50;
 
 /// Target speeds for each motor in RPM.
 float target_speeds[MOTOR_COUNT] = {0};

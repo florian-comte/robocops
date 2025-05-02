@@ -19,14 +19,14 @@ s <speed1> <speed2> <speed3> <speed4>
 **Example:** (set all motors to 1000 RPM):
 
 ```
-s 1000 1000 1000 1000
+m 1000 1000 1000 1000
 ```
 
 **Parameters:**
 - Integer values representing target speeds (RPM) for each motor
 - Motor order matches maxon_encoder.h order
 - `0` RPM stops the motor
-- Valid RPM range: `-3500` to `3500` (as defined in firmware, see configuration section)
+- Valid RPM range: `-100000` to `10000` (as defined in firmware, see configuration section)
 - Negative values indicate reverse rotation
 
 
@@ -55,7 +55,6 @@ Key parameters can be adjusted in these header files:
 |------|-------------------------|
 | `maxon_driver.h` | PWM limits (`MIN_PWM`, `MAX_PWM`) |
 | `maxon_encoder.h` | Speed ranges (`MIN_ENCODER_SPEED`, `MAX_ENCODER_SPEED`) |
-| `pid.h` | PID constants (`KP`, `KI`, `KD`) |
 | `ros_arduino_bridge.ino` | PID updates interval (`LOOP_INTERVAL`) |
 
 You should also define the pins for the motors and encoders in maxon_driver.cpp (for enable, direction, pwm) and maxon_encoder.h (for averaged speed).
@@ -65,16 +64,9 @@ You should also define the pins for the motors and encoders in maxon_driver.cpp 
 |------|-------------|
 | `maxon_driver` | Motor driver interface and pin mappings |
 | `maxon_encoder` | Encoder reading functions |
-| `pid` | PID control implementation |
 | `commands` | Serial command definitions |
-| `utils` | Utility functions |
 | `ros_arduino_bridge` | Main program |
 
 ## Usage Notes
-- PID controller runs at fixed 20Hz interval (50ms), can be change (see Configuration section)
-- Encoder feedback provides closed-loop speed control, motor speeds are maintained automatically once set
+- Closed-loop speed control, motor speeds are maintained automatically once set
 - System designed for expansion to additional motor types and sensors
-
-## Test using python_serial_tester
-
-You can test the program using the script in python_serial_tester folder that send serial message.

@@ -10,7 +10,6 @@
  */
 
 #include <Arduino.h>
-#include "utils.h"
 
 /**
  * @brief Minimum PWM value to activate the motor.
@@ -25,19 +24,32 @@
 /**
  * @brief Maximum speed value in RPM.
  */
-#define MAX_MOTOR_SPEED 7500
+#define MIN_MOTOR_SPEED 0
+
+/**
+ * @brief Maximum speed value in RPM.
+ */
+#define MAX_MOTOR_SPEED 10000
+
+// Total number of motors
+#define MOTOR_COUNT 2
 
 /**
  * @enum motor_position
  * @brief Enumerates the positions of motors on a 4-wheeled robot.
  */
 enum motor_position {
+    REAR_RIGHT = 0,
+    REAR_LEFT = 1
     //FRONT_LEFT = 0,
     //FRONT_RIGHT,
-    //REAR_LEFT,
-    REAR_RIGHT = 0,
-    MOTOR_COUNT  ///< Total number of motors
 };
+
+/**
+ * @brief Tell if the motor is inversed
+ * True if the motor is inversed, false if not.
+ */
+extern const int IS_INVERSED_MOTOR[MOTOR_COUNT];
 
 /**
  * @brief Initialize all motor drivers (e.g., pin modes).

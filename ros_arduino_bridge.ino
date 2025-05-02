@@ -1,6 +1,5 @@
 #include "maxon_driver.h"
 #include "maxon_encoder.h"
-#include "pid.h"
 #include "commands.h"
 
 // Communication baudrate
@@ -10,26 +9,23 @@
 #define MAX_ARGS 4
 
 // Interval between PID updates in milliseconds
-#define LOOP_INTERVAL 50
+//#define LOOP_INTERVAL 50
 
 // Time tracking for periodic PID updates
-unsigned long last_loop_time = 0;
+//unsigned long last_loop_time = 0;
 
 // a String to hold incoming data
-String input_string = "";   
+String input_string = "";
 
 // whether the string is complete
-bool is_string_completed = false;  
+bool is_string_completed = false;
+
+// The target_speeds wanted for the motors
+double target_speeds[MOTOR_COUNT] = {0};
 
 /**
- * @brief Handle incoming serial commands to control motor behavior.
- *
- * Expected format:
- *    s <speed1> <speed2> <speed3> <speed4>
- *
- * Where 's' indicates a speed command, followed by 4 integers representing
- * the target speeds (RPM) for each motor.
- */
+   @brief Handle incoming serial commands. See commands.h for more infos
+*/
 void handle_serial_command() {
   input_string.trim();
   if (input_string.length() == 0) return;
@@ -58,45 +54,35 @@ void handle_serial_command() {
   }
 
   switch (cmd) {
-    case MOTOR_SPEEDS: // 's' command
+    //case PID_VALUES: // 'p' command, expects 3 values: k_p, k_i, k_d
+      //if (arg_count != 3) {
+        //Serial.println("Error: Expected 3 PID values");
+        //return;
+      //}
+
+      //Serial.println("Updated PID values.");
+      //break;
+    case MOTOR_SPEEDS: // 'm' command
       if (arg_count != MOTOR_COUNT) {
         Serial.println("Error: Expected motor speeds for each motor");
         return;
       }
 
       for (int i = 0; i < MOTOR_COUNT; i++) {
-        int speed = (int)args[i];
-        target_speeds[i] = speed;
-        is_moving[i] = (speed != 0) ? 1 : 0;
+        target_speeds[i] = (int)args[i];
       }
 
-      Serial.println("Updated motor speeds.");
       break;
-
     case ENCODERS_FEEDBACK: // 'e' command
-      {
-        String encoder_output = "";
-        for (int i = 0; i < MOTOR_COUNT; i++) {
-          encoder_output += " ";
-          encoder_output += String(read_encoder(i));
-        }
-        Serial.println(encoder_output);
+    
+      String encoder_output = "";
+      for (int i = 0; i < MOTOR_COUNT; i++) {
+        encoder_output += read_encoder(i);
+        encoder_output += " ";
       }
+      
+      Serial.println(encoder_output);
       break;
-
-    case PID_VALUES: // 'p' command, expects 4 values: k_p, k_d, k_i, k_o
-      if (arg_count != 4) {
-        Serial.println("Error: Expected 4 PID values");
-        return;
-      }
-
-      k_p = (int)args[0];
-      k_d = (int)args[1];
-      k_i = (int)args[2];
-      k_o = (int)args[3];
-      Serial.println("Updated PID values.");
-      break;
-
     default:
       Serial.println("Error: Unknown command");
       break;
@@ -105,27 +91,26 @@ void handle_serial_command() {
 
 
 /**
- * @brief Arduino setup function. Initializes serial communication,
- * motor drivers, encoders, and resets PID states.
- */
+   @brief Arduino setup function. Initializes serial communication,
+   motor drivers, encoders, and resets PID states.
+*/
 void setup() {
   Serial.begin(BAUDRATE);
 
   input_string.reserve(200);
-  
+
   init_motor_drivers();
   init_motor_encoders();
 
-  // Reset PID controller for each motor
   for (int i = 0; i < MOTOR_COUNT; i++) {
-    reset_pid(i);
+    target_speeds[i] = 0;
   }
 }
 
 /**
- * @brief Main Arduino loop. Handles serial commands and runs the PID update
- * at a fixed interval for each motor.
- */
+   @brief Main Arduino loop. Handles serial commands and runs the PID update
+   at a fixed interval for each motor.
+*/
 void loop() {
   if (is_string_completed) {
     handle_serial_command();
@@ -133,16 +118,12 @@ void loop() {
     is_string_completed = false;
   }
 
-  unsigned long now = millis();
-
-  // Run PID update every loop_interval milliseconds
-  if (now - last_loop_time >= LOOP_INTERVAL) {
-    last_loop_time = now;
-
-    for (int i = 0; i < MOTOR_COUNT; i++) {
-      update_pid(i);
-    }
-  }  
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    int enable = target_speeds[i] != 0;
+    int direction = (target_speeds[i] >= 0) ? !IS_INVERSED_MOTOR[i] : IS_INVERSED_MOTOR[i];
+    int pwm = map(abs(target_speeds[i]), MIN_MOTOR_SPEED, MAX_MOTOR_SPEED, MIN_PWM, MAX_PWM);
+    set_motor_state(i, enable, direction, pwm);
+  }
 }
 
 /*

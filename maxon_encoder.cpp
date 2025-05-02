@@ -5,10 +5,12 @@
  * These pins are used to read the encoder voltage corresponding to motor RPM.
  */
 const int MOTOR_ENCODER_SPEED_PINS[MOTOR_COUNT] = {
-//    40, // FRONT_LEFT
+   A0,  // REAR_RIGHT,
+   A1 // REAR_LEFT
+   //    40, // FRONT_LEFT
    // 41, // FRONT_RIGHT
-    //41, // REAR_LEFT
-    63  // REAR_RIGHT
+    
+   
 };
 
 /**
@@ -32,8 +34,7 @@ void init_motor_encoders() {
  */
 float read_encoder(motor_position motor){
   int raw_analog = analogRead(MOTOR_ENCODER_SPEED_PINS[motor]);
-  float voltage = raw_analog * (5.0 / 1023.0);
 
-  // Map voltage range [0V–4V] to speed range [-3500 RPM to 3500 RPM]
-  return map_float(voltage, MIN_ENCODER_VOLTAGE, MAX_ENCODER_VOLTAGE, MIN_ENCODER_SPEED, MAX_ENCODER_SPEED);  
+  // Map voltage range [0–MAX_ANALOG_VALUE] to speed range [-10000 RPM to 10000 RPM]
+  return map(raw_analog, 0, MAX_ANALOG_VALUE, MIN_ENCODER_SPEED, MAX_ENCODER_SPEED);  
 }

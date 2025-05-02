@@ -5,10 +5,19 @@
  * These pins enable or disable motor output.
  */
 const int MOTOR_ENABLE_PINS[MOTOR_COUNT] = {
+    41,  // REAR_RIGHT
+    39 // REAR_LEFT
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT
-    //41, // REAR_LEFT
-    41  // REAR_RIGHT
+};
+
+/**
+ * @brief Tell if the motor is inversed
+ * True if the motor is inversed, false if not.
+ */
+const int IS_INVERSED_MOTOR[MOTOR_COUNT] = {
+  0, // REAR_RIGHT
+  1 // REAR_LEFT
 };
 
 /**
@@ -16,10 +25,10 @@ const int MOTOR_ENABLE_PINS[MOTOR_COUNT] = {
  * These pins control motor speed using pulse-width modulation.
  */
 const int MOTOR_PWM_PINS[MOTOR_COUNT] = {
+    3,  // REAR_RIGHT
+    4 // REAR_LEFT
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT
-    //41, // REAR_LEFT
-    2  // REAR_RIGHT
 };
 
 /**
@@ -27,10 +36,11 @@ const int MOTOR_PWM_PINS[MOTOR_COUNT] = {
  * These pins control the motor direction (forward/reverse).
  */
 const int MOTOR_DIRECTION_PINS[MOTOR_COUNT] = {
+    40,  // REAR_RIGHT
+    38 // REAR_LEFT
+
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT
-    //41, // REAR_LEFT
-    40  // REAR_RIGHT
 };
 
 /**

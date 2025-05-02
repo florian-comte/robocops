@@ -2,6 +2,109 @@
 
 This workspace contains the packages for the Robocops team. All of our packages can be found in the `/src` directory.
 
+## robocops_gazebo
+
+The robocops_gazebo package provides Gazebo simulation support for the RoboCops robotics system. It launches the simulation environment, spawns the robot at a configurable initial pose, and bridges ROS 2 and Gazebo topics using ros_gz_bridge.
+
+
+### How to use
+
+First, ensure that you have ros2 installed, sourced and that all the dependencies are installed:
+```bash
+source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+Then build the package:
+
+```bash
+colcon build --packages-select robocops_gazebo
+source install/setup.bash
+```
+
+And start the simulator:
+
+```bash
+ros2 launch robocops_gazebo arena.launch.py
+```
+
+You can find more informations about the available arguments for this commands in the next subsection.
+
+### Customize parameters
+
+You can of course combine the parameters. To create your own world/robot model, please check the existing files.
+
+#### Custom worlds
+
+To use your own '.world' files:
+
+1. Place the '.world' file in the 'robocops_gazebo/worlds/' directory.
+2. Launch using the file name without extension:
+   ```bash
+   ros2 launch robocops_gazebo arena.launch.py world:=your_custom_world
+   ```
+
+#### Custom robot models
+
+To use your own robot URDF::
+
+1. Create a .xacro file in the robocops_gazebo/description/ directory.
+2. Launch using the file name without extension:
+   ```bash
+   ros2 launch robocops_gazebo arena.launch.py robot_model:=your_model_name
+   ```
+## robocops_teleop
+
+This package provides keyboard-based teleoperation functionality for controlling the RoboCops robot via ROS 2 topics. It publishes velocity commands (geometry_msgs/msg/TwistStamped) to the /cmd_vel topic, enabling manual control of the robot during development, debugging.
+
+Originally based on work by Darby Lim (Willow Garage) for https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/, adapted for the RoboCops team at EPFL Robot Competition 2025.
+
+### How to use
+
+First, ensure that you have ros2 installed, sourced and that all the dependencies are installed:
+```bash
+source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+Then build the package:
+
+```bash
+colcon build --packages-select robocops_teleop
+source install/setup.bash
+```
+
+And start the teleoperator:
+
+```bash
+ros2 run robocops_teleop teleop_keyboard
+```
+
+### Keybinds
+
+```
+Moving around:
+        w
+   a    s    d
+        x
+
+w/x : increase/decrease linear velocity
+a/d : increase/decrease angular velocity
+space or s : force stop
+
+CTRL-C to quit
+```
+
+### Topics
+
+| Topic        | Type                                      | Description                                      |
+|--------------|-------------------------------------------|--------------------------------------------------|
+| `/cmd_vel`   | `geometry_msgs/msg/Twist` or `geometry_msgs/msg/TwistStamped` | Velocity command for robot movement |
+
+## robocops_control
+
+Coming soon...
+
 ## robocops_camera
 
 The `robocops_camera` package is responsible for setting up and operating OAK-D Lite camera for object detection and other camera-related tasks in the Robocops robotics system.
@@ -61,7 +164,7 @@ For example, to specify a custom neural network file and resolution:
 ros2 launch robocops_camera duplo_detector.py nn_name:=/path/to/custom_model.blob rgb_resolution_str:=720p
 ```
 
-### Created topics
+### Topics
 
 When the `robocops_camera` package is launched, the following ROS 2 topics are created for interaction:
 

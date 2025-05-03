@@ -18,10 +18,12 @@ from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
 
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackageShare, LaunchConfiguration, IfCondition, DeclareLaunchArgument
 
 
 def generate_launch_description():
+    rviz = LaunchConfiguration("rviz")
+
     # Get URDF via xacro
     robot_description_content = Command(
         [
@@ -36,30 +38,28 @@ def generate_launch_description():
 
     robot_controllers = PathJoinSubstitution(
         [
-            FindPackageShare("diffdrive_arduino"),
+            FindPackageShare("robocops_control"),
             "config",
             "diffbot_controllers.yaml",
         ]
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("diffdrive_arduino"), "rviz", "diffbot.rviz"]
+        [FindPackageShare("robocops_control"), "rviz", "diffbot.rviz"]
     )
 
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, robot_controllers],
+        parameters=[robot_controllers],
         output="both",
     )
+
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
-        remappings=[
-            ("/diff_drive_controller/cmd_vel_unstamped", "/cmd_vel"),
-        ],
     )
 
     rviz_node = Node(
@@ -68,18 +68,25 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        condition=IfCondition(rviz)
     )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster"],
     )
 
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "diffbot_base_controller",
+            "--param-file",
+            robot_controllers,
+            "--controller-ros-args",
+            "-r /diffbot_base_controller/cmd_vel:=/cmd_vel",
+        ],
     )
 
     # Delay rviz start after `joint_state_broadcaster`
@@ -90,20 +97,24 @@ def generate_launch_description():
         )
     )
 
-    # Delay start of robot_controller after `joint_state_broadcaster`
-    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+    # Delay start of joint_state_broadcaster after `robot_controller`
+    delay_joint_state_broadcaster_after_robot_controller_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[robot_controller_spawner],
+            target_action=robot_controller_spawner,
+            on_exit=[joint_state_broadcaster_spawner],
         )
     )
 
     nodes = [
         control_node,
         robot_state_pub_node,
-        joint_state_broadcaster_spawner,
+        robot_controller_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
-        delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
+        delay_joint_state_broadcaster_after_robot_controller_spawner,
     ]
 
-    return LaunchDescription(nodes)
+    return LaunchDescription(DeclareLaunchArgument(
+            "rviz",
+            default_value="true",
+            description="Start RViz2 automatically with this launch file.",
+        ) + nodes)

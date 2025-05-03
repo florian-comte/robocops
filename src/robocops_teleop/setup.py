@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='Florian Comte',
     maintainer_email='florian.comte@epfl.ch',
-    description='Package used by the team RocoCops (Robot Competition EPFL 2025) to be able to control in gazebo and in real life the robot using teleoperator keyboard.',
+    description='Package used by the team RocoCops (Robot Competition EPFL 2025) to be able to control in gazebo and in real life the robot using teleoperator keyboard',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={

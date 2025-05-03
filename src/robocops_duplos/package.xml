@@ -2,8 +2,8 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>robocops_duplos</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>1.0.0</version>
+  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the duplo detection system</description>
   <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>
   <license>Apache-2.0</license>
 

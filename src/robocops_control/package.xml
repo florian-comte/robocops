@@ -3,7 +3,7 @@
 <package format="3">
   <name>robocops_control</name>
   <version>1.0.0</version>
-  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the hardware interface using ros2_control.</description>
+  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the hardware interface using ros2_control</description>
 
   <license>Apache-2.0</license>
   <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>

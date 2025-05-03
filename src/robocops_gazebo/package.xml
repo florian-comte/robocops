@@ -3,7 +3,7 @@
 <package format="3">
   <name>robocops_gazebo</name>
   <version>1.0.0</version>
-  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the gazebo simulations.</description>
+  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the gazebo simulations</description>
   <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>
   <license>Apache-2.0</license>
 

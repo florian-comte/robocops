@@ -103,7 +103,37 @@ CTRL-C to quit
 
 ## robocops_control
 
-Coming soon...
+The robocops_control package provides control interfaces for the RoboCops robot, specifically for controlling the robot's wheels through ROS 2 control systems. It interfaces with the robot hardware and provides control commands for wheel speed and motion.
+
+
+### How to use
+
+First, ensure that you have ros2 installed, sourced and that all the dependencies are installed:
+```bash
+source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+Then build the package:
+
+```bash
+colcon build --packages-select robocops_control
+source install/setup.bash
+```
+
+And start the interface:
+
+```bash
+ros2 run robocops_control diffbot.launch.py
+```
+
+### Customization
+
+Various aspects can and should be customized.
+
+First, there's the diffbot_controllers.yaml configuration file located in bringup/config.
+
+Next, customization can be done in the URDF and the ROS 2 control configuration within the .xacro file found in the /description directory.
 
 ## robocops_camera
 

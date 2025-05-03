@@ -1,229 +1,100 @@
-#!/usr/bin/env python
-#
-# Copyright (c) 2011, Willow Garage, Inc.
-# All rights reserved.
-#
-# Modified by [florian.comte@epfl.ch], [2025]
-#
-# Software License Agreement (BSD License 2.0)
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# Original Author: Darby Lim
-# Modified by: Florian Comte <florian.comte@epfl.ch> on 2025-05-02
+#!/usr/bin/env python3
 
 import os
-import select
 import sys
-
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import TwistStamped
+import select
+import termios
+import tty
 import rclpy
+from rclpy.node import Node
 from rclpy.clock import Clock
-from rclpy.qos import QoSProfile
+from geometry_msgs.msg import TwistStamped
 
-if os.name == 'nt':
-    import msvcrt
-else:
-    import termios
-    import tty
+MAX_LIN_VEL = 1.0
+MAX_ANG_VEL = 1.0
+LIN_STEP = 0.01
+ANG_STEP = 0.1
 
-MAX_LIN_VEL = 0.22
-MAX_ANG_VEL = 0.22
-
-LIN_VEL_STEP_SIZE = 0.01
-ANG_VEL_STEP_SIZE = 0.1
-
-msg = """
-
+INSTRUCTIONS = """
+< Robocops teleop controller >
 ---------------------------
-Moving around:
-        w
-   a    s    d
-        x
+   w    
+a  s  d
+   x    
 
-w/x : increase/decrease linear velocity (Burger : ~ 0.22, Waffle and Waffle Pi : ~ 0.26)
-a/d : increase/decrease angular velocity (Burger : ~ 2.84, Waffle and Waffle Pi : ~ 1.82)
-
-space key, s : force stop
-
+w/x : Increase/decrease linear velocity
+a/d : Increase/decrease angular velocity
+s or space : Stop
 CTRL-C to quit
 """
 
-e = """
-Communications Failed
-"""
+KEY_BINDINGS = {
+    'w': (LIN_STEP, 0),
+    'x': (-LIN_STEP, 0),
+    'a': (0, ANG_STEP),
+    'd': (0, -ANG_STEP),
+    ' ': (0, 0),
+    's': (0, 0),
+}
 
-
-def get_key(settings):
-    if os.name == 'nt':
-        return msvcrt.getch().decode('utf-8')
+def get_key():
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-    if rlist:
-        key = sys.stdin.read(1)
-    else:
-        key = ''
-
+    key = sys.stdin.read(1) if rlist else ''
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
+def clamp(value, min_val, max_val):
+    return max(min_val, min(value, max_val))
 
-def print_vels(target_linear_velocity, target_angular_velocity):
-    print('currently:\tlinear velocity {0}\t angular velocity {1} '.format(
-        target_linear_velocity,
-        target_angular_velocity))
+class TeleopNode(Node):
+    def __init__(self):
+        super().__init__('teleop_keyboard')
+        self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.linear = 0.0
+        self.angular = 0.0
+        print(INSTRUCTIONS)
 
-def make_simple_profile(output_vel, input_vel, slop):
-    if input_vel > output_vel:
-        output_vel = min(input_vel, output_vel + slop)
-    elif input_vel < output_vel:
-        output_vel = max(input_vel, output_vel - slop)
-    else:
-        output_vel = input_vel
+    def update_velocity(self, key):
+        if key in KEY_BINDINGS:
+            lin_delta, ang_delta = KEY_BINDINGS[key]
+            if key in [' ', 's']:
+                self.linear = 0.0
+                self.angular = 0.0
+            else:
+                self.linear = clamp(self.linear + lin_delta, -MAX_LIN_VEL, MAX_LIN_VEL)
+                self.angular = clamp(self.angular + ang_delta, -MAX_ANG_VEL, MAX_ANG_VEL)
+            print(f"Linear: {self.linear:.2f} | Angular: {self.angular:.2f}")
 
-    return output_vel
-
-
-def constrain(input_vel, low_bound, high_bound):
-    if input_vel < low_bound:
-        input_vel = low_bound
-    elif input_vel > high_bound:
-        input_vel = high_bound
-    else:
-        input_vel = input_vel
-
-    return input_vel
-
-
-def check_linear_limit_velocity(velocity):
-    return constrain(velocity, -MAX_LIN_VEL, MAX_LIN_VEL)
-
-def check_angular_limit_velocity(velocity):
-    return constrain(velocity, -MAX_ANG_VEL, MAX_ANG_VEL)
+    def publish_velocity(self):
+        msg = TwistStamped()
+        msg.header.stamp = Clock().now().to_msg()
+        msg.twist.linear.x = self.linear
+        msg.twist.angular.z = self.angular
+        self.publisher.publish(msg)
 
 def main():
-    settings = None
-    if os.name != 'nt':
-        settings = termios.tcgetattr(sys.stdin)
+    global settings
+    settings = termios.tcgetattr(sys.stdin)
 
     rclpy.init()
-
-    qos = QoSProfile(depth=10)
-    node = rclpy.create_node('teleop_keyboard')
-
-    pub = node.create_publisher(TwistStamped, 'cmd_vel', qos)
-
-    status = 0
-    target_linear_velocity = 0.0
-    target_angular_velocity = 0.0
-    control_linear_velocity = 0.0
-    control_angular_velocity = 0.0
+    node = TeleopNode()
 
     try:
-        print(msg)
-        while (1):
-            key = get_key(settings)
-            if key == 'w':
-                target_linear_velocity =\
-                    check_linear_limit_velocity(target_linear_velocity + LIN_VEL_STEP_SIZE)
-                status = status + 1
-                print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'x':
-                target_linear_velocity =\
-                    check_linear_limit_velocity(target_linear_velocity - LIN_VEL_STEP_SIZE)
-                status = status + 1
-                print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'a':
-                target_angular_velocity =\
-                    check_angular_limit_velocity(target_angular_velocity + ANG_VEL_STEP_SIZE)
-                status = status + 1
-                print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == 'd':
-                target_angular_velocity =\
-                    check_angular_limit_velocity(target_angular_velocity - ANG_VEL_STEP_SIZE)
-                status = status + 1
-                print_vels(target_linear_velocity, target_angular_velocity)
-            elif key == ' ' or key == 's':
-                target_linear_velocity = 0.0
-                control_linear_velocity = 0.0
-                target_angular_velocity = 0.0
-                control_angular_velocity = 0.0
-                print_vels(target_linear_velocity, target_angular_velocity)
-            else:
-                if (key == '\x03'):
-                    break
-
-            if status == 20:
-                print(msg)
-                status = 0
-
-            control_linear_velocity = make_simple_profile(
-                control_linear_velocity,
-                target_linear_velocity,
-                (LIN_VEL_STEP_SIZE / 2.0))
-
-            control_angular_velocity = make_simple_profile(
-                control_angular_velocity,
-                target_angular_velocity,
-                (ANG_VEL_STEP_SIZE / 2.0))
-
-            twist_stamped = TwistStamped()
-            twist_stamped.header.stamp = Clock().now().to_msg()
-            twist_stamped.header.frame_id = ''
-            twist_stamped.twist.linear.x = control_linear_velocity
-            twist_stamped.twist.linear.y = 0.0
-            twist_stamped.twist.linear.z = 0.0
-
-            twist_stamped.twist.angular.x = 0.0
-            twist_stamped.twist.angular.y = 0.0
-            twist_stamped.twist.angular.z = control_angular_velocity
-
-            pub.publish(twist_stamped)
-
+        while True:
+            key = get_key()
+            if key == '\x03':  # Ctrl-C
+                break
+            node.update_velocity(key)
+            node.publish_velocity()
     except Exception as e:
-        print(e)
-
+        print(f"Error: {e}")
     finally:
-
-        twist_stamped = TwistStamped()
-        twist_stamped.header.stamp = Clock().now().to_msg()
-        twist_stamped.header.frame_id = ''
-        twist_stamped.twist.linear.x = control_linear_velocity
-        twist_stamped.twist.linear.y = 0.0
-        twist_stamped.twist.linear.z = 0.0
-        twist_stamped.twist.angular.x = 0.0
-        twist_stamped.twist.angular.y = 0.0
-        twist_stamped.twist.angular.z = control_angular_velocity
-        pub.publish(twist_stamped)
-
-        if os.name != 'nt':
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+        node.linear = 0.0
+        node.angular = 0.0
+        node.publish_velocity()
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

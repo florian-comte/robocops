@@ -38,8 +38,11 @@
 
         <sensor name="laser" type="gpu_lidar">
             <pose> 0 0 0 0 0 0 </pose>
-            <visualize>false</visualize>
+            <visualize>true</visualize>
             <update_rate>10</update_rate>
+            <topic>scan</topic>
+            <gz_frame_id>laser_frame</gz_frame_id>
+            <always_on>1</always_on>
             <lidar>
                 <scan>
                     <horizontal>
@@ -49,12 +52,12 @@
                     </horizontal>
                 </scan>
                 <range>
-                    <min>0.3</min>
+                    <min>0.1</min>
                     <max>12</max>
+                    <resolution>1</resolution>
                 </range>
+                <frame_id>laser_frame</frame_id>
             </lidar>
-            <topic>scan</topic>
-            <gz_frame_id>laser_frame</gz_frame_id>
         </sensor>
     </gazebo>
 

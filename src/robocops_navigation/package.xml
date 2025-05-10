@@ -3,9 +3,12 @@
 <package format="3">
   <name>robocops_navigation</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This package aims at running SLAM toolbox and Nav2 for RoboCops</description>
   <maintainer email="michel.abela@epfl.ch">micdev</maintainer>
   <license>TODO: License declaration</license>
+
+  <exec_depend>demo_nodes_cpp</exec_depend>
+  <exec_depend>demo_nodes_py</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

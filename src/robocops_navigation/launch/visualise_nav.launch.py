@@ -22,6 +22,7 @@ def generate_launch_description():
         PythonExpression(["'", LaunchConfiguration('world'), "' + '.world'"])
     ])
     gazebo_params_file = os.path.join(get_package_share_directory('robocops_gazebo'), 'config', 'gz_bridge.yaml')
+    rviz_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'rviz2_visualise_params.rviz')
     
     ld.add_action(declare_world)
     ld.add_action(declare_robot)
@@ -73,6 +74,17 @@ def generate_launch_description():
     )
 
     ld.add_action(robot_state_publisher_launch_file)
+    # ------
+
+    # --- include RVIZ2 launch file and setup ---
+    rviz_visualise_robot = Node(
+        package='rviz2',
+        executable='rviz2',
+        arguments=['-d', rviz_params_file],
+        output='screen'
+        #parameters=[{'use_sim_time': True}]
+    )
+    ld.add_action(rviz_visualise_robot)
     # ------
 
     return ld

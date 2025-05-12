@@ -32,5 +32,5 @@
   gz_topic_name: "/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
-  lazy: true
+  lazy: False
   direction: GZ_TO_ROS

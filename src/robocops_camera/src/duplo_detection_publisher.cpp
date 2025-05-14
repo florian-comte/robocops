@@ -103,13 +103,13 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display) {
    // If we want display, we also create out link for rgb and depth
    if (with_display) {
        auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
-       auto xout_depth = pipeline.create<dai::node::XLinkOut>();
+       //auto xout_depth = pipeline.create<dai::node::XLinkOut>();
 
        xout_rgb->setStreamName("preview");
-       xout_depth->setStreamName("depth");    
+       //xout_depth->setStreamName("depth");    
 
        spatial_detection_network->passthrough.link(xout_rgb->input);
-       spatial_detection_network->passthroughDepth.link(xout_depth->input);
+       //spatial_detection_network->passthroughDepth.link(xout_depth->input);
    }
 
    return pipeline;
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
            queue_size);
     
-    // We don't need the depth stream but it's here commented in cas.
+    // We don't need the depth stream but it's here commented in case.
     //    dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
     //    // width and height based on 480p mono resolution
     //    auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);

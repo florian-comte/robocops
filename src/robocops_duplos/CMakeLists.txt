@@ -22,12 +22,12 @@ add_executable(duplos_mapper src/duplos_mapper.cpp src/main.cpp)
 ament_target_dependencies(duplos_mapper rclcpp depthai_ros_msgs)
 
 # Install
+install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
+FILES_MATCHING PATTERN "*.py")
+
 install(TARGETS duplos_mapper
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}/
-)
 
 ament_package()

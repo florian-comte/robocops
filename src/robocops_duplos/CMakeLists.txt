@@ -18,7 +18,7 @@ include_directories(
 )
 
 # Executable
-add_executable(duplos_mapper src/duplos_mapper.cpp src/main.cpp)
+add_executable(duplos_mapper src/duplos_mapper.cpp)
 ament_target_dependencies(duplos_mapper rclcpp depthai_ros_msgs)
 
 # Install

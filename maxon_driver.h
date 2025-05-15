@@ -14,33 +14,33 @@
 /**
  * @brief Minimum PWM value to activate the motor.
  */
-#define MIN_PWM 30  // Approx. 10% of full scale (255), defined in firmware of maxon driver
+#define MAXON_MIN_PWM 30  // Approx. 10% of full scale (255), defined in firmware of maxon driver
 
 /**
  * @brief Maximum PWM value to limit power to the motor.
  */
-#define MAX_PWM 220 // Approx. 90% of full scale (255), defined in firmware of maxon driver
+#define MAXON_MAX_PWM 220 // Approx. 90% of full scale (255), defined in firmware of maxon driver
 
 /**
  * @brief Maximum speed value in RPM.
  */
-#define MIN_MOTOR_SPEED 0
+#define MAXON_MIN_MOTOR_SPEED 0
 
 /**
  * @brief Maximum speed value in RPM.
  */
-#define MAX_MOTOR_SPEED 10000
+#define MAXON_MAX_MOTOR_SPEED 10000
 
 // Total number of motors
-#define MOTOR_COUNT 2
+#define MAXON_MOTOR_COUNT 2
 
 /**
  * @enum motor_position
  * @brief Enumerates the positions of motors on a 4-wheeled robot.
  */
-enum motor_position {
-    REAR_RIGHT = 0,
-    REAR_LEFT = 1
+enum maxon_motor_position {
+    MAXON_REAR_RIGHT = 0,
+    MAXON_REAR_LEFT = 1
     //FRONT_LEFT = 0,
     //FRONT_RIGHT,
 };
@@ -49,21 +49,21 @@ enum motor_position {
  * @brief Tell if the motor is inversed
  * True if the motor is inversed, false if not.
  */
-extern const int IS_INVERSED_MOTOR[MOTOR_COUNT];
+extern const int IS_INVERSED_MAXON_MOTOR[MAXON_MOTOR_COUNT];
 
 /**
  * @brief Initialize all motor drivers (e.g., pin modes).
  */
-void init_motor_drivers();
+void init_maxon_motor_drivers();
 
 /**
  * @brief Set the state of an individual motor.
  *
- * @param motor     Motor to control (use motor_position enum).
+ * @param motor     Motor to control (use maxon_motor_position enum).
  * @param enabled   Whether the motor should be active (1) or off (0).
  * @param direction Direction of rotation (1 for forward, -1 for reverse).
  * @param pwm       PWM value (within MIN_PWM and MAX_PWM).
  */
-void set_motor_state(motor_position motor, int enabled, int direction, int pwm);
+void set_maxon_motor_state(maxon_motor_position motor, int enabled, int direction, int pwm);
 
 #endif // MAXON_DRIVER_H

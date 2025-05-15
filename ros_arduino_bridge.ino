@@ -1,4 +1,6 @@
 #include "maxon_driver.h"
+#include "l298n_driver.h"
+#include "servo_driver.h"
 #include "maxon_encoder.h"
 #include "commands.h"
 
@@ -11,9 +13,6 @@
 // Interval between PID updates in milliseconds
 //#define LOOP_INTERVAL 50
 
-// Time tracking for periodic PID updates
-//unsigned long last_loop_time = 0;
-
 // a String to hold incoming data
 String input_string = "";
 
@@ -21,7 +20,9 @@ String input_string = "";
 bool is_string_completed = false;
 
 // The target_speeds wanted for the motors
-double target_speeds[MOTOR_COUNT] = {0};
+double maxon_target_speeds[MAXON_MOTOR_COUNT] = {0};
+double l298n_target_speeds[L298N_MOTOR_COUNT] = {0};
+double servo_target_angles[SERVO_MOTOR_COUNT] = {0};
 
 /**
    @brief Handle incoming serial commands. See commands.h for more infos
@@ -54,30 +55,52 @@ void handle_serial_command() {
   }
 
   switch (cmd) {
-    //case PID_VALUES: // 'p' command, expects 3 values: k_p, k_i, k_d
-      //if (arg_count != 3) {
-        //Serial.println("Error: Expected 3 PID values");
-        //return;
-      //}
-
-      //Serial.println("Updated PID values.");
-      //break;
     case MOTOR_SPEEDS: // 'm' command
-      if (arg_count != MOTOR_COUNT) {
+      if (arg_count != MAXON_MOTOR_COUNT) {
         Serial.println("Error: Expected motor speeds for each motor");
         return;
       }
 
-      for (int i = 0; i < MOTOR_COUNT; i++) {
-        target_speeds[i] = (int)args[i];
+      for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
+        maxon_target_speeds[i] = (int)args[i];
       }
 
+      Serial.println("Motor speeds received.");
+
       break;
+    case L298N_SPEEDS: // 'l' command
+      if (arg_count != L298N_MOTOR_COUNT){
+        Serial.println("Error: Expected motor speeds for each motor");
+        return;
+      }
+
+      for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
+        l298n_target_speeds[i] = (int)args[i];
+      }
+
+      Serial.println("Motor speeds received.");
+
+      break;
+
+     case SERVO_POSITIONS: // 's' command
+      if (arg_count != SERVO_MOTOR_COUNT){
+        Serial.println("Error: Expected motor speeds for each motor");
+        return;
+      }
+  
+      for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
+        servo_target_angles[i] = (int)args[i];
+      }
+  
+      Serial.println("Motor speeds received.");
+  
+      break;
+      
     case ENCODERS_FEEDBACK: // 'e' command
     
       String encoder_output = "";
-      for (int i = 0; i < MOTOR_COUNT; i++) {
-        encoder_output += read_encoder(i);
+      for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
+        encoder_output += read_maxon_encoder(i);
         encoder_output += " ";
       }
       
@@ -99,11 +122,21 @@ void setup() {
 
   input_string.reserve(200);
 
-  init_motor_drivers();
-  init_motor_encoders();
+  init_maxon_motor_drivers();
+  init_maxon_motor_encoders();
+  init_servo_motors();
+  init_l298n_motor_drivers();
 
-  for (int i = 0; i < MOTOR_COUNT; i++) {
-    target_speeds[i] = 0;
+  for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
+    maxon_target_speeds[i] = 0;
+  }
+
+  for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
+    l298n_target_speeds[i] = 0;
+  }
+
+  for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
+    set_servo_motor_angle(i, 0); 
   }
 }
 
@@ -118,11 +151,25 @@ void loop() {
     is_string_completed = false;
   }
 
-  for (int i = 0; i < MOTOR_COUNT; i++) {
-    int enable = target_speeds[i] != 0;
-    int direction = (target_speeds[i] >= 0) ? !IS_INVERSED_MOTOR[i] : IS_INVERSED_MOTOR[i];
-    int pwm = map(abs(target_speeds[i]), MIN_MOTOR_SPEED, MAX_MOTOR_SPEED, MIN_PWM, MAX_PWM);
-    set_motor_state(i, enable, direction, pwm);
+  // Maxon motors
+  for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
+    int enable = maxon_target_speeds[i] != 0;
+    int direction = (maxon_target_speeds[i] >= 0);
+    int pwm = map(abs(maxon_target_speeds[i]), MAXON_MIN_MOTOR_SPEED, MAXON_MAX_MOTOR_SPEED, MAXON_MIN_PWM, MAXON_MAX_PWM);
+    set_maxon_motor_state(i, enable, direction, pwm);
+  }
+
+  // L298N
+  for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
+    int enable = l298n_target_speeds[i] != 0;
+    int direction = (l298n_target_speeds[i] >= 0);
+    int pwm = abs(l298n_target_speeds[i]);
+    set_l298n_motor_state(i, direction, pwm);
+  }
+  
+  // Servo
+  for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
+    set_servo_motor_angle(i, servo_target_angles[i]); 
   }
 }
 

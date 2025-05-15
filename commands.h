@@ -16,6 +16,10 @@
 // Usage: 'm' MOTOR_SPEED_1, MOTOR_SPEED_2, ..., MOTOR_SPEED_(MOTOR_COUNT)
 #define MOTOR_SPEEDS 'm'
 
+#define SERVO_POSITIONS 's'
+
+#define L298N_SPEEDS 'l'
+
 // Command to get the current encoder values in RPM
 // Usage: 'e' 
 #define ENCODERS_FEEDBACK 'e'

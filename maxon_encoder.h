@@ -17,31 +17,31 @@
  * @brief Minimum encoder speed in RPM.
  * Corresponds to 0V from the encoder output, defined in firmware of maxon driver.
  */
-#define MIN_ENCODER_SPEED -10000
+#define MAXON_MIN_ENCODER_SPEED -10000
 
 /**
  * @brief Maximum encoder speed in RPM.
  * Corresponds to 4V from the encoder output, defined in firmware of maxon driver.
  */
-#define MAX_ENCODER_SPEED 10000
+#define MAXON_MAX_ENCODER_SPEED 10000
 
 /**
  * @brief Minimum voltage from encoder (in Volts), defined in firmware of maxon driver.
  */
-#define MIN_ENCODER_VOLTAGE 0
+#define MAXON_MIN_ENCODER_VOLTAGE 0
 
 /**
  * @brief Maximum voltage from encoder (in Volts), defined in firmware of maxon driver.
  */
-#define MAX_ENCODER_VOLTAGE 4
+#define MAXON_MAX_ENCODER_VOLTAGE 4
 
 // @brief The maximum value between 0 and 1023 of the analogRead. Here is it 1023*4/5=818.4 because we decided to put 4v in maxon firmware
-#define MAX_ANALOG_VALUE 818.4
+#define MAXON_MAX_ANALOG_VALUE 818.4
 
 /**
  * @brief Initialize the encoder system (e.g., configure analog input pins).
  */
-void init_motor_encoders();
+void init_maxon_motor_encoders();
 
 /**
  * @brief Read the current speed of a motor from its encoder.
@@ -52,6 +52,6 @@ void init_motor_encoders();
  * @param motor The motor whose encoder speed should be read.
  * @return The motor speed in RPM as a floating point value.
  */
-float read_encoder(motor_position motor);
+float read_maxon_encoder(maxon_motor_position motor);
 
 #endif // MAXON_ENCODER_H

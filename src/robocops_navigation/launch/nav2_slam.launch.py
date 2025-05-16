@@ -21,17 +21,17 @@ def generate_launch_description():
         'worlds',
         PythonExpression(["'", LaunchConfiguration('world'), "' + '.world'"])
     ])
-    # urdf_file_path = PathJoinSubstitution([
-    #     get_package_share_directory('robocops_gazebo'),
-    #     'description',
-    #     PythonExpression(["'", LaunchConfiguration('robot_model'), "' + '.urdf.xacro'"])
-    # ])
+    urdf_file_path = PathJoinSubstitution([
+        get_package_share_directory('robocops_gazebo'),
+        'description',
+        PythonExpression(["'", LaunchConfiguration('robot_model'), "' + '.urdf.xacro'"])
+    ])
 
     gazebo_params_file = os.path.join(get_package_share_directory('robocops_gazebo'), 'config', 'gz_bridge.yaml')
     rviz_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'rviz2_nav2_params.rviz')
     nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params.yaml')
     map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'test_arena.yaml')
-    # remappings_nav = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    remappings_nav = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
     ld.add_action(declare_world)
     ld.add_action(declare_robot)
@@ -74,27 +74,17 @@ def generate_launch_description():
     # ------
 
     # --- include ROBOT STATE PUBLISHER launch file and setup ---
-    robot_state_publisher_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('robocops_gazebo'), 
-                         'launch/robot_state_publisher.launch.py')
-        ),
-        launch_arguments={
-            'robot_model': LaunchConfiguration('robot_model'),
-            }.items()
+    robot_state_publisher_cmd = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
+        }],
+        remappings=remappings_nav,
     )
-
-    # robot_state_publisher_cmd = Node(
-    #     package='robot_state_publisher',
-    #     executable='robot_state_publisher',
-    #     name='robot_state_publisher',
-    #     output='screen',
-    #     parameters=[{
-    #         'use_sim_time': True,
-    #         'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
-    #     }],
-    #     remappings=remappings_nav,
-    # )
 
     ld.add_action(robot_state_publisher_cmd)
     # ------
@@ -105,7 +95,6 @@ def generate_launch_description():
         executable='rviz2',
         arguments=['-d', rviz_params_file],
         output='screen'
-        #parameters=[{'use_sim_time': True}]
     )
     ld.add_action(rviz_visualise_robot)
     # ------

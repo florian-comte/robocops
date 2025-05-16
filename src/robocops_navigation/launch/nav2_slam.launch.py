@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression, Command
 from launch_ros.substitutions import FindPackageShare
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
@@ -21,11 +21,17 @@ def generate_launch_description():
         'worlds',
         PythonExpression(["'", LaunchConfiguration('world'), "' + '.world'"])
     ])
+    # urdf_file_path = PathJoinSubstitution([
+    #     get_package_share_directory('robocops_gazebo'),
+    #     'description',
+    #     PythonExpression(["'", LaunchConfiguration('robot_model'), "' + '.urdf.xacro'"])
+    # ])
+
     gazebo_params_file = os.path.join(get_package_share_directory('robocops_gazebo'), 'config', 'gz_bridge.yaml')
     rviz_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'rviz2_nav2_params.rviz')
     nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params.yaml')
-    map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'map', 'test_arena.yaml')
-    SetEnvironmentVariable('RCUTILS_LOGGING_BUFFERED_STREAM', '1')
+    map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'test_arena.yaml')
+    # remappings_nav = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
     ld.add_action(declare_world)
     ld.add_action(declare_robot)
@@ -68,15 +74,29 @@ def generate_launch_description():
     # ------
 
     # --- include ROBOT STATE PUBLISHER launch file and setup ---
-    robot_state_publisher_launch_file = IncludeLaunchDescription(
+    robot_state_publisher_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('robocops_gazebo'), 
                          'launch/robot_state_publisher.launch.py')
         ),
-        launch_arguments={'robot_model': LaunchConfiguration('robot_model')}.items()
+        launch_arguments={
+            'robot_model': LaunchConfiguration('robot_model'),
+            }.items()
     )
 
-    ld.add_action(robot_state_publisher_launch_file)
+    # robot_state_publisher_cmd = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': True,
+    #         'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
+    #     }],
+    #     remappings=remappings_nav,
+    # )
+
+    ld.add_action(robot_state_publisher_cmd)
     # ------
 
     # --- include RVIZ2 launch file and setup ---
@@ -91,76 +111,15 @@ def generate_launch_description():
     # ------
 
     # --- include NAV2 launch file and setup ---
-    lifecycle_nodes = ['map_server', 
-                       'amcl',
-                       'planner_server',
-                       'controller_server',
-                       'recoveries_server',
-                       'bt_navigator'
-                       ]
-    #remappings = [('/cmd_vel', '/diffbot_base_controller/cmd_vel_unstamped'),('/odom','/odom_filtered')] #odom_filtered for sensor fusion only
-    #remappings = [('/cmd_vel', '/diffbot_base_controller/cmd_vel_unstamped')]
+    nav2_launch_file = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('nav2_bringup'),
+                         'launch/bringup_launch.py')
+        ),
+        launch_arguments={'slam': 'False', 'map': map_file, 'use_sim_time': 'True', 'params_file': nav2_yaml, 'autostart': 'True'}.items()
+    )
 
-    nav2_map_server = Node(
-            package='nav2_map_server',
-            executable='map_server',
-            name='map_server',
-            output='screen',
-            parameters=[{'use_sim_time': True}, 
-                        {'yaml_filename':map_file}])
-
-    nav2_amcl = Node(
-        package='nav2_amcl',
-        executable='amcl',
-        name='amcl',
-        output='screen',
-        parameters=[nav2_yaml])
-                
-    nav2_controller = Node(
-        package='nav2_controller',
-        executable='controller_server',
-        name='controller_server',
-        output='screen',
-        parameters=[nav2_yaml])#,
-        #remappings=remappings)
-
-    nav2_planner = Node(
-        package='nav2_planner',
-        executable='planner_server',
-        name='planner_server',
-        output='screen',
-        parameters=[nav2_yaml])
-        
-    #nav2_recoveries = Node(
-    #    package='nav2_recoveries',
-    #    executable='recoveries_server',
-    #   name='recoveries_server',
-    #    parameters=[nav2_yaml],
-    #    output='screen')
-
-    nav2_bt_navigator = Node(
-        package='nav2_bt_navigator',
-        executable='bt_navigator',
-        name='bt_navigator',
-        output='screen',
-        parameters=[nav2_yaml])
-        
-    nav2_lifecycle_manager = Node(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager_localization',
-        output='screen',
-        parameters=[{'use_sim_time': True},
-                    {'autostart': True},
-                    {'node_names': lifecycle_nodes}])
-    
-    ld.add_action(nav2_map_server)
-    ld.add_action(nav2_amcl)
-    ld.add_action(nav2_controller)
-    ld.add_action(nav2_planner)
-    #ld.add_action(nav2_recoveries)
-    ld.add_action(nav2_bt_navigator)
-    ld.add_action(nav2_lifecycle_manager)
+    ld.add_action(nav2_launch_file)
     # ------
 
     return ld

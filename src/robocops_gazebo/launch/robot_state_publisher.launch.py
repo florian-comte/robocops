@@ -27,7 +27,7 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': True,
             'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
-        }]
+        }],
     )
 
     return LaunchDescription([

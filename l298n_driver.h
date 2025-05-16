@@ -10,7 +10,8 @@
 
 enum l298n_motor_position {
     BRUSH_LEFT = 0,
-    BRUSH_RIGHT = 1
+    BRUSH_RIGHT = 1,
+    UNLOAD_CONVOYER_MOTOR = 2,
 };
 
 extern const int IS_INVERSED_L298N_MOTOR[L298N_MOTOR_COUNT];

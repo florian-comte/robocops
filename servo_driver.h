@@ -7,7 +7,8 @@
 #define SERVO_MOTOR_COUNT 1
 
 enum servo_motor_position {
-    SERVO_LEFT = 0,
+    UNLOAD_DOOR_MOTOR = 0,
+    UNLOAD_LATCH_MOTOR = 0
 };
 
 extern const int SERVO_MOTOR_PINS[SERVO_MOTOR_COUNT];

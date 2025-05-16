@@ -1,6 +1,7 @@
 #include "maxon_driver.h"
 #include "l298n_driver.h"
 #include "servo_driver.h"
+#include "dri_driver.h"
 #include "maxon_encoder.h"
 #include "commands.h"
 #include "routines.h"
@@ -10,11 +11,13 @@
 
 // PWM from 0 to 255
 #define BRUSH_SPEED 200
+#define CONVOYER_SPEED 200
 
 // The target_speeds wanted for the motors
-double maxon_target_speeds[MAXON_MOTOR_COUNT] = {0};
-double l298n_target_speeds[L298N_MOTOR_COUNT] = {0};
+double maxon_target_speeds[MAXON_MOTOR_COUNT] = {MAXON_MIN_PWM};
+double l298n_target_speeds[L298N_MOTOR_COUNT] = {L298N_MIN_PWM};
 double servo_target_angles[SERVO_MOTOR_COUNT] = {0};
+double dri_target_speeds[DRI_MOTOR_COUNT] = {DRI_MIN_PWM};
 
 /**
    @brief Arduino setup function. Initializes serial communication,
@@ -25,20 +28,15 @@ void setup() {
 
   init_maxon_motor_drivers();
   init_maxon_motor_encoders();
-  init_servo_motors();
+  init_servo_motors_drivers();
   init_l298n_motor_drivers();
+  init_dri_motor_drivers();
 
-  for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
-    maxon_target_speeds[i] = 0;
-  }
+  // Init unload routine
+  unload_state = UNLOAD_OPEN_LATCH; 
 
-  for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
-    l298n_target_speeds[i] = 0;
-  }
-
-  for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
-    set_servo_motor_angle(i, 0); 
-  }
+  // Init lift routine
+  // todo
 }
 
 /**
@@ -63,6 +61,11 @@ void loop() {
     int direction = (l298n_target_speeds[i] >= 0);
     int pwm = abs(l298n_target_speeds[i]);
     set_l298n_motor_state(i, direction, pwm);
+  }
+
+  // DRI
+  for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
+    set_dri_motor_state(i, dri_target_speeds[i]); 
   }
   
   // Servo
@@ -129,9 +132,9 @@ void handle_serial_command() {
     response[4] = 0;
     response[4] |= (brush_signal << 0);
     response[4] |= ((unload_state != UNLOAD_IDLE) << 1);
+    
     //todo lift
 
     Serial.write(response, 5);
-    
   }
 }

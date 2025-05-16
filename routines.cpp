@@ -1,5 +1,5 @@
 #include "routines.h"
-#include "l298n_driver.h"
+#include "dri_driver.h"
 #include "maxon_driver.h"
 #include "servo_driver.h"
 
@@ -11,7 +11,7 @@ UnloadState unload_state = UNLOAD_IDLE;
 unsigned long unload_timer = 0;
 
 void handle_unload_routine() {
-  switch (unload_state) {
+  switch (unload_state) {      
     case UNLOAD_IDLE:
       break;
 
@@ -31,7 +31,7 @@ void handle_unload_routine() {
 
     case UNLOAD_CONVOYER:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
-        set_l298n_motor_state(UNLOAD_CONVOYER_NAME, true, UNLOAD_CONVOYER_SPEED);
+        set_dri_motor_state(UNLOAD_CONVOYER_NAME, UNLOAD_CONVOYER_SPEED);
         unload_timer = millis();
         unload_state = UNLOAD_CLOSE_DOOR;
       }
@@ -39,7 +39,7 @@ void handle_unload_routine() {
 
     case UNLOAD_CLOSE_DOOR:
       if (millis() - unload_timer > UNLOAD_TIME_TO_CONVOY) {
-        set_l298n_motor_state(UNLOAD_CONVOYER_NAME, false, 0);
+        set_dri_motor_state(UNLOAD_CONVOYER_NAME, DRI_MIN_PWM);
         set_servo_motor_angle(UNLOAD_DOOR_SERVO_NAME, UNLOAD_DOOR_SERVO_CLOSED_POS);
         unload_timer = millis();
         unload_state = UNLOAD_CLOSE_LATCH;

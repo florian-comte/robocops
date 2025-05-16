@@ -60,6 +60,7 @@ void init_maxon_motor_drivers() {
         digitalWrite(MAXON_MOTOR_PWM_PINS[i], MAXON_MIN_PWM);
         digitalWrite(MAXON_MOTOR_DIRECTION_PINS[i], LOW);
     }
+    
 }
 
 /**

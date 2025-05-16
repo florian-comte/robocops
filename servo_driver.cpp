@@ -7,10 +7,9 @@ const int SERVO_MOTOR_PINS[SERVO_MOTOR_COUNT] = {
        // SERVO_RIGHT
 };
 
-void init_servo_motors() {
+void init_servo_motors_drivers() {
     for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
         servoMotors[i].attach(SERVO_MOTOR_PINS[i]);
-        servoMotors[i].write(90); // Center position on startup
     }
 }
 

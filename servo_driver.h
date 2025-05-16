@@ -13,7 +13,7 @@ enum servo_motor_position {
 
 extern const int SERVO_MOTOR_PINS[SERVO_MOTOR_COUNT];
 
-void init_servo_motors();
+void init_servo_motors_drivers();
 void set_servo_motor_angle(servo_motor_position motor, int angle);
 
 #endif // SERVO_DRIVER_H

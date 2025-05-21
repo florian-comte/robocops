@@ -3,7 +3,6 @@
 #include "servo_driver.h"
 #include "dri_driver.h"
 #include "maxon_encoder.h"
-#include "commands.h"
 #include "routines.h"
 #include "lift_ultrasound_sensor.h"
 
@@ -12,9 +11,8 @@
 
 // PWM from 0 to 255
 #define BRUSH_SPEED 200
-#define CONVOYER_SPEED 200
 
-#define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 100
+#define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 10
 
 // The target_speeds wanted for the motors
 double maxon_target_speeds[MAXON_MOTOR_COUNT] = {MAXON_MIN_PWM};
@@ -62,6 +60,7 @@ void loop() {
       // Check if routine should be started
       if(lift_ultrasound_averaged_distance <= ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE){
         // todo michel: start lift routine
+        Serial.println("Lift routine should be started");
       }
   } else {
     // By security, reset the current lift ultrasound value to MAX_DISTANCE when not updating it

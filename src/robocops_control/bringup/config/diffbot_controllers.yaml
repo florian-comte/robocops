@@ -19,22 +19,21 @@ gpio_controller:
       - name: brushes
         interface: gpio_state
 
-      - name: unload_routine
+      - name: unload
         interface: gpio_state
 
-      - name: lift_routine
+      - name: lift
         interface: gpio_state
 
     command_interfaces:
       - name: brushes
         interface: gpio_command
 
-      - name: unload_routine
+      - name: unload
         interface: gpio_command
 
-      - name: lift_routine
+      - name: lift
         interface: gpio_command
-
 
 diffbot_base_controller:
   ros__parameters:

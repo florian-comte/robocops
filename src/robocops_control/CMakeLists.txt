@@ -12,7 +12,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_lifecycle
   controller_interface
-  robocops_msgs
 )
 
 find_package(ament_cmake REQUIRED)

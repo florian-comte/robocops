@@ -31,14 +31,13 @@
         <state_interface name="gpio_state" data_type="bool"/>
       </gpio>
 
-      <gpio name="unload_routine">
+      <gpio name="unload">
         <command_interface name="gpio_command" data_type="bool"/>
         <state_interface name="gpio_state" data_type="bool"/>
       </gpio>
 
-      <gpio name="lift_routine">
+      <gpio name="lift">
         <command_interface name="gpio_command" data_type="bool"/>
-        <state_interface name="gpio_state" data_type="bool"/>
         <state_interface name="gpio_state" data_type="bool"/>
       </gpio>
     </ros2_control>

@@ -162,6 +162,8 @@ void handle_serial_command() {
     response[4] |= brush_signal & 0x01;
     response[4] |= (((unload_state != UNLOAD_IDLE) & 0x01) << 1);
     response[4] |= (authorized_lift_routine & 0x01) << 2;
+
+    // todo: maybe here add the current state of lift
     
     Serial.write(response, 5);
   }

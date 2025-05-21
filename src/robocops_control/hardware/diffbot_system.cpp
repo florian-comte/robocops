@@ -188,7 +188,7 @@ namespace robocops_control
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         right_wheel_name_, hardware_interface::HW_IF_VELOCITY, &state_interfaces_.right_wheel_encoder_speed));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface("brush", "gpio_state", &gpio_states_.brush));
+    state_interfaces.emplace_back(hardware_interface::StateInterface("brushes", "gpio_state", &gpio_states_.brush));
     state_interfaces.emplace_back(hardware_interface::StateInterface("unload", "gpio_state", &gpio_states_.unload));
     state_interfaces.emplace_back(hardware_interface::StateInterface("lift", "gpio_state", &gpio_states_.lift));
 
@@ -210,7 +210,7 @@ namespace robocops_control
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         right_wheel_name_, hardware_interface::HW_IF_VELOCITY, &command_interfaces_.right_wheel_command_speed));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface("brush", "gpio_command", &gpio_commands_.brush));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface("brushes", "gpio_command", &gpio_commands_.brush));
     command_interfaces.emplace_back(hardware_interface::CommandInterface("unload", "gpio_command", &gpio_commands_.unload));
     command_interfaces.emplace_back(hardware_interface::CommandInterface("lift", "gpio_command", &gpio_commands_.lift));
 

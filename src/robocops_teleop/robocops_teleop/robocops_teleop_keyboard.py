@@ -9,6 +9,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.clock import Clock
 from geometry_msgs.msg import TwistStamped
+from robocops_msgs.msg import GpioCommand
 
 MAX_LIN_VEL = 1.0
 MAX_ANG_VEL = 1.0
@@ -29,12 +30,18 @@ CTRL-C to quit
 """
 
 KEY_BINDINGS = {
-    'w': (LIN_STEP, 0),
-    'x': (-LIN_STEP, 0),
-    'a': (0, ANG_STEP),
+    'z': (LIN_STEP, 0),
+    's': (-LIN_STEP, 0),
+    'q': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    's': (0, 0),
+    'a': (0, 0),
+}
+
+gpio_states = {
+    "brushes": False,
+    "unload": False,
+    "lift": False
 }
 
 def get_key():
@@ -51,6 +58,7 @@ class TeleopNode(Node):
     def __init__(self):
         super().__init__('teleop_keyboard')
         self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.gpio_publisher = self.create_publisher(GpioCommand, 'gpios_commands', 10)
         self.linear = 0.0
         self.angular = 0.0
         print(INSTRUCTIONS)
@@ -85,6 +93,21 @@ def main():
             key = get_key()
             if key == '\x03':  # Ctrl-C
                 break
+            if key == 'w':
+                gpio_states["brushes"] = not gpio_states["brushes"]
+                msg = GpioCommand(id="brushes", value=gpio_states["brushes"])
+                node.gpio_publisher.publish(msg)
+
+            elif key == 'x':
+                gpio_states["unload"] = not gpio_states["unload"]
+                msg = GpioCommand(id="unload", value=gpio_states["unload"])
+                node.gpio_publisher.publish(msg)
+
+            elif key == 'c':
+                gpio_states["lift"] = not gpio_states["lift"]
+                msg = GpioCommand(id="lift", value=gpio_states["lift"])
+                node.gpio_publisher.publish(msg)
+
             node.update_velocity(key)
             node.publish_velocity()
     except Exception as e:

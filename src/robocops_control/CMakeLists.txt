@@ -11,6 +11,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  controller_interface
+  robocops_msgs
 )
 
 find_package(ament_cmake REQUIRED)
@@ -26,7 +28,6 @@ add_library(
   robocops_control
   SHARED
   hardware/diffbot_system.cpp
-  hardware/wheel.cpp
   hardware/utils.cpp
   hardware/arduino_comms.cpp
 )

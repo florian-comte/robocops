@@ -15,8 +15,9 @@
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
-  <depend>rclcpp_lifecycle</depend>
+  <depend>rclcpp_lifecycle</depend> 
 
+  <exec_depend>robocops_msgs</exec_depend>
   <exec_depend>robocops_description</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>

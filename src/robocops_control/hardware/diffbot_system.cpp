@@ -47,10 +47,6 @@ namespace robocops_control
 
     use_encoders_ = (info_.hardware_parameters["use_encoders"] == "true");
 
-    // Setup wheels
-    wheel_l_.setup(left_wheel_name_);
-    wheel_r_.setup(right_wheel_name_);
-
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
       if (joint.command_interfaces.size() != 1)
@@ -73,7 +69,7 @@ namespace robocops_control
       // Removed check for 2 state interfaces (position and velocity) since we don't have acces to it
       // since passing through maxon controllers.
       // We could check for state_interfaces.size() == 1 (but not really needed in our context)
-        
+
       // if (joint.state_interfaces.size() != 2)
       // {
       //   RCLCPP_FATAL(
@@ -187,10 +183,14 @@ namespace robocops_control
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.encoder_speed));
+        left_wheel_name_, hardware_interface::HW_IF_VELOCITY, &state_interfaces_.left_wheel_encoder_speed));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.encoder_speed));
+        right_wheel_name_, hardware_interface::HW_IF_VELOCITY, &state_interfaces_.right_wheel_encoder_speed));
+
+    state_interfaces.emplace_back(hardware_interface::StateInterface("brush_gpio", "gpio_state", &gpio_states_.brush));
+    state_interfaces.emplace_back(hardware_interface::StateInterface("unload_gpio", "gpio_state", &gpio_states_.unload));
+    state_interfaces.emplace_back(hardware_interface::StateInterface("lift_gpio", "gpio_state", &gpio_states_.lift));
 
     return state_interfaces;
   }
@@ -205,10 +205,14 @@ namespace robocops_control
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.command_speed));
+        left_wheel_name_, hardware_interface::HW_IF_VELOCITY, &command_interfaces_.left_wheel_command_speed));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.command_speed));
+        right_wheel_name_, hardware_interface::HW_IF_VELOCITY, &command_interfaces_.right_wheel_command_speed));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface("brush_gpio", "gpio_command", &gpio_commands_.brush));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface("unload_gpio", "gpio_command", &gpio_commands_.unload));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface("lift_gpio", "gpio_command", &gpio_commands_.lift));
 
     return command_interfaces;
   }
@@ -228,17 +232,16 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
+    // update encoders
     if (use_encoders_)
     {
-      comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
-
-      wheel_r_.encoder_speed /= gearbox_ratio_;
-      wheel_l_.encoder_speed /= gearbox_ratio_;
+      state_interfaces_.right_wheel_encoder_speed /= gearbox_ratio_;
+      state_interfaces_.left_wheel_encoder_speed /= gearbox_ratio_;
     }
     else
     {
-      wheel_l_.encoder_speed = wheel_l_.command_speed;
-      wheel_r_.encoder_speed = wheel_r_.command_speed;
+      state_interfaces_.left_wheel_encoder_speed = command_interfaces_.left_wheel_command_speed;
+      state_interfaces_.right_wheel_encoder_speed = command_interfaces_.right_wheel_command_speed;
     }
 
     return hardware_interface::return_type::OK;
@@ -259,9 +262,16 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
-    comms_.set_motor_values(
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)));
+    // send command
+    comms_.send_command(
+        static_cast<int16_t>(rad_per_sec_to_rpm(gearbox_ratio_ * command_interfaces_.left_wheel_command_speed)),
+        static_cast<int16_t>(rad_per_sec_to_rpm(gearbox_ratio_ * command_interfaces_.right_wheel_command_speed)),
+        static_cast<bool>(gpio_commands_.brush),
+        static_cast<bool>(gpio_commands_.unload),
+        static_cast<bool>(gpio_commands_.unload),
+        &state_interfaces_.left_wheel_encoder_speed,
+        &state_interfaces_.right_wheel_encoder_speed,
+        true);
 
     return hardware_interface::return_type::OK;
   }

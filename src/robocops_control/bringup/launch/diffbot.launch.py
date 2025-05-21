@@ -54,6 +54,12 @@ def generate_launch_description():
         output="both",
     )
 
+    gpio_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gpio_controller"],
+    )
+
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -108,6 +114,7 @@ def generate_launch_description():
 
     nodes = [
         control_node,
+        gpio_controller_spawner,
         robot_state_pub_node,
         robot_controller_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,

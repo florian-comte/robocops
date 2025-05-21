@@ -8,10 +8,8 @@
 
 enum servo_motor_position {
     UNLOAD_DOOR_MOTOR = 0,
-    UNLOAD_LATCH_MOTOR = 0
+    UNLOAD_LATCH_MOTOR = 1
 };
-
-extern const int SERVO_MOTOR_PINS[SERVO_MOTOR_COUNT];
 
 void init_servo_motors_drivers();
 void set_servo_motor_angle(servo_motor_position motor, int angle);

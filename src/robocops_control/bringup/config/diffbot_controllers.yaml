@@ -9,31 +9,35 @@ controller_manager:
       type: diff_drive_controller/DiffDriveController
 
     gpio_controller:
-      type: gpio_controllers/GPIOController
+      type: gpio_controllers/GpioCommandController
 
-gpio_controller:
+gpio_command_controller:
   ros__parameters:
-    use_inverted_command_interface: false
-
-    state_interfaces:
-      - name: brushes
-        interface: gpio_state
-
-      - name: unload
-        interface: gpio_state
-
-      - name: lift
-        interface: gpio_state
-
+    type: gpio_controllers/GpioCommandController
+    gpios:
+      - brushes
+      - lift
+      - unload
     command_interfaces:
-      - name: brushes
-        interface: gpio_command
-
-      - name: unload
-        interface: gpio_command
-
-      - name: lift
-        interface: gpio_command
+      brushes:
+        - interfaces:
+          - gpio_command
+      lift:
+        - interfaces:
+          - gpio_command
+      unload:
+        - interfaces:
+          - gpio_command
+    state_interfaces:
+      brushes:
+        - interfaces:
+          - gpio_state
+      lift:
+        - interfaces:
+          - gpio_state
+      unload:
+        - interfaces:
+          - gpio_state
 
 diffbot_base_controller:
   ros__parameters:

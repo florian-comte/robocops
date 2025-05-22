@@ -57,7 +57,7 @@ def generate_launch_description():
     gpio_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["gpio_controller"],
+        arguments=["gpio_controller", "--param-file", robot_controllers],
     )
 
     robot_state_pub_node = Node(

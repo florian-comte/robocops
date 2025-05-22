@@ -103,6 +103,17 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= ((activate_unload_routine & 0x01) << 1);
     cmd[4] |= ((authorized_lift_routine & 0x01) << 2);
 
+    if (print_output)
+    {
+        std::cout << "[DEBUG] Command to send: ";
+        for (int i = 0; i < 5; ++i)
+        {
+            std::cout << "0x" << std::hex << std::uppercase
+                      << static_cast<int>(cmd[i]) << " ";
+        }
+        std::cout << std::dec << std::endl; // Remet le format en décimal pour les autres affichages
+    }
+
     // Send command
     LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
     serial_conn_.Write(writeDataBuffer);

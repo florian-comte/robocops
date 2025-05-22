@@ -38,11 +38,11 @@ CTRL-C to quit
 
 KEY_BINDINGS = {
     'z': (LIN_STEP, 0),
-    'x': (-LIN_STEP, 0),
+    's': (-LIN_STEP, 0),
     'q': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    's': (0, 0),
+    'a': (0, 0),
 }
 
 gpio_states = {
@@ -80,7 +80,7 @@ class TeleopNode(Node):
     def update_velocity(self, key):
         if key in KEY_BINDINGS:
             lin_delta, ang_delta = KEY_BINDINGS[key]
-            if key in [' ', 's']:
+            if key in [' ', 'a']:
                 self.linear = 0.0
                 self.angular = 0.0
             else:
@@ -116,7 +116,7 @@ def main():
                 break
             if key == 'w':
                 node.toggle_gpio("brushes")
-            elif key == 'e':
+            elif key == 'x':
                 node.toggle_gpio("unload")
             elif key == 'c':
                 node.toggle_gpio("lift")

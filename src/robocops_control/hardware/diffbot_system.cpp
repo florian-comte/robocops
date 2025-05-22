@@ -271,7 +271,7 @@ namespace robocops_control
         static_cast<bool>(gpio_commands_.unload),
         &state_interfaces_.left_wheel_encoder_speed,
         &state_interfaces_.right_wheel_encoder_speed,
-        false);
+        true);
 
     return hardware_interface::return_type::OK;
   }

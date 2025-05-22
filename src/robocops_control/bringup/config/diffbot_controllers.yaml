@@ -11,7 +11,7 @@ controller_manager:
     gpio_controller:
       type: gpio_controllers/GpioCommandController
 
-gpio_command_controller:
+gpio_controller:
   ros__parameters:
     type: gpio_controllers/GpioCommandController
     gpios:

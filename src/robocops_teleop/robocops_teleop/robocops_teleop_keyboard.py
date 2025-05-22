@@ -9,7 +9,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.clock import Clock
 from geometry_msgs.msg import TwistStamped
-from robocops_msgs.msg import GpioCommand
+from std_msgs.msg import Float64
 
 MAX_LIN_VEL = 1.0
 MAX_ANG_VEL = 1.0
@@ -18,24 +18,31 @@ ANG_STEP = 0.1
 
 INSTRUCTIONS = """
 < Robocops teleop controller >
----------------------------
-   w    
-a  s  d
+-----------------------------
+Movement:
+   z    
+q  s  d
    x    
 
-w/x : Increase/decrease linear velocity
-a/d : Increase/decrease angular velocity
+z/x : Increase/decrease linear velocity
+q/d : Increase/decrease angular velocity
 s or space : Stop
+
+GPIO toggles:
+w : Toggle brushes
+c : Toggle lift
+e : Toggle unload
+
 CTRL-C to quit
 """
 
 KEY_BINDINGS = {
     'z': (LIN_STEP, 0),
-    's': (-LIN_STEP, 0),
+    'x': (-LIN_STEP, 0),
     'q': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    'a': (0, 0),
+    's': (0, 0),
 }
 
 gpio_states = {
@@ -58,7 +65,14 @@ class TeleopNode(Node):
     def __init__(self):
         super().__init__('teleop_keyboard')
         self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
-        self.gpio_publisher = self.create_publisher(GpioCommand, 'gpios_commands', 10)
+
+        # GPIO command publishers
+        self.gpio_pubs = {
+            "brushes": self.create_publisher(Float64, '/brushes/gpio_command', 10),
+            "unload": self.create_publisher(Float64, '/unload/gpio_command', 10),
+            "lift": self.create_publisher(Float64, '/lift/gpio_command', 10),
+        }
+
         self.linear = 0.0
         self.angular = 0.0
         print(INSTRUCTIONS)
@@ -76,10 +90,17 @@ class TeleopNode(Node):
 
     def publish_velocity(self):
         msg = TwistStamped()
-        msg.header.stamp = Clock().now().to_msg()
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.twist.linear.x = self.linear
         msg.twist.angular.z = self.angular
         self.publisher.publish(msg)
+
+    def toggle_gpio(self, name):
+        gpio_states[name] = not gpio_states[name]
+        msg = Float64()
+        msg.data = 1.0 if gpio_states[name] else 0.0
+        self.gpio_pubs[name].publish(msg)
+        print(f"{name.capitalize()} toggled to {'ON' if gpio_states[name] else 'OFF'}")
 
 def main():
     global settings
@@ -94,19 +115,11 @@ def main():
             if key == '\x03':  # Ctrl-C
                 break
             if key == 'w':
-                gpio_states["brushes"] = not gpio_states["brushes"]
-                msg = GpioCommand(id="brushes", value=gpio_states["brushes"])
-                node.gpio_publisher.publish(msg)
-
-            elif key == 'x':
-                gpio_states["unload"] = not gpio_states["unload"]
-                msg = GpioCommand(id="unload", value=gpio_states["unload"])
-                node.gpio_publisher.publish(msg)
-
+                node.toggle_gpio("brushes")
+            elif key == 'e':
+                node.toggle_gpio("unload")
             elif key == 'c':
-                gpio_states["lift"] = not gpio_states["lift"]
-                msg = GpioCommand(id="lift", value=gpio_states["lift"])
-                node.gpio_publisher.publish(msg)
+                node.toggle_gpio("lift")
 
             node.update_velocity(key)
             node.publish_velocity()

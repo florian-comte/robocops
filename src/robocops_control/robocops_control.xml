@@ -7,3 +7,12 @@
     </description>
   </class>
 </library>
+
+<library path="gpio_controllers">
+  <class name="gpio_controller"
+         type="gpio_controllers::GPIOController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>GPIO Controller</description>
+  </class>
+</library>
+

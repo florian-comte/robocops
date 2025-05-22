@@ -88,6 +88,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
 {
     uint8_t cmd[5];
 
+    std::cout << maxon_left << std::endl;
+
     // Offset encoding
     maxon_left += 10000;
     maxon_right += 10000;
@@ -111,7 +113,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
             std::cout << "0x" << std::hex << std::uppercase
                       << static_cast<int>(cmd[i]) << " ";
         }
-        std::cout << std::dec << std::endl; // Remet le format en décimal pour les autres affichages
+        std::cout << std::dec << std::endl;
     }
 
     // Send command

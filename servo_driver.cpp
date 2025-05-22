@@ -3,13 +3,17 @@
 Servo servoMotors[SERVO_MOTOR_COUNT];
 
 const int SERVO_MOTOR_PINS[SERVO_MOTOR_COUNT] = {
-    8 // SERVO_LEFT
-       // SERVO_RIGHT
+    8, // UNLOAD_DOOR_MOTOR
+    36 // UNLOAD_LATCH_MOTOR
 };
+
+double servo_target_angles[SERVO_MOTOR_COUNT];
 
 void init_servo_motors_drivers() {
     for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
         servoMotors[i].attach(SERVO_MOTOR_PINS[i]);
+
+        servo_target_angles[i] = 0;
     }
 }
 

@@ -31,6 +31,8 @@ const int MAXON_MOTOR_PWM_PINS[MAXON_MOTOR_COUNT] = {
     //41, // FRONT_RIGHT
 };
 
+double maxon_target_speeds[MAXON_MOTOR_COUNT];
+
 /**
  * @brief Direction pin mapping for each motor (1 for forward and -1 for backward).
  * These pins control the motor direction (forward/reverse).
@@ -59,6 +61,8 @@ void init_maxon_motor_drivers() {
         digitalWrite(MAXON_MOTOR_ENABLE_PINS[i], LOW);
         digitalWrite(MAXON_MOTOR_PWM_PINS[i], MAXON_MIN_PWM);
         digitalWrite(MAXON_MOTOR_DIRECTION_PINS[i], LOW);
+
+        maxon_target_speeds[i] = MAXON_MIN_MOTOR_SPEED;
     }
     
 }

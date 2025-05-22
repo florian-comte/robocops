@@ -1,19 +1,21 @@
 #include "dri_driver.h"
 
 const int DRI_MOTOR_EN_PINS[DRI_MOTOR_COUNT] = {
-  9, // BRUSH_LEFT
-  10 // BRUSH_RIGHT
+  //9, // BRUSH_LEFT
+  //10 // BRUSH_RIGHT
 };
 
 const int DRI_MOTOR_PWM_PINS[DRI_MOTOR_COUNT] = {
-  9, // BRUSH_LEFT
-  10 // BRUSH_RIGHT
+ // 9, // BRUSH_LEFT
+  //10 // BRUSH_RIGHT
 };
 
 const int IS_INVERSED_DRI_MOTOR[DRI_MOTOR_COUNT] = {
-  0, // BRUSH_LEFT
-  0 // BRUSH_RIGHT
+  //0, // BRUSH_LEFT
+  //0 // BRUSH_RIGHT
 };
+
+double dri_target_speeds[DRI_MOTOR_COUNT];
 
 void init_dri_motor_drivers() {
     for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
@@ -23,6 +25,8 @@ void init_dri_motor_drivers() {
         // Disable motor at startup
         digitalWrite(DRI_MOTOR_EN_PINS[i], LOW);
         analogWrite(DRI_MOTOR_PWM_PINS[i], DRI_MIN_PWM);
+
+        dri_target_speeds[i] = DRI_MIN_PWM;
     }
 }
 

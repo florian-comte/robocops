@@ -51,6 +51,8 @@ enum maxon_motor_position {
  */
 extern const int IS_INVERSED_MAXON_MOTOR[MAXON_MOTOR_COUNT];
 
+extern double maxon_target_speeds[MAXON_MOTOR_COUNT];
+
 /**
  * @brief Initialize all motor drivers (e.g., pin modes).
  */

@@ -10,5 +10,6 @@
 extern int lift_ultrasound_averaged_distance;
 
 void update_lift_ultrasound_sensor();
+void init_lift_ultrasound_sensor();
 
 #endif // LIFT_ULTRASOUND_SENSOR_H

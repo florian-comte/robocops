@@ -16,14 +16,14 @@ void handle_unload_routine() {
       break;
 
     case UNLOAD_OPEN_LATCH:
-      set_servo_motor_angle(UNLOAD_LATCH_SERVO_NAME, UNLOAD_LATCH_SERVO_OPEN_POS);
+      servo_target_angles[UNLOAD_LATCH_SERVO_NAME] = UNLOAD_LATCH_SERVO_OPEN_POS;
       unload_timer = millis();
       unload_state = UNLOAD_OPEN_DOOR;
       break;
 
     case UNLOAD_OPEN_DOOR:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_LATCH) {
-        set_servo_motor_angle(UNLOAD_DOOR_SERVO_NAME, UNLOAD_DOOR_SERVO_OPEN_POS);
+        servo_target_angles[UNLOAD_DOOR_SERVO_NAME] = UNLOAD_DOOR_SERVO_OPEN_POS;
         unload_timer = millis();
         unload_state = UNLOAD_CONVOYER;
       }
@@ -31,7 +31,7 @@ void handle_unload_routine() {
 
     case UNLOAD_CONVOYER:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
-        set_dri_motor_state(UNLOAD_CONVOYER_NAME, UNLOAD_CONVOYER_SPEED);
+        dri_target_speeds[UNLOAD_CONVOYER_NAME] = UNLOAD_CONVOYER_SPEED;
         unload_timer = millis();
         unload_state = UNLOAD_CLOSE_DOOR;
       }
@@ -39,8 +39,8 @@ void handle_unload_routine() {
 
     case UNLOAD_CLOSE_DOOR:
       if (millis() - unload_timer > UNLOAD_TIME_TO_CONVOY) {
-        set_dri_motor_state(UNLOAD_CONVOYER_NAME, DRI_MIN_PWM);
-        set_servo_motor_angle(UNLOAD_DOOR_SERVO_NAME, UNLOAD_DOOR_SERVO_CLOSED_POS);
+        dri_target_speeds[UNLOAD_CONVOYER_NAME] = DRI_MIN_PWM;
+        servo_target_angles[UNLOAD_DOOR_SERVO_NAME] = UNLOAD_DOOR_SERVO_CLOSED_POS;
         unload_timer = millis();
         unload_state = UNLOAD_CLOSE_LATCH;
       }
@@ -48,7 +48,7 @@ void handle_unload_routine() {
 
     case UNLOAD_CLOSE_LATCH:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
-        set_servo_motor_angle(UNLOAD_LATCH_SERVO_NAME, UNLOAD_LATCH_SERVO_CLOSED_POS);
+        servo_target_angles[UNLOAD_LATCH_SERVO_NAME] = UNLOAD_LATCH_SERVO_CLOSED_POS;
         unload_state = UNLOAD_IDLE;
       }
       break;

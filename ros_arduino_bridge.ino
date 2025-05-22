@@ -10,24 +10,20 @@
 #define BAUDRATE 57600
 
 // PWM from 0 to 255
-#define BRUSH_SPEED 200
+#define BRUSH_SPEED 255
 
+// Distance of ultrasound to activate the lift routine (cm)
 #define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 10
 
-// The target_speeds wanted for the motors
-double maxon_target_speeds[MAXON_MOTOR_COUNT] = {MAXON_MIN_PWM};
-double l298n_target_speeds[L298N_MOTOR_COUNT] = {L298N_MIN_PWM};
-double servo_target_angles[SERVO_MOTOR_COUNT] = {0};
-double dri_target_speeds[DRI_MOTOR_COUNT] = {DRI_MIN_PWM};
-
 // todo: need to be replaced by michel's logic
-bool is_lift_doing_routine = 0;
+bool active_lift_routine = 0;
+bool authorized_lift_routine = 1;
 
-bool authorized_lift_routine = 0;
+double previous_loop = 0;
+double loop_start = 0;
 
 /**
-   @brief Arduino setup function. Initializes serial communication,
-   motor drivers, encoders, and resets PID states.
+   @brief Arduino setup function.
 */
 void setup() {
   Serial.begin(BAUDRATE);
@@ -37,30 +33,31 @@ void setup() {
   init_servo_motors_drivers();
   init_l298n_motor_drivers();
   init_dri_motor_drivers();
+  init_lift_ultrasound_sensor();
 
   // Init unload routine
   unload_state = UNLOAD_OPEN_LATCH; 
 
   // Init lift routine
   // todo
+
 }
 
 /**
-   @brief Main Arduino loop. Handles serial commands and runs the PID update
-   at a fixed interval for each motor.
+   @brief Main Arduino loop.
 */
 void loop() {
   handle_serial_command();
   handle_routines();
 
   // Update lift ultrasound sensor
-  if(authorized_lift_routine == 1 && is_lift_doing_routine == 0){
-      update_lift_ultrasound_sensor;
+  if(authorized_lift_routine == 1 && active_lift_routine == 0){
+      update_lift_ultrasound_sensor();
 
       // Check if routine should be started
       if(lift_ultrasound_averaged_distance <= ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE){
         // todo michel: start lift routine
-        Serial.println("Lift routine should be started");
+        active_lift_routine = 1;
       }
   } else {
     // By security, reset the current lift ultrasound value to MAX_DISTANCE when not updating it
@@ -104,22 +101,23 @@ void loop() {
 // To raspberry
 // 16 bits maxon_left_encoder (buf[0] & buf[1])
 // 16 bits maxon_right_encoder (buf[2] & buf[3])
-// 1 bit activate brush (buf[4] >> 0)
-// 1 bit activate unload (buf[4] >> 1)
+// 1 bit active brush (buf[4] >> 0)
+// 1 bit active unload (buf[4] >> 1)
 // 1 bit authorized_lift (buf[4] >> 2)
+// 1 bit active_lift (buf[4] >> 3)
 
-void handle_serial_command() {
+int handle_serial_command() {
   if (Serial.available() >= 5) {
     byte buf[5];
     Serial.readBytes(buf, 5);
 
-    // Maxon left (15 bits)
+    // Maxon left (16 bits)
     int16_t maxon_left = ((buf[0] << 8) | buf[1]);
     maxon_left -= 10000;
 
-    // Maxon right (15 bits)
+    // Maxon right (16 bits)
     int16_t maxon_right = ((buf[2] << 8) | buf[3]);
-    maxon_right -= 10000;
+    maxon_right -= 10000;    
 
     // 1 = Activate brush, 0 = Deactivate brush
     bool brush_signal = buf[4] & 0x01;
@@ -131,18 +129,18 @@ void handle_serial_command() {
     authorized_lift_routine = (buf[4] >> 2) & 0x01;
 
     // Activate / Deactivate brushes
-    if(brush_signal = 1){
-      set_l298n_motor_state(BRUSH_LEFT, 1, BRUSH_SPEED);
-      set_l298n_motor_state(BRUSH_RIGHT, 1, BRUSH_SPEED);
+    if(brush_signal == 1){
+      l298n_target_speeds[BRUSH_LEFT] = BRUSH_SPEED;
+      l298n_target_speeds[BRUSH_RIGHT] = BRUSH_SPEED;
     } else {
-      set_l298n_motor_state(BRUSH_LEFT, 1, L298N_MIN_PWM);
-      set_l298n_motor_state(BRUSH_RIGHT, 1, L298N_MIN_PWM);
+      l298n_target_speeds[BRUSH_LEFT] = L298N_MIN_PWM;
+      l298n_target_speeds[BRUSH_RIGHT] = L298N_MIN_PWM;
     }
 
-    if(unload_state == UNLOAD_IDLE){
+    if((activate_unload_routine == 1) && (unload_state == UNLOAD_IDLE)){
       unload_state = UNLOAD_OPEN_LATCH; 
     }
-
+    
     // Apply speeds
     maxon_target_speeds[MAXON_REAR_LEFT] = maxon_left;
     maxon_target_speeds[MAXON_REAR_RIGHT] = maxon_right;
@@ -162,8 +160,7 @@ void handle_serial_command() {
     response[4] |= brush_signal & 0x01;
     response[4] |= (((unload_state != UNLOAD_IDLE) & 0x01) << 1);
     response[4] |= (authorized_lift_routine & 0x01) << 2;
-
-    // todo: maybe here add the current state of lift
+    response[4] |= (active_lift_routine & 0x01) << 3;
     
     Serial.write(response, 5);
   }

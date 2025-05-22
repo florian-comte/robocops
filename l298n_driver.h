@@ -15,6 +15,8 @@ enum l298n_motor_position {
 
 extern const int IS_INVERSED_L298N_MOTOR[L298N_MOTOR_COUNT];
 
+extern double l298n_target_speeds[L298N_MOTOR_COUNT];
+
 void init_l298n_motor_drivers();
 void set_l298n_motor_state(l298n_motor_position motor, int direction, int pwm);
 

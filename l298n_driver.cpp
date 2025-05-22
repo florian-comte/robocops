@@ -21,6 +21,8 @@ const int IS_INVERSED_L298N_MOTOR[L298N_MOTOR_COUNT] = {
   0 // BRUSH_RIGHT
 };
 
+double l298n_target_speeds[L298N_MOTOR_COUNT];
+
 void init_l298n_motor_drivers() {
     for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
         pinMode(L298N_MOTOR_PWM_PINS[i], OUTPUT);
@@ -31,6 +33,8 @@ void init_l298n_motor_drivers() {
         analogWrite(L298N_MOTOR_PWM_PINS[i], L298N_MIN_PWM);
         digitalWrite(L298N_MOTOR_IN1_PINS[i], LOW);
         digitalWrite(L298N_MOTOR_IN2_PINS[i], LOW);
+
+        l298n_target_speeds[i] = L298N_MIN_PWM;
     }
 }
 

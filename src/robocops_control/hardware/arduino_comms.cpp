@@ -1,157 +1,122 @@
 #include "arduino_comms.hpp"
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
 #include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include "utils.hpp"
-#include <cstdint>
-#include <iostream>
+#include <cstring>
+#include <sys/ioctl.h>
+
 /**
- * @brief Converts an integer baud rate to a LibSerial::BaudRate enum.
- *
- * @param baud_rate The integer baud rate to convert.
- * @return Corresponding LibSerial::BaudRate value, or BAUD_57600 as default for unsupported rates.
+ * Opens and configures the serial port.
  */
-LibSerial::BaudRate ArduinoComms::convert_baud_rate(int baud_rate)
+void ArduinoComms::connect(const std::string &device, int baud_rate, int timeout_ms)
 {
-    switch (baud_rate)
+    timeout_ms_ = timeout_ms;
+
+    serial_fd_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (serial_fd_ < 0)
     {
-    case 1200:
-        return LibSerial::BaudRate::BAUD_1200;
-    case 1800:
-        return LibSerial::BaudRate::BAUD_1800;
-    case 2400:
-        return LibSerial::BaudRate::BAUD_2400;
-    case 4800:
-        return LibSerial::BaudRate::BAUD_4800;
-    case 9600:
-        return LibSerial::BaudRate::BAUD_9600;
-    case 19200:
-        return LibSerial::BaudRate::BAUD_19200;
-    case 38400:
-        return LibSerial::BaudRate::BAUD_38400;
-    case 57600:
-        return LibSerial::BaudRate::BAUD_57600;
-    case 115200:
-        return LibSerial::BaudRate::BAUD_115200;
-    case 230400:
-        return LibSerial::BaudRate::BAUD_230400;
-    default:
-        std::cout << "Error! Baud rate " << baud_rate << " not supported! Default to 57600" << std::endl;
-        return LibSerial::BaudRate::BAUD_57600;
+        perror("Error opening serial port");
+        return;
+    }
+
+    struct termios tty;
+    memset(&tty, 0, sizeof tty);
+    if (tcgetattr(serial_fd_, &tty) != 0)
+    {
+        perror("Error from tcgetattr");
+        return;
+    }
+
+    cfsetospeed(&tty, B57600); // hardcoded baudrate
+    cfsetispeed(&tty, B57600);
+
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit chars
+    tty.c_iflag &= ~IGNBRK;                     // disable break processing
+    tty.c_lflag = 0;                            // no signaling chars, no echo
+    tty.c_oflag = 0;                            // no remapping, no delays
+    tty.c_cc[VMIN] = 5;                         // read blocks until 5 bytes
+    tty.c_cc[VTIME] = timeout_ms_ / 100;        // timeout in deciseconds
+
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+    tty.c_cflag |= (CLOCAL | CREAD);        // ignore modem controls, enable reading
+    tty.c_cflag &= ~(PARENB | PARODD);      // no parity
+    tty.c_cflag &= ~CSTOPB;                 // 1 stop bit
+    tty.c_cflag &= ~CRTSCTS;                // no flow control
+
+    if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0)
+    {
+        perror("Error from tcsetattr");
+        return;
     }
 }
 
-/**
- * @brief Opens and configures the serial connection.
- *
- * @param serial_device Path to the serial device (e.g., "/dev/ttyUSB0").
- * @param baud_rate Baud rate for communication.
- * @param timeout_ms Timeout for reading responses, in milliseconds.
- */
-void ArduinoComms::connect(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms)
-{
-    timeout_ms_ = timeout_ms;
-    serial_conn_.Open(serial_device);
-    serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
-}
-
-/**
- * @brief Closes the serial connection if it is open.
- */
-void ArduinoComms::disconnect()
-{
-    serial_conn_.Close();
-}
-
-/**
- * @brief Checks whether the serial port is currently open.
- *
- * @return true if connected, false otherwise.
- */
 bool ArduinoComms::connected() const
 {
-    return serial_conn_.IsOpen();
+    return serial_fd_ >= 0;
+}
+
+void ArduinoComms::disconnect()
+{
+    if (connected())
+    {
+        close(serial_fd_);
+        serial_fd_ = -1;
+    }
 }
 
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
-                                bool brush_signal,
-                                bool activate_unload_routine,
-                                bool authorized_lift_routine,
-
-                                double *encoder_maxon_left,
-                                double *encoder_maxon_right,
-                                // double *are_brushes_activated,
-                                // double *is_unload_routine_activated,
-                                // double *is_lift_routine_authorized,
+                                bool brush,
+                                bool unload,
+                                bool lift,
+                                double *encoder_left,
+                                double *encoder_right,
                                 bool print_output)
 {
+    if (!connected())
+    {
+        std::cerr << "[Serial] Port not connected." << std::endl;
+        return;
+    }
+
+    // Encode
     uint8_t cmd[5];
+    uint16_t left_enc = maxon_left + 10000;
+    uint16_t right_enc = maxon_right + 10000;
 
-    std::cout << maxon_left << std::endl;
-
-    // Offset encoding
-    maxon_left += 10000;
-    maxon_right += 10000;
-
-    // Compose command
-    cmd[0] = (maxon_left >> 8) & 0xFF;
-    cmd[1] = maxon_left & 0xFF;
-    cmd[2] = (maxon_right >> 8) & 0xFF;
-    cmd[3] = maxon_right & 0xFF;
-
+    cmd[0] = (left_enc >> 8) & 0xFF;
+    cmd[1] = left_enc & 0xFF;
+    cmd[2] = (right_enc >> 8) & 0xFF;
+    cmd[3] = right_enc & 0xFF;
     cmd[4] = 0;
-    cmd[4] |= (brush_signal & 0x01);
-    cmd[4] |= ((activate_unload_routine & 0x01) << 1);
-    cmd[4] |= ((authorized_lift_routine & 0x01) << 2);
+    cmd[4] |= brush ? 0x01 : 0x00;
+    cmd[4] |= unload ? 0x02 : 0x00;
+    cmd[4] |= lift ? 0x04 : 0x00;
+
+    if (write(serial_fd_, cmd, 5) != 5)
+    {
+        perror("[Serial] Failed to write full command");
+        return;
+    }
+
+    // Read 5-byte response
+    uint8_t response[5];
+    int n = read(serial_fd_, response, 5);
+    if (n != 5)
+    {
+        perror("[Serial] Failed to read response");
+        return;
+    }
+
+    *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]);
+    *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
 
     if (print_output)
     {
-        std::cout << "[DEBUG] Command to send: ";
+        std::cout << "[Serial] Sent command: ";
         for (int i = 0; i < 5; ++i)
-        {
-            std::cout << "0x" << std::hex << std::uppercase
-                      << static_cast<int>(cmd[i]) << " ";
-        }
-        std::cout << std::dec << std::endl;
-    }
-
-    if(!connected()){
-        std::cerr << "[ROBOCOPS_CONTROL] Lib connection error." << std::endl;
-    }
-    
-    // Send command
-    LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
-    serial_conn_.FlushIOBuffers();
-    serial_conn_.Write(writeDataBuffer);
-
-    LibSerial::DataBuffer readDataBuffer(5);
-
-    try
-    {
-        serial_conn_.Read(readDataBuffer);
-
-        *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
-        *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
-
-        // Decode flags
-        uint8_t flags = readDataBuffer[4];
-        // *are_brushes_activated = static_cast<double> (flags & 0x01);
-        // *is_unload_routine_activated = static_cast<double>((flags >> 1) & 0x01);
-        // *is_lift_routine_authorized = static_cast<double>((flags >> 2) & 0x01);
-
-        if (print_output)
-        {
-            std::cout << "[ROBOCOPS_CONTROL] Encoder Left: " << *encoder_maxon_left
-                      << ", Right: " << *encoder_maxon_right << std::endl;
-            //   << "Brushes: " << *are_brushes_activated
-            //   << ", Unload: " << *is_unload_routine_activated
-            //   << ", Lift authorized: " << *is_lift_routine_authorized
-        }
-        
-    }
-    catch (const LibSerial::ReadTimeout &)
-    {
-        std::cerr << "[ROBOCOPS_CONTROL] Read timeout occurred." << std::endl;
+            std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
+        std::cout << std::dec << "\n[Serial] Encoders: L=" << *encoder_left << " R=" << *encoder_right << std::endl;
     }
 }

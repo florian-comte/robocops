@@ -1,48 +1,69 @@
 #include "arduino_comms.hpp"
-
 #include <iostream>
-#include <stdexcept>
-#include <string>
-#include <serial/serial.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <algorithm>
+#include <cstdint>
 
 void ArduinoComms::connect(const std::string &serial_device, int32_t timeout_ms)
 {
     timeout_ms_ = timeout_ms;
 
-    try
+    serial_fd_ = open(serial_device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (serial_fd_ < 0)
     {
-        serial::Timeout to = serial::Timeout::simpleTimeout(timeout_ms_);
-        serial_.setPort(serial_device);
-        serial_.setBaudrate(57600);
-        serial_.setTimeout(to);
-        serial_.open();
-
-        if (!serial_.isOpen())
-        {
-            throw std::runtime_error("Failed to open serial port.");
-        }
-
-        std::cout << "[Serial] Connected to " << serial_device << " at 57600 baud." << std::endl;
+        perror("Error opening serial port");
+        return;
     }
-    catch (const std::exception &e)
+
+    struct termios tty;
+    memset(&tty, 0, sizeof tty);
+    if (tcgetattr(serial_fd_, &tty) != 0)
     {
-        std::cerr << "[Serial] Connection exception: " << e.what() << std::endl;
+        perror("Error from tcgetattr");
+        return;
+    }
+
+    cfsetospeed(&tty, B57600);
+    cfsetispeed(&tty, B57600);
+
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
+    tty.c_iflag &= ~IGNBRK;
+    tty.c_lflag = 0;
+    tty.c_oflag = 0;
+    tty.c_cc[VMIN] = 5;
+    tty.c_cc[VTIME] = std::min(timeout_ms_ / 100, 255); // Timeout in deciseconds
+
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+    tty.c_cflag |= (CLOCAL | CREAD);
+    tty.c_cflag &= ~(PARENB | PARODD);
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CRTSCTS;
+
+    if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0)
+    {
+        perror("Error from tcsetattr");
+        return;
     }
 }
 
 void ArduinoComms::disconnect()
 {
-    if (serial_.isOpen())
+    if (connected())
     {
-        serial_.close();
-        std::cout << "[Serial] Disconnected from serial port." << std::endl;
+        close(serial_fd_);
+        serial_fd_ = -1;
     }
 }
 
 bool ArduinoComms::connected() const
 {
-    return serial_.isOpen();
+    return serial_fd_ >= 0;
 }
+
+#include <sys/select.h>
 
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
@@ -61,7 +82,6 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     uint8_t cmd[5];
 
-    // Offset values to be in range (0 - 20000)
     maxon_left += 10000;
     maxon_right += 10000;
 
@@ -74,39 +94,55 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= ((activate_unload_routine & 0x01) << 1);
     cmd[4] |= ((authorized_lift_routine & 0x01) << 2);
 
-    try
+    // Wait for the port to be ready for writing
+    fd_set write_fds;
+    FD_ZERO(&write_fds);
+    FD_SET(serial_fd_, &write_fds);
+    struct timeval tv_write = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
+
+    if (select(serial_fd_ + 1, nullptr, &write_fds, nullptr, &tv_write) > 0)
     {
-        // Send command
-        serial_.write(cmd, 5);
-
-        // Read response
-        std::string response = serial_.read(5);
-
-        if (response.size() != 5)
+        if (write(serial_fd_, cmd, 5) != 5)
         {
-            std::cerr << "[Serial] Incomplete response received: " << response.size() << " bytes." << std::endl;
+            perror("[Serial] Failed to write full command");
+            return;
+        }
+    }
+    else
+    {
+        std::cerr << "[Serial] Write timeout or error" << std::endl;
+        return;
+    }
+
+    // Wait for response to be ready
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(serial_fd_, &read_fds);
+    struct timeval tv_read = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
+
+    if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
+    {
+        uint8_t response[5];
+        int n = read(serial_fd_, response, 5);
+        if (n != 5)
+        {
+            perror("[Serial] Failed to read full response");
             return;
         }
 
-        // Parse encoder values
-        *encoder_maxon_left = static_cast<int16_t>((static_cast<uint8_t>(response[0]) << 8) |
-                                                   static_cast<uint8_t>(response[1]));
-
-        *encoder_maxon_right = static_cast<int16_t>((static_cast<uint8_t>(response[2]) << 8) |
-                                                    static_cast<uint8_t>(response[3]));
+        *encoder_maxon_left = static_cast<int16_t>((response[0] << 8) | response[1]);
+        *encoder_maxon_right = static_cast<int16_t>((response[2] << 8) | response[3]);
 
         if (print_output)
         {
             std::cout << "[Serial] Sent command: ";
             for (int i = 0; i < 5; ++i)
-            {
                 std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
-            }
             std::cout << std::dec << "\n[Serial] Encoders: L=" << *encoder_maxon_left << " R=" << *encoder_maxon_right << std::endl;
         }
     }
-    catch (const std::exception &e)
+    else
     {
-        std::cerr << "[Serial] Exception during send_command: " << e.what() << std::endl;
+        std::cerr << "[Serial] Read timeout or error" << std::endl;
     }
 }

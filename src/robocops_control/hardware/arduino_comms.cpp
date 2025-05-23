@@ -53,6 +53,8 @@ void ArduinoComms::connect(const std::string &serial_device, int32_t baud_rate, 
     timeout_ms_ = timeout_ms;
     serial_conn_.Open(serial_device);
     serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
+    serial_conn_.SetCharacterSize(CharacterSize::CHAR_SIZE_8);
+    serial_conn_.SetFlowControl(FlowControl::FLOW_CONTROL_NONE);
 }
 
 /**
@@ -88,8 +90,6 @@ void ArduinoComms::send_command(int16_t maxon_left,
 {
     uint8_t cmd[5];
 
-    std::cout << maxon_left << std::endl;
-
     // Offset encoding
     maxon_left += 10000;
     maxon_right += 10000;
@@ -119,7 +119,10 @@ void ArduinoComms::send_command(int16_t maxon_left,
     // Send command
     LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
     serial_conn_.FlushIOBuffers();
-    serial_conn_.Write(writeDataBuffer);
+    // serial_conn_.Write(writeDataBuffer);
+    serial_conn_.Write("yo");
+
+    serial_conn_.DrainWriteBuffer();
 
     LibSerial::DataBuffer readDataBuffer(5);
 

@@ -8,6 +8,37 @@ controller_manager:
     diffbot_base_controller:
       type: diff_drive_controller/DiffDriveController
 
+    gpio_controller:
+      type: gpio_controllers/GpioCommandController
+
+gpio_controller:
+  ros__parameters:
+    type: gpio_controllers/GpioCommandController
+    gpios:
+      - brushes
+      - lift
+      - unload
+    command_interfaces:
+      brushes:
+        - interfaces:
+          - gpio_command
+      lift:
+        - interfaces:
+          - gpio_command
+      unload:
+        - interfaces:
+          - gpio_command
+    state_interfaces:
+      brushes:
+        - interfaces:
+          - gpio_state
+      lift:
+        - interfaces:
+          - gpio_state
+      unload:
+        - interfaces:
+          - gpio_state
+
 diffbot_base_controller:
   ros__parameters:
     left_wheel_names: ["left_wheel_joint"]

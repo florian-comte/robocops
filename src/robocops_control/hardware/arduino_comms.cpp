@@ -123,7 +123,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
     // Send command
     LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
     serial_conn_.FlushIOBuffers();
-    serial_conn_.Write(writeDataBuffer);
+    serial_conn_.Write(std::string ss(reinterpret_cast<char *>(cmd), 5););
 
     LibSerial::DataBuffer readDataBuffer(5);
 

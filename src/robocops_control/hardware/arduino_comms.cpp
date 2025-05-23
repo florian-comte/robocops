@@ -128,22 +128,33 @@ void ArduinoComms::send_command(int16_t maxon_left,
         serial_conn_.Read(readDataBuffer);
 
         // Decode encoder readings
-        *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
-        *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
+        // *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
+        // *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
 
-        // Decode flags
-        uint8_t flags = readDataBuffer[4];
-        // *are_brushes_activated = static_cast<double> (flags & 0x01);
-        // *is_unload_routine_activated = static_cast<double>((flags >> 1) & 0x01);
-        // *is_lift_routine_authorized = static_cast<double>((flags >> 2) & 0x01);
+        // // Decode flags
+        // uint8_t flags = readDataBuffer[4];
+        // // *are_brushes_activated = static_cast<double> (flags & 0x01);
+        // // *is_unload_routine_activated = static_cast<double>((flags >> 1) & 0x01);
+        // // *is_lift_routine_authorized = static_cast<double>((flags >> 2) & 0x01);
+
+        // if (print_output)
+        // {
+        //     std::cout << "[ROBOCOPS_CONTROL] Encoder Left: " << *encoder_maxon_left
+        //               << ", Right: " << *encoder_maxon_right << std::endl;
+        //     //   << "Brushes: " << *are_brushes_activated
+        //     //   << ", Unload: " << *is_unload_routine_activated
+        //     //   << ", Lift authorized: " << *is_lift_routine_authorized
+        // }
 
         if (print_output)
         {
-            std::cout << "[ROBOCOPS_CONTROL] Encoder Left: " << *encoder_maxon_left
-                      << ", Right: " << *encoder_maxon_right << std::endl;
-            //   << "Brushes: " << *are_brushes_activated
-            //   << ", Unload: " << *is_unload_routine_activated
-            //   << ", Lift authorized: " << *is_lift_routine_authorized
+            std::cout << "[DEBUG] Command received : ";
+            for (int i = 0; i < 5; ++i)
+            {
+                std::cout << "0x" << std::hex << std::uppercase
+                          << static_cast<int>(readDataBuffer[i]) << " ";
+            }
+            std::cout << std::dec << std::endl;
         }
     }
     catch (const LibSerial::ReadTimeout &)

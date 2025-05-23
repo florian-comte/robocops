@@ -128,14 +128,14 @@ void ArduinoComms::send_command(int16_t maxon_left,
         return;
     }
 
-    *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]);
-    *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
+    *encoder_maxon_left = static_cast<int16_t>((response[0] << 8) | response[1]);
+    *encoder_maxon_right = static_cast<int16_t>((response[2] << 8) | response[3]);
 
     if (print_output)
     {
         std::cout << "[Serial] Sent command: ";
         for (int i = 0; i < 5; ++i)
             std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
-        std::cout << std::dec << "\n[Serial] Encoders: L=" << *encoder_left << " R=" << *encoder_right << std::endl;
+        std::cout << std::dec << "\n[Serial] Encoders: L=" << *encoder_maxon_left << " R=" << *encoder_maxon_right << std::endl;
     }
 }

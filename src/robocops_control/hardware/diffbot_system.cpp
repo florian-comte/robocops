@@ -114,7 +114,7 @@ namespace robocops_control
     {
       comms_.disconnect();
     }
-    comms_.connect(device_, baud_rate_, timeout_ms_);
+    comms_.connect(device_, timeout_ms_);
     RCLCPP_INFO(get_logger(), "Successfully configured!");
 
     return hardware_interface::CallbackReturn::SUCCESS;

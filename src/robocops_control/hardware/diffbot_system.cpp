@@ -230,7 +230,7 @@ namespace robocops_control
 
     if (use_encoders_)
     {
-      //comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
+      // comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
 
       wheel_r_.encoder_speed /= gearbox_ratio_;
       wheel_l_.encoder_speed /= gearbox_ratio_;
@@ -259,9 +259,15 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
-    // comms_.set_motor_values(
-    //     static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
-    //     static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)));
+    comms_.send_command(
+        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
+        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)),
+        false,
+        false,
+        false,
+        &wheel_l_.encoder_speed,
+        &wheel_r_.encoder_speed,
+        true);
 
     return hardware_interface::return_type::OK;
   }

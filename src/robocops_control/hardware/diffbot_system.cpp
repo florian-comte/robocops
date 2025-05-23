@@ -259,14 +259,10 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
-    comms_.send_command(static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)),
-                        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
-                        false,
-                        false,
-                        false,
-                        &wheel_l_.encoder_speed,
-                        &wheel_r_.encoder_speed,
-                        true);
+    // comms_.set_motor_values(
+    //     static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
+    //     static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)));
+
     return hardware_interface::return_type::OK;
   }
 

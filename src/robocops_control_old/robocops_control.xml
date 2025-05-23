@@ -1,9 +1,0 @@
-<library path="robocops_control">
-  <class name="robocops_control/DiffBotSystemHardware"
-         type="robocops_control::DiffBotSystemHardware"
-         base_class_type="hardware_interface::SystemInterface">
-    <description>
-      Hardware interface for RoboCops robot (EPFL robotic competition 2025)
-    </description>
-  </class>
-</library>

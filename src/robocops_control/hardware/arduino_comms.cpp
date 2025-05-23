@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstring>
-#include <algorithm> // for std::min
+#include <algorithm>
+#include <cstdint>
 
 void ArduinoComms::connect(const std::string &serial_device, int32_t timeout_ms)
 {

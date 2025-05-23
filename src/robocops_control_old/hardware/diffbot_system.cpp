@@ -263,9 +263,12 @@ namespace robocops_control
     comms_.send_command(
       static_cast<int16_t>(rad_per_sec_to_rpm(gearbox_ratio_ * command_interfaces_.left_wheel_command_speed)),
       static_cast<int16_t>(rad_per_sec_to_rpm(gearbox_ratio_ * command_interfaces_.right_wheel_command_speed)),
-      static_cast<bool>(gpio_commands_.brush),
-      static_cast<bool>(gpio_commands_.unload),
-      static_cast<bool>(gpio_commands_.unload),
+      // static_cast<bool>(gpio_commands_.brush),
+      // static_cast<bool>(gpio_commands_.unload),
+      // static_cast<bool>(gpio_commands_.unload),
+      false,
+      false,
+      false,
       &state_interfaces_.left_wheel_encoder_speed,
       &state_interfaces_.right_wheel_encoder_speed,
       true);

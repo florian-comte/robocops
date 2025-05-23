@@ -53,8 +53,6 @@ void ArduinoComms::connect(const std::string &serial_device, int32_t baud_rate, 
     timeout_ms_ = timeout_ms;
     serial_conn_.Open(serial_device);
     serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
-    serial_conn_.SetCharacterSize(CharacterSize::CHAR_SIZE_8);
-    serial_conn_.SetFlowControl(FlowControl::FLOW_CONTROL_NONE);
 }
 
 /**

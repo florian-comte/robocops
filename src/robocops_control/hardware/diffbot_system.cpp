@@ -73,7 +73,7 @@ namespace robocops_control
       // Removed check for 2 state interfaces (position and velocity) since we don't have acces to it
       // since passing through maxon controllers.
       // We could check for state_interfaces.size() == 1 (but not really needed in our context)
-        
+
       // if (joint.state_interfaces.size() != 2)
       // {
       //   RCLCPP_FATAL(
@@ -118,7 +118,7 @@ namespace robocops_control
     {
       comms_.disconnect();
     }
-    comms_.connect(device_, baud_rate_, timeout_ms_);
+    comms_.connect(device_, timeout_ms_);
     RCLCPP_INFO(get_logger(), "Successfully configured!");
 
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -187,7 +187,7 @@ namespace robocops_control
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.encoder_speed));
+        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.encoder_speed));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.encoder_speed));
@@ -259,10 +259,14 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
-    comms_.set_motor_values(
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)));
-
+    comms_.send_command(static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)),
+                        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
+                        false,
+                        false,
+                        false,
+                        &wheel_l_.encoder_speed,
+                        &wheel_r_.encoder_speed,
+                        true);
     return hardware_interface::return_type::OK;
   }
 

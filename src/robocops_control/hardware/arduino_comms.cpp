@@ -88,6 +88,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
 {
     uint8_t cmd[5];
 
+    std::cout << maxon_left << std::endl;
+
     // Offset encoding
     maxon_left += 10000;
     maxon_right += 10000;
@@ -114,14 +116,14 @@ void ArduinoComms::send_command(int16_t maxon_left,
         std::cout << std::dec << std::endl;
     }
 
+    if(!connected){
+        std::cerr << "[ROBOCOPS_CONTROL] Lib connection error." << std::endl;
+    }
+
     // Send command
     LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
     serial_conn_.FlushIOBuffers();
-    // serial_conn_.Write(writeDataBuffer);
-    std::stringstream ss;
-    ss << "m " << " yp" << "envie" << "\n";
-
-    serial_conn_.Write(ss.str());
+    serial_conn_.Write(writeDataBuffer);
 
     LibSerial::DataBuffer readDataBuffer(5);
 
@@ -129,35 +131,25 @@ void ArduinoComms::send_command(int16_t maxon_left,
     {
         serial_conn_.Read(readDataBuffer);
 
-        // Decode encoder readings
-        // *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
-        // *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
+        Decode encoder readings
+        *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
+        *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
 
-        // // Decode flags
-        // uint8_t flags = readDataBuffer[4];
-        // // *are_brushes_activated = static_cast<double> (flags & 0x01);
-        // // *is_unload_routine_activated = static_cast<double>((flags >> 1) & 0x01);
-        // // *is_lift_routine_authorized = static_cast<double>((flags >> 2) & 0x01);
-
-        // if (print_output)
-        // {
-        //     std::cout << "[ROBOCOPS_CONTROL] Encoder Left: " << *encoder_maxon_left
-        //               << ", Right: " << *encoder_maxon_right << std::endl;
-        //     //   << "Brushes: " << *are_brushes_activated
-        //     //   << ", Unload: " << *is_unload_routine_activated
-        //     //   << ", Lift authorized: " << *is_lift_routine_authorized
-        // }
+        // Decode flags
+        uint8_t flags = readDataBuffer[4];
+        // *are_brushes_activated = static_cast<double> (flags & 0x01);
+        // *is_unload_routine_activated = static_cast<double>((flags >> 1) & 0x01);
+        // *is_lift_routine_authorized = static_cast<double>((flags >> 2) & 0x01);
 
         if (print_output)
         {
-            std::cout << "[DEBUG] Command received : ";
-            for (int i = 0; i < 5; ++i)
-            {
-                std::cout << "0x" << std::hex << std::uppercase
-                          << static_cast<int>(readDataBuffer[i]) << " ";
-            }
-            std::cout << std::dec << std::endl;
+            std::cout << "[ROBOCOPS_CONTROL] Encoder Left: " << *encoder_maxon_left
+                      << ", Right: " << *encoder_maxon_right << std::endl;
+            //   << "Brushes: " << *are_brushes_activated
+            //   << ", Unload: " << *is_unload_routine_activated
+            //   << ", Lift authorized: " << *is_lift_routine_authorized
         }
+        
     }
     catch (const LibSerial::ReadTimeout &)
     {

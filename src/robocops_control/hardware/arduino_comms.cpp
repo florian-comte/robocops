@@ -116,7 +116,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
         std::cout << std::dec << std::endl;
     }
 
-    if(!connected){
+    if(!connected()){
         std::cerr << "[ROBOCOPS_CONTROL] Lib connection error." << std::endl;
     }
 

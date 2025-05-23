@@ -131,7 +131,6 @@ void ArduinoComms::send_command(int16_t maxon_left,
     {
         serial_conn_.Read(readDataBuffer);
 
-        Decode encoder readings
         *encoder_maxon_left = static_cast<double>(readDataBuffer[0] << 8 | readDataBuffer[1]);
         *encoder_maxon_right = static_cast<double>(readDataBuffer[2] << 8 | readDataBuffer[3]);
 

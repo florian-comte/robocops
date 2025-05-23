@@ -5,7 +5,7 @@
 class ArduinoComms
 {
 public:
-  void connect(const std::string &device, int baud_rate = 57600, int timeout_ms = 100);
+  void connect(const std::string &device, int timeout_ms = 100);
   void disconnect();
   bool connected() const;
 

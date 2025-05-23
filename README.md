@@ -2,6 +2,10 @@
 
 This workspace contains the packages for the Robocops team. All of our packages can be found in the `/src` directory.
 
+## robocops_duplos
+
+The robocops_duplos package is used to process the camera detections and publish the position of the duplo in the arena using the localization. It uses internal process to verified the published camera detections.
+
 ## robocops_gazebo
 
 The robocops_gazebo package provides Gazebo simulation support for the RoboCops robotics system. It launches the simulation environment, spawns the robot at a configurable initial pose, and bridges ROS 2 and Gazebo topics using ros_gz_bridge.

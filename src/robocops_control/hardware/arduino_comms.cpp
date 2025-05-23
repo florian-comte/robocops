@@ -120,10 +120,12 @@ void ArduinoComms::send_command(int16_t maxon_left,
         std::cerr << "[ROBOCOPS_CONTROL] Lib connection error." << std::endl;
     }
 
+    std::string ss(reinterpret_cast<char *>(cmd), 5);
+
     // Send command
     LibSerial::DataBuffer writeDataBuffer(cmd, cmd + 5);
     serial_conn_.FlushIOBuffers();
-    serial_conn_.Write(std::string ss(reinterpret_cast<char *>(cmd), 5););
+    serial_conn_.Write(ss);
 
     LibSerial::DataBuffer readDataBuffer(5);
 

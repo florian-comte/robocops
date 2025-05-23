@@ -59,14 +59,6 @@ install(
   DESTINATION share/robocops_control
 )
 
-find_package(serial REQUIRED)
-
-target_link_libraries(robocops_control
-  ${serial_LIBRARIES}
-)
-include_directories(${serial_INCLUDE_DIRS})
-
-
 
 install(TARGETS robocops_control
   EXPORT export_robocops_control

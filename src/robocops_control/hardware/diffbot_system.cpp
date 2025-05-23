@@ -230,7 +230,7 @@ namespace robocops_control
 
     if (use_encoders_)
     {
-      comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
+      //comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
 
       wheel_r_.encoder_speed /= gearbox_ratio_;
       wheel_l_.encoder_speed /= gearbox_ratio_;

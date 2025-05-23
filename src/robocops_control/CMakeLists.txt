@@ -18,8 +18,6 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-find_package(PkgConfig REQUIRED)
-
 ## COMPILE
 add_library(
   robocops_control

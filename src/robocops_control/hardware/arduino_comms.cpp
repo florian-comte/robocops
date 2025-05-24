@@ -108,7 +108,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= ((lift_authorize & 1) << 2);
 
     std::cout << "yo: " << cmd[4] << std::endl;
-    std::count << "ah: " << unload_activate << std::endl;
+    std::cout << "ah: " << unload_activate << std::endl;
 
     fd_set write_fds;
     FD_ZERO(&write_fds);

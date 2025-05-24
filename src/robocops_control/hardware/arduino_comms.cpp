@@ -107,7 +107,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= ((unload_activate & 1) << 1);
     cmd[4] |= ((lift_authorize & 1) << 2);
 
-    std::cout << "yo: " << cmd[4] << std::endl;
+    std::cout << "yo: " << static_cast<int>(cmd[4]) << std::endl;
     std::cout << "ah: " << unload_activate << std::endl;
 
     fd_set write_fds;

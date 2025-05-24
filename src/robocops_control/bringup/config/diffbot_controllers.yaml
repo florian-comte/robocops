@@ -72,6 +72,6 @@ gpio_controller:
           - activate
       lift:
         - interfaces:
-          - authorized
+          - authorize
           - active
           - authorized

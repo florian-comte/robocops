@@ -228,7 +228,7 @@ namespace robocops_control
         &lift_active_,
         &unload_active_,
         &brushes_active_,
-        true);
+        false);
 
     return hardware_interface::return_type::OK;
   }

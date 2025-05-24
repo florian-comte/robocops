@@ -48,9 +48,9 @@ KEY_BINDINGS = {
 gpio_order = ["brushes", "unload", "lift"]
 
 gpio_interfaces = {
-    "brushes": "brushes/active",
-    "unload": "unload/active",
-    "lift": "lift/authorized"
+    "brushes": "active",
+    "unload": "active",
+    "lift": "authorized"
 }
 
 def get_key():

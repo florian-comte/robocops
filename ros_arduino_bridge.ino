@@ -107,7 +107,7 @@ void loop() {
 // 1 bit active_lift (buf[4] >> 3)
 
 int handle_serial_command() {
-  if (Serial.available() >= 5) {
+  if (Serial.available() >= 5) {    
     byte buf[5];
     Serial.readBytes(buf, 5);
 

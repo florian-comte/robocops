@@ -17,7 +17,7 @@
 
 // todo: need to be replaced by michel's logic
 bool active_lift_routine = 0;
-bool authorized_lift_routine = 1;
+bool authorized_lift_routine = 0;
 
 double previous_loop = 0;
 double loop_start = 0;

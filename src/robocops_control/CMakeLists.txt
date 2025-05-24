@@ -23,7 +23,6 @@ add_library(
   robocops_control
   SHARED
   hardware/diffbot_system.cpp
-  hardware/wheel.cpp
   hardware/utils.cpp
   hardware/arduino_comms.cpp
 )

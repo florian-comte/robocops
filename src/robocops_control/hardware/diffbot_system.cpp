@@ -25,7 +25,7 @@ namespace robocops_control
    * @param info The hardware info provided from the URDF.
    * @return CallbackReturn::SUCCESS if initialization succeeds, otherwise CallbackReturn::ERROR.
    */
-  hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
+  hardware_interface::CallbackReturn RobocopsSystemHardware::on_init(
       const hardware_interface::HardwareInfo &info)
   {
     if (
@@ -38,18 +38,20 @@ namespace robocops_control
     // Get the params
     left_wheel_name_ = info_.hardware_parameters["left_wheel_name"];
     right_wheel_name_ = info_.hardware_parameters["right_wheel_name"];
-    device_ = info_.hardware_parameters["device"];
 
-    loop_rate_ = std::stoi(info_.hardware_parameters["loop_rate"]);
-    baud_rate_ = std::stoi(info_.hardware_parameters["baud_rate"]);
+    device_ = info_.hardware_parameters["device"];
     timeout_ms_ = std::stoi(info_.hardware_parameters["timeout_ms"]);
     gearbox_ratio_ = std::stoi(info_.hardware_parameters["gearbox_ratio"]);
 
     use_encoders_ = (info_.hardware_parameters["use_encoders"] == "true");
 
-    // Setup wheels
-    wheel_l_.setup(left_wheel_name_);
-    wheel_r_.setup(right_wheel_name_);
+    left_wheel_encoder_ = 0;
+    right_wheel_encoder_ = 0;
+
+    lift_authorized_ = false;
+    lift_active_ = false;
+    unload_active_ = false;
+    brushes_active_ = false;
 
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
@@ -80,7 +82,7 @@ namespace robocops_control
    * @param previous_state Lifecycle state prior to configuration.
    * @return CallbackReturn indicating success or failure.
    */
-  hardware_interface::CallbackReturn DiffBotSystemHardware::on_configure(
+  hardware_interface::CallbackReturn RobocopsSystemHardware::on_configure(
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
     RCLCPP_INFO(get_logger(), "Configuring ...please wait...");
@@ -119,7 +121,7 @@ namespace robocops_control
    * @param previous_state Lifecycle state prior to activation.
    * @return CallbackReturn indicating success or failure.
    */
-  hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
+  hardware_interface::CallbackReturn RobocopsSystemHardware::on_activate(
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
     RCLCPP_INFO(get_logger(), "Activating ...please wait...");
@@ -147,7 +149,7 @@ namespace robocops_control
    * @param previous_state Lifecycle state prior to deactivation.
    * @return CallbackReturn indicating success or failure.
    */
-  hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
+  hardware_interface::CallbackReturn RobocopsSystemHardware::on_deactivate(
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
 
@@ -168,7 +170,7 @@ namespace robocops_control
    * @param period Duration since the last read (unused).
    * @return return_type::OK if successful, return_type::ERROR if communication failed.
    */
-  hardware_interface::return_type DiffBotSystemHardware::read(
+  hardware_interface::return_type RobocopsSystemHardware::read(
       const rclcpp::Time & /*time*/, const rclcpp::Duration &)
   {
     if (!comms_.connected())
@@ -179,13 +181,13 @@ namespace robocops_control
     // Set state left/right encoder value
     if (use_encoders_)
     {
-      set_state(left_wheel_name_ + "/velocity", wheel_l_.encoder_speed / gearbox_ratio_);
-      set_state(right_wheel_name_ + "/velocity", wheel_r_.encoder_speed / gearbox_ratio_);
+      set_state(left_wheel_name_ + "/velocity", left_wheel_encoder_ / gearbox_ratio_);
+      set_state(right_wheel_name_ + "/velocity", right_wheel_encoder_ / gearbox_ratio_);
     }
     else
     {
-      set_state(left_wheel_name_ + "/velocity", wheel_l_.command_speed);
-      set_state(right_wheel_name_ + "/velocity", wheel_r_.command_speed);
+      set_state(left_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
+      set_state(right_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
     }
 
     // Set state authorized/active lift
@@ -208,7 +210,7 @@ namespace robocops_control
    * @param period Duration since last write (unused).
    * @return return_type::OK if successful, return_type::ERROR if communication failed.
    */
-  hardware_interface::return_type DiffBotSystemHardware::write(
+  hardware_interface::return_type RobocopsSystemHardware::write(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
     if (!comms_.connected())
@@ -222,8 +224,8 @@ namespace robocops_control
         static_cast<bool>(get_command("brushes/active")),
         static_cast<bool>(get_command("unload/active")),
         static_cast<bool>(get_command("lift/authorized")),
-        &wheel_l_.encoder_speed,
-        &wheel_r_.encoder_speed,
+        &left_wheel_encoder_,
+        &right_wheel_encoder_,
         &lift_authorized_,
         &lift_active_,
         &unload_active_,
@@ -238,4 +240,4 @@ namespace robocops_control
 #include "pluginlib/class_list_macros.hpp"
 /// @brief Export the plugin to be dynamically loaded by the ROS 2 control system.
 PLUGINLIB_EXPORT_CLASS(
-    robocops_control::DiffBotSystemHardware, hardware_interface::SystemInterface)
+    robocops_control::RobocopsSystemHardware, hardware_interface::SystemInterface)

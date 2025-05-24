@@ -33,7 +33,7 @@
         <state_interface name="active"/>
       </gpio>
 
-      <gpio name="unload">
+      <gpio name="lift">
         <command_interface name="authorize"/>
         <state_interface name="authorized"/>
         <state_interface name="active"/>

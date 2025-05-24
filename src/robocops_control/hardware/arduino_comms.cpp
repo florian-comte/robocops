@@ -103,9 +103,9 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     // Encode control signals into bit flags in cmd[4]
     cmd[4] = 0;
-    cmd[4] |= (brushes_activate & 0x01);
-    cmd[4] |= ((unload_activate & 0x01) << 1);
-    cmd[4] |= ((lift_authorize & 0x01) << 2);
+    cmd[4] |= (brushes_activate & 1);
+    cmd[4] |= ((unload_activate & 1) << 1);
+    cmd[4] |= ((lift_authorize & 1) << 2);
 
     fd_set write_fds;
     FD_ZERO(&write_fds);
@@ -146,10 +146,10 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
 
         // Extract GPIO states from response[4]
-        *brushes_active = static_cast<bool>(response[4] & (1 << 0));
-        *unload_active = static_cast<bool>(response[4] & (1 << 1));
-        *lift_authorized = static_cast<bool>(response[4] & (1 << 2));
-        *lift_active = static_cast<bool>(response[4] & (1 << 3));
+        *brushes_active = static_cast<bool>((response[4] >> 0) & 1);
+        *unload_active = static_cast<bool>((response[4] >> 1) & 1);
+        *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
+        *lift_active = static_cast<bool>((response[4] >> 3) & 1);
 
         // Print debug if wanted
         if (print_output)

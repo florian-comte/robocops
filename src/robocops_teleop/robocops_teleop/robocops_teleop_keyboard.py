@@ -98,8 +98,8 @@ class TeleopNode(Node):
         msg.twist.angular.z = self.angular
         self.publisher.publish(msg)
 
-    def toggle_gpio(self, name):
-        self.gpio_states[name] = not self.gpio_states[name]
+    def toggle_gpio(self, init_name):
+        self.gpio_states[init_name] = not self.gpio_states[init_name]
 
         msg = DynamicInterfaceGroupValues()
         msg.interface_groups = gpio_order
@@ -111,7 +111,7 @@ class TeleopNode(Node):
             msg.interface_values.append(group_msg)
 
         self.gpio_pub.publish(msg)
-        print(f"{name.capitalize()} toggled to {'ON' if self.gpio_states[name] else 'OFF'}")
+        print(f"{init_name.capitalize()} toggled to {'ON' if self.gpio_states[init_name] else 'OFF'}")
 
 
 def main():

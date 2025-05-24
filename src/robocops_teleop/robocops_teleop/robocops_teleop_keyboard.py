@@ -45,8 +45,13 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_order = ["brushes", "unload", "lift"]  # Define GPIO command group names
+gpio_order = ["brushes", "unload", "lift"]
 
+gpio_interfaces = {
+    "brushes": "brushes/active",
+    "unload": "unload/active",
+    "lift": "lift/authorized"
+}
 
 def get_key():
     tty.setraw(sys.stdin.fileno())
@@ -99,13 +104,11 @@ class TeleopNode(Node):
         msg = DynamicInterfaceGroupValues()
         msg.interface_groups = gpio_order
 
-        for group in gpio_order:
+        for name, interface_name in gpio_interfaces.items():
             group_msg = InterfaceValue()
-            group_msg.interface_names = [group]
-            group_msg.values = [1.0 if self.gpio_states[group] else 0.0]
+            group_msg.interface_names = [interface_name]
+            group_msg.values = [1.0 if self.gpio_states[name] else 0.0]
             msg.interface_values.append(group_msg)
-
-        print(msg)
 
         self.gpio_pub.publish(msg)
         print(f"{name.capitalize()} toggled to {'ON' if self.gpio_states[name] else 'OFF'}")

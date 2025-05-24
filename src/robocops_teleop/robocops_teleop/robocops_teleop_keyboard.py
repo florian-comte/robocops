@@ -8,7 +8,7 @@ import tty
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TwistStamped
-from std_msgs.msg import Float64MultiArray
+from control_msgs.msg import DynamicInterfaceGroupValues, DynamicGroup
 
 MAX_LIN_VEL = 1.0
 MAX_ANG_VEL = 1.0
@@ -44,13 +44,7 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_states = {
-    "brushes": False,
-    "unload": False,
-    "lift": False
-}
-
-gpio_order = ["brushes", "unload", "lift"]  # Define GPIO command index order
+gpio_order = ["brushes", "unload", "lift"] 
 
 
 def get_key():
@@ -70,11 +64,14 @@ class TeleopNode(Node):
         super().__init__('teleop_keyboard')
 
         self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
-        self.gpio_pub = self.create_publisher(Float64MultiArray, '/gpio_controller/commands', 10)
-        self.gpio_sub = self.create_subscription(Float64MultiArray, '/gpio_controller/gpio_states', self.gpio_callback, 10)
+        self.gpio_pub = self.create_publisher(DynamicInterfaceGroupValues, '/gpio_controller/commands', 10)
 
         self.linear = 0.0
         self.angular = 0.0
+
+        # Track state for toggling
+        self.gpio_states = {name: False for name in gpio_order}
+
         print(INSTRUCTIONS)
 
     def update_velocity(self, key):
@@ -96,17 +93,19 @@ class TeleopNode(Node):
         self.publisher.publish(msg)
 
     def toggle_gpio(self, name):
-        gpio_states[name] = not gpio_states[name]
-        msg = Float64MultiArray()
-        msg.data = [1.0 if gpio_states[n] else 0.0 for n in gpio_order]
-        self.gpio_pub.publish(msg)
-        print(f"{name.capitalize()} toggled to {'ON' if gpio_states[name] else 'OFF'}")
+        self.gpio_states[name] = not self.gpio_states[name]
 
-    def gpio_callback(self, msg):
-        for i, name in enumerate(gpio_order):
-            state = msg.data[i] if i < len(msg.data) else 0.0
-            gpio_states[name] = state > 0.5
-        print(f"GPIO states updated: {gpio_states}")
+        msg = DynamicInterfaceGroupValues()
+        msg.interface_groups = gpio_order
+
+        for group in gpio_order:
+            group_msg = DynamicGroup()
+            group_msg.interface_names = [group]
+            group_msg.values = [1.0 if self.gpio_states[group] else 0.0]
+            msg.interface_values.append(group_msg)
+
+        self.gpio_pub.publish(msg)
+        print(f"{name.capitalize()} toggled to {'ON' if self.gpio_states[name] else 'OFF'}")
 
 
 def main():

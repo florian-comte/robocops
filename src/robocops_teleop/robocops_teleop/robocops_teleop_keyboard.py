@@ -8,7 +8,8 @@ import tty
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TwistStamped
-from control_msgs.msg import DynamicInterfaceGroupValues, DynamicGroup
+from control_msgs.msg import DynamicInterfaceGroupValues
+from control_msgs.msg import InterfaceValue
 
 MAX_LIN_VEL = 1.0
 MAX_ANG_VEL = 1.0
@@ -44,7 +45,7 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_order = ["brushes", "unload", "lift"] 
+gpio_order = ["brushes", "unload", "lift"]  # Define GPIO command group names
 
 
 def get_key():
@@ -99,7 +100,7 @@ class TeleopNode(Node):
         msg.interface_groups = gpio_order
 
         for group in gpio_order:
-            group_msg = DynamicGroup()
+            group_msg = InterfaceValue()
             group_msg.interface_names = [group]
             group_msg.values = [1.0 if self.gpio_states[group] else 0.0]
             msg.interface_values.append(group_msg)

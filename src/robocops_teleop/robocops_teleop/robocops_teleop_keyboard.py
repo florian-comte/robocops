@@ -128,7 +128,7 @@ def main():
                 break
             if key == 'w':
                 node.toggle_gpio("brushes")
-            elif key == 'e':
+            elif key == 'x':
                 node.toggle_gpio("unload")
             elif key == 'c':
                 node.toggle_gpio("lift")

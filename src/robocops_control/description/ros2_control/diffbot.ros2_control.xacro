@@ -25,16 +25,16 @@
       </joint>
 
       <gpio name="brushes">
-        <command_interface name="activate"/>
+        <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
       <gpio name="unload">
-        <command_interface name="activate"/>
+        <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
 
       <gpio name="lift">
-        <command_interface name="authorize"/>
+        <command_interface name="authorized"/>
         <state_interface name="authorized"/>
         <state_interface name="active"/>
       </gpio>

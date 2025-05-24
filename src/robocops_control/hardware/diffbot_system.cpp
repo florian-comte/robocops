@@ -221,7 +221,7 @@ namespace robocops_control
         static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(right_wheel_name_ + "/velocity"))),
         static_cast<bool>(get_command("brushes/active")),
         static_cast<bool>(get_command("unload/active")),
-        static_cast<bool>(get_command("lift/authorize")),
+        static_cast<bool>(get_command("lift/authorized")),
         &wheel_l_.encoder_speed,
         &wheel_r_.encoder_speed,
         &lift_authorized_,

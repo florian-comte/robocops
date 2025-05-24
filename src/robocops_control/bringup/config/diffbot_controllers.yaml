@@ -64,13 +64,13 @@ gpio_controller:
     command_interfaces:
       brushes:
         - interfaces:
-          - activate
+          - active
       unload:
         - interfaces:
-          - activate
+          - active
       lift:
         - interfaces:
-          - authorize
+          - authorized
     state_interfaces:
       brushes:
         - interfaces:

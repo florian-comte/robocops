@@ -190,13 +190,13 @@ namespace robocops_control
 
     // Set state authorized/active lift
     set_state("lift/authorized", lift_authorized_ ? 1.0 : 0.0);
-    set_state("lift/active", lift_authorized_ ? 1.0 : 0.0);
+    set_state("lift/active", lift_active_ ? 1.0 : 0.0);
 
     // Set state active unload
-    set_state("unload/active", lift_authorized_ ? 1.0 : 0.0);
+    set_state("unload/active", unload_active_ ? 1.0 : 0.0);
 
     // Set state active brushes
-    set_state("unload/active", lift_authorized_ ? 1.0 : 0.0);
+    set_state("brushes/active", brushes_active_ ? 1.0 : 0.0);
 
     return hardware_interface::return_type::OK;
   }
@@ -227,7 +227,7 @@ namespace robocops_control
         &lift_authorized_,
         &lift_active_,
         &unload_active_,
-        &brushed_active_,
+        &brushes_active_,
         false);
 
     return hardware_interface::return_type::OK;

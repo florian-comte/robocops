@@ -127,7 +127,7 @@ namespace robocops_control
     bool lift_authorized_;
     bool lift_active_;
     bool unload_active_;
-    bool brushed_active_;
+    bool brushes_active_;
   };
 
 } // namespace robocops_control

@@ -6,8 +6,9 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
 diffbot_base_controller:
-  type: diff_drive_controller/DiffDriveController
   ros__parameters:
+    type: diff_drive_controller/DiffDriveController
+
     left_wheel_names: ["left_wheel_joint"]
     right_wheel_names: ["right_wheel_joint"]
 

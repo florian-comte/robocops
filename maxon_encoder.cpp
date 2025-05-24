@@ -13,6 +13,9 @@ const int MAXON_MOTOR_ENCODER_SPEED_PINS[MAXON_MOTOR_COUNT] = {
    
 };
 
+double maxon_encoder_speeds[MAXON_MOTOR_COUNT];
+
+
 /**
  * @brief Initializes motor encoder pins.
  *

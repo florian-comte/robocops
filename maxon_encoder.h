@@ -38,6 +38,8 @@
 // @brief The maximum value between 0 and 1023 of the analogRead. Here is it 1023*4/5=818.4 because we decided to put 4v in maxon firmware
 #define MAXON_MAX_ANALOG_VALUE 818.4
 
+extern double maxon_encoder_speeds[MAXON_MOTOR_COUNT];
+
 /**
  * @brief Initialize the encoder system (e.g., configure analog input pins).
  */

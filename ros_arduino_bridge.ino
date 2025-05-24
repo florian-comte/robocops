@@ -70,6 +70,7 @@ void loop() {
     int direction = (maxon_target_speeds[i] >= 0);
     int pwm = map(abs(maxon_target_speeds[i]), MAXON_MIN_MOTOR_SPEED, MAXON_MAX_MOTOR_SPEED, MAXON_MIN_PWM, MAXON_MAX_PWM);
     set_maxon_motor_state(i, enable, direction, pwm);
+    maxon_encoder_speeds[i] = read_maxon_encoder(i);
   }
 
   // L298N
@@ -146,8 +147,8 @@ int handle_serial_command() {
     maxon_target_speeds[MAXON_REAR_RIGHT] = maxon_right;
 
     // Return infos to rasp
-    int16_t maxon_encoder_left = read_maxon_encoder(MAXON_REAR_LEFT);
-    int16_t maxon_encoder_right = read_maxon_encoder(MAXON_REAR_RIGHT);
+    int16_t maxon_encoder_left = maxon_encoder_speeds[MAXON_REAR_LEFT];
+    int16_t maxon_encoder_right = maxon_encoder_speeds[MAXON_REAR_RIGHT];
 
     byte response[5];
 

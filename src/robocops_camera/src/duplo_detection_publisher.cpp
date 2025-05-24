@@ -39,167 +39,173 @@
 #include "depthai/pipeline/node/XLinkOut.hpp"
 
 /**
-* @brief Creates a DepthAI pipeline for object detection.
-* @param rgb_resolution_str Desired resolution of the RGB camera.
-* @param nn_name Path to the neural network blob file.
-* @param with_display True if you want to have out links for depth and raw rgb
-* @return Configured DepthAI pipeline.
-*/
-dai::Pipeline create_pipeline(const std::string nn_name, bool with_display) {
-   dai::Pipeline pipeline;
-   
-   // Define camera and processing nodes
-   auto rgb_camera = pipeline.create<dai::node::ColorCamera>();
-   auto spatial_detection_network = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
-   auto mono_left = pipeline.create<dai::node::MonoCamera>();
-   auto mono_right = pipeline.create<dai::node::MonoCamera>();
-   auto stereo = pipeline.create<dai::node::StereoDepth>();
-   
-   auto xout_nn = pipeline.create<dai::node::XLinkOut>();
-   xout_nn->setStreamName("detections");
+ * @brief Creates a DepthAI pipeline for object detection.
+ * @param rgb_resolution_str Desired resolution of the RGB camera.
+ * @param nn_name Path to the neural network blob file.
+ * @param with_display True if you want to have out links for depth and raw rgb
+ * @return Configured DepthAI pipeline.
+ */
+dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
+{
+    dai::Pipeline pipeline;
 
-   // Configure RGB camera
-   rgb_camera->setPreviewSize(416, 416);
-   rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
-   rgb_camera->setInterleaved(false);
-   rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
-   
-   // Configure mono cameras (480p resolution)
-   mono_left->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);
-   mono_left->setBoardSocket(dai::CameraBoardSocket::CAM_B);
-   mono_right->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);
-   mono_right->setBoardSocket(dai::CameraBoardSocket::CAM_C);
+    // Define camera and processing nodes
+    auto rgb_camera = pipeline.create<dai::node::ColorCamera>();
+    auto spatial_detection_network = pipeline.create<dai::node::YoloSpatialDetectionNetwork>();
+    auto mono_left = pipeline.create<dai::node::MonoCamera>();
+    auto mono_right = pipeline.create<dai::node::MonoCamera>();
+    auto stereo = pipeline.create<dai::node::StereoDepth>();
 
-   // Configure stereo depth processing
-   stereo->initialConfig.setConfidenceThreshold(200);
-   stereo->setRectifyEdgeFillColor(0); 
-   stereo->initialConfig.setLeftRightCheckThreshold(true);
-   stereo->setSubpixel(true);
-   stereo->setDepthAlign(dai::CameraBoardSocket::CAM_A);
+    auto xout_nn = pipeline.create<dai::node::XLinkOut>();
+    xout_nn->setStreamName("detections");
 
-   // Configure YOLO spatial detection network
-   spatial_detection_network->setBlobPath(nn_name);
-   spatial_detection_network->setConfidenceThreshold(0.5f);
-   spatial_detection_network->setBoundingBoxScaleFactor(0.5);
-   spatial_detection_network->setDepthLowerThreshold(100);
-   spatial_detection_network->setDepthUpperThreshold(5000);
+    // Configure RGB camera
+    rgb_camera->setPreviewSize(416, 416);
+    rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
+    rgb_camera->setInterleaved(false);
+    rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
 
-   // Set YOLO network parameters
-   spatial_detection_network->setNumClasses(1);
-   spatial_detection_network->setCoordinateSize(4);
-   spatial_detection_network->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
-   spatial_detection_network->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
-   spatial_detection_network->setIouThreshold(0.5f);
+    // Configure mono cameras (480p resolution)
+    mono_left->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);
+    mono_left->setBoardSocket(dai::CameraBoardSocket::CAM_B);
+    mono_right->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);
+    mono_right->setBoardSocket(dai::CameraBoardSocket::CAM_C);
 
-   // Link stereo and RGB camera outputs
-   mono_left->out.link(stereo->left);
-   mono_right->out.link(stereo->right);
+    // Configure stereo depth processing
+    stereo->initialConfig.setConfidenceThreshold(200);
+    stereo->setRectifyEdgeFillColor(0);
+    stereo->initialConfig.setLeftRightCheckThreshold(true);
+    stereo->setSubpixel(true);
+    stereo->setDepthAlign(dai::CameraBoardSocket::CAM_A);
 
-   rgb_camera->preview.link(spatial_detection_network->input);
+    // Configure YOLO spatial detection network
+    spatial_detection_network->setBlobPath(nn_name);
+    spatial_detection_network->setConfidenceThreshold(0.5f);
+    spatial_detection_network->setBoundingBoxScaleFactor(0.5);
+    spatial_detection_network->setDepthLowerThreshold(100);
+    spatial_detection_network->setDepthUpperThreshold(5000);
 
-   stereo->depth.link(spatial_detection_network->inputDepth);
-   spatial_detection_network->out.link(xout_nn->input);
+    // Set YOLO network parameters
+    spatial_detection_network->setNumClasses(1);
+    spatial_detection_network->setCoordinateSize(4);
+    spatial_detection_network->setAnchors({10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319});
+    spatial_detection_network->setAnchorMasks({{"side13", {3, 4, 5}}, {"side26", {1, 2, 3}}});
+    spatial_detection_network->setIouThreshold(0.5f);
 
-   // If we want display, we also create out link for rgb and depth
-   if (with_display) {
-       auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
-       //auto xout_depth = pipeline.create<dai::node::XLinkOut>();
+    // Link stereo and RGB camera outputs
+    mono_left->out.link(stereo->left);
+    mono_right->out.link(stereo->right);
 
-       xout_rgb->setStreamName("preview");
-       //xout_depth->setStreamName("depth");    
+    rgb_camera->preview.link(spatial_detection_network->input);
 
-       spatial_detection_network->passthrough.link(xout_rgb->input);
-       //spatial_detection_network->passthroughDepth.link(xout_depth->input);
-   }
+    stereo->depth.link(spatial_detection_network->inputDepth);
+    spatial_detection_network->out.link(xout_nn->input);
 
-   return pipeline;
+    // If we want display, we also create out link for rgb and depth
+    if (with_display)
+    {
+        auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
+        // auto xout_depth = pipeline.create<dai::node::XLinkOut>();
+
+        xout_rgb->setStreamName("preview");
+        // xout_depth->setStreamName("depth");
+
+        spatial_detection_network->passthrough.link(xout_rgb->input);
+        // spatial_detection_network->passthroughDepth.link(xout_depth->input);
+    }
+
+    return pipeline;
 }
 
-int main(int argc, char** argv) {
-   rclcpp::init(argc, argv);
-   auto node = rclcpp::Node::make_shared("duplo_detection_publisher");
+int main(int argc, char **argv)
+{
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("duplo_detection_publisher");
 
-   std::string rgb_resolution_str, resource_base_folder, nn_name;
-   bool with_display;
-   int queue_size;
+    std::string rgb_resolution_str, resource_base_folder, nn_name;
+    bool with_display;
+    int queue_size;
 
-   // Declare parameters with default values
-   node->declare_parameter("rgb_resolution_str", "1080p");
-   node->declare_parameter("nn_name", "");
-   node->declare_parameter("resource_base_folder", "");
-   node->declare_parameter("with_display", false);
-   node->declare_parameter("queue_size", 30);
+    // Declare parameters with default values
+    node->declare_parameter("rgb_resolution_str", "1080p");
+    node->declare_parameter("nn_name", "");
+    node->declare_parameter("resource_base_folder", "");
+    node->declare_parameter("with_display", false);
+    node->declare_parameter("queue_size", 30);
 
-   // Get parameters from ROS2 parameter server
-   node->get_parameter("rgb_resolution_str", rgb_resolution_str);
-   node->get_parameter("nn_name", nn_name);
-   node->get_parameter("resource_base_folder", resource_base_folder);
-   node->get_parameter("with_display", with_display);
-   node->get_parameter("queue_size", queue_size);
+    // Get parameters from ROS2 parameter server
+    node->get_parameter("rgb_resolution_str", rgb_resolution_str);
+    node->get_parameter("nn_name", nn_name);
+    node->get_parameter("resource_base_folder", resource_base_folder);
+    node->get_parameter("with_display", with_display);
+    node->get_parameter("queue_size", queue_size);
 
-   // Create the pipeline and device
-   dai::Pipeline pipeline = create_pipeline(resource_base_folder + "/" + nn_name, with_display);
-   dai::Device device(pipeline);
+    // Create the pipeline and device
+    dai::Pipeline pipeline = create_pipeline(resource_base_folder + "/" + nn_name, with_display);
+    dai::Device device(pipeline);
 
-   // Set up detection queue
-   auto detection_queue = device.getOutputQueue("detections", queue_size, false);
-   
-   // Create publishers for rgb, depth and detections if we want display
-   if (with_display) {
-       auto rgb_queue = device.getOutputQueue("preview", queue_size, false);
-       auto depth_queue = device.getOutputQueue("depth", queue_size, false);
-       auto calibration_handler = device.readCalibration();
+    // Set up detection queue
+    auto detection_queue = device.getOutputQueue("detections", queue_size, false);
 
-       dai::rosBridge::ImageConverter rgb_converter("oak_rgb_camera_optical_frame", false);
-       auto rgb_camera_info = rgb_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_A, -1, -1);
-       dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgb_publish(rgb_queue,
-           node,
-           std::string("camera/raw_rgb"),
-           std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgb_converter, std::placeholders::_1, std::placeholders::_2),
-           queue_size,
-           rgb_camera_info,
-           "camera");
+    // Create publishers for rgb, depth and detections if we want display
+    if (with_display)
+    {
+        auto rgb_queue = device.getOutputQueue("preview", queue_size, false);
+        auto depth_queue = device.getOutputQueue("depth", queue_size, false);
+        auto calibration_handler = device.readCalibration();
 
-       dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
-       dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
-           detection_queue,
-           node,
-           std::string("camera/detections"),
-           std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
-           queue_size);
-    
-    // We don't need the depth stream but it's here commented in case.
-    //    dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
-    //    // width and height based on 480p mono resolution
-    //    auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);
-    //    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depth_publish(
-    //        depth_queue,
-    //        node,
-    //        std::string("camera/depth"),
-    //        std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &depth_converter, std::placeholders::_1, std::placeholders::_2),
-    //        queue_size,
-    //        right_camera_info,
-    //        "camera");
+        dai::rosBridge::ImageConverter rgb_converter("oak_rgb_camera_optical_frame", false);
+        auto rgb_camera_info = rgb_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_A, -1, -1);
+        dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgb_publish(rgb_queue,
+                                                                                            node,
+                                                                                            std::string("camera/raw_rgb"),
+                                                                                            std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgb_converter, std::placeholders::_1, std::placeholders::_2),
+                                                                                            queue_size,
+                                                                                            rgb_camera_info,
+                                                                                            "camera");
 
-       detection_publish.addPublisherCallback();
-       //depth_publish.addPublisherCallback();
-       rgb_publish.addPublisherCallback();
+        dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
+        dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
+            detection_queue,
+            node,
+            std::string("camera/detections"),
+            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
+            queue_size);
 
-       rclcpp::spin(node);
+        // We don't need the depth stream but it's here commented in case.
+        //    dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
+        //    // width and height based on 480p mono resolution
+        //    auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);
+        //    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depth_publish(
+        //        depth_queue,
+        //        node,
+        //        std::string("camera/depth"),
+        //        std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &depth_converter, std::placeholders::_1, std::placeholders::_2),
+        //        queue_size,
+        //        right_camera_info,
+        //        "camera");
 
-   // only create publisher for detections if we don't want display
-   } else {
-       dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
-       dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
-           detection_queue,
-           node,
-           std::string("camera/detections"),
-           std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
-           queue_size);
+        detection_publish.addPublisherCallback();
+        // depth_publish.addPublisherCallback();
+        rgb_publish.addPublisherCallback();
 
-       detection_publish.addPublisherCallback();
+        rclcpp::spin(node);
 
-       rclcpp::spin(node);
-   }
-   return 0;
+        // only create publisher for detections if we don't want display
+    }
+    else
+    {
+        dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
+        dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
+            detection_queue,
+            node,
+            std::string("camera/detections"),
+            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
+            queue_size);
+
+        detection_publish.addPublisherCallback();
+
+        rclcpp::spin(node);
+    }
+    return 0;
 }

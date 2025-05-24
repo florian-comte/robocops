@@ -69,36 +69,6 @@ namespace robocops_control
             hardware_interface::HW_IF_VELOCITY);
         return hardware_interface::CallbackReturn::ERROR;
       }
-
-      // Removed check for 2 state interfaces (position and velocity) since we don't have acces to it
-      // since passing through maxon controllers.
-      // We could check for state_interfaces.size() == 1 (but not really needed in our context)
-
-      // if (joint.state_interfaces.size() != 2)
-      // {
-      //   RCLCPP_FATAL(
-      //       get_logger(), "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
-      //       joint.state_interfaces.size());
-      //   return hardware_interface::CallbackReturn::ERROR;
-      // }
-
-      // if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-      // {
-      //   RCLCPP_FATAL(
-      //       get_logger(), "Joint '%s' have '%s' as first state interface. '%s' expected.",
-      //       joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
-      //       hardware_interface::HW_IF_POSITION);
-      //   return hardware_interface::CallbackReturn::ERROR;
-      // }
-
-      // if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-      // {
-      //   RCLCPP_FATAL(
-      //       get_logger(), "Joint '%s' have '%s' as second state interface. '%s' expected.",
-      //       joint.name.c_str(), joint.state_interfaces[1].name.c_str(),
-      //       hardware_interface::HW_IF_VELOCITY);
-      //   return hardware_interface::CallbackReturn::ERROR;
-      // }
     }
 
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -119,26 +89,26 @@ namespace robocops_control
       comms_.disconnect();
     }
     comms_.connect(device_, timeout_ms_);
-    RCLCPP_INFO(get_logger(), "Successfully configured!");
 
-    return hardware_interface::CallbackReturn::SUCCESS;
-  }
-
-  /**
-   * @brief Cleans up the hardware, closing the serial connection if open.
-   *
-   * @param previous_state Lifecycle state prior to cleanup.
-   * @return CallbackReturn indicating success or failure.
-   */
-  hardware_interface::CallbackReturn DiffBotSystemHardware::on_cleanup(
-      const rclcpp_lifecycle::State & /*previous_state*/)
-  {
-    RCLCPP_INFO(get_logger(), "Cleaning up ...please wait...");
-    if (comms_.connected())
+    for (const auto &[name, descr] : joint_state_interfaces_)
     {
-      comms_.disconnect();
+      set_state(name, 0.0);
     }
-    RCLCPP_INFO(get_logger(), "Successfully cleaned up!");
+    for (const auto &[name, descr] : joint_command_interfaces_)
+    {
+      set_command(name, 0.0);
+    }
+
+    for (const auto &[name, descr] : gpio_state_interfaces_)
+    {
+      set_state(name, 0.0);
+    }
+    for (const auto &[name, descr] : gpio_command_interfaces_)
+    {
+      set_command(name, 0.0);
+    }
+
+    RCLCPP_INFO(get_logger(), "Successfully configured!");
 
     return hardware_interface::CallbackReturn::SUCCESS;
   }
@@ -158,6 +128,15 @@ namespace robocops_control
       return hardware_interface::CallbackReturn::ERROR;
     }
 
+    for (const auto &[name, descr] : joint_state_interfaces_)
+    {
+      set_command(name, get_state(name));
+    }
+    for (const auto &[name, descr] : gpio_command_interfaces_)
+    {
+      set_command(name, get_state(name));
+    }
+
     RCLCPP_INFO(get_logger(), "Successfully activated!");
     return hardware_interface::CallbackReturn::SUCCESS;
   }
@@ -171,46 +150,15 @@ namespace robocops_control
   hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
-    RCLCPP_INFO(get_logger(), "Deactivating ...please wait...");
+
+    if (comms_.connected())
+    {
+      comms_.disconnect();
+    }
+
     RCLCPP_INFO(get_logger(), "Successfully deactivated!");
 
     return hardware_interface::CallbackReturn::SUCCESS;
-  }
-
-  /**
-   * @brief Exports state interfaces for each wheel's velocity.
-   *
-   * @return A vector of StateInterface objects for both wheels.
-   */
-  std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_state_interfaces()
-  {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.encoder_speed));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.encoder_speed));
-
-    return state_interfaces;
-  }
-
-  /**
-   * @brief Exports command interfaces for each wheel's velocity.
-   *
-   * @return A vector of CommandInterface objects for both wheels.
-   */
-  std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_command_interfaces()
-  {
-    std::vector<hardware_interface::CommandInterface> command_interfaces;
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.command_speed));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.command_speed));
-
-    return command_interfaces;
   }
 
   /**
@@ -228,18 +176,27 @@ namespace robocops_control
       return hardware_interface::return_type::ERROR;
     }
 
+    // Set state left/right encoder value
     if (use_encoders_)
     {
-      // comms_.read_encoder_values(&wheel_r_.encoder_speed, &wheel_l_.encoder_speed);
-
-      wheel_r_.encoder_speed /= gearbox_ratio_;
-      wheel_l_.encoder_speed /= gearbox_ratio_;
+      set_state(left_wheel_name_ + "/velocity", wheel_l_.encoder_speed / gearbox_ratio_);
+      set_state(right_wheel_name_ + "/velocity", wheel_r_.encoder_speed / gearbox_ratio_);
     }
     else
     {
-      wheel_l_.encoder_speed = wheel_l_.command_speed;
-      wheel_r_.encoder_speed = wheel_r_.command_speed;
+      set_state(left_wheel_name_ + "/velocity", wheel_l_.command_speed);
+      set_state(right_wheel_name_ + "/velocity", wheel_r_.command_speed);
     }
+
+    // Set state authorized/active lift
+    set_state("lift/authorized", lift_authorized_ ? 1.0 : 0.0);
+    set_state("lift/active", lift_authorized_ ? 1.0 : 0.0);
+
+    // Set state active unload
+    set_state("unload/active", lift_authorized_ ? 1.0 : 0.0);
+
+    // Set state active brushes
+    set_state("unload/active", lift_authorized_ ? 1.0 : 0.0);
 
     return hardware_interface::return_type::OK;
   }
@@ -260,13 +217,17 @@ namespace robocops_control
     }
 
     comms_.send_command(
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_r_.command_speed)),
-        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * wheel_l_.command_speed)),
-        false,
-        true,
-        false,
+        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(left_wheel_name_ + "/velocity"))),
+        static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(right_wheel_name_ + "/velocity"))),
+        static_cast<bool>(get_command("brushes/active")),
+        static_cast<bool>(get_command("unload/active")),
+        static_cast<bool>(get_command("lift/authorize")),
         &wheel_l_.encoder_speed,
         &wheel_r_.encoder_speed,
+        &lift_authorized_,
+        &lift_active_,
+        &unload_active_,
+        &brushed_active_,
         true);
 
     return hardware_interface::return_type::OK;

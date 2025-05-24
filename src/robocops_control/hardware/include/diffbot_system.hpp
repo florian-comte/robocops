@@ -53,35 +53,12 @@ namespace robocops_control
         const rclcpp_lifecycle::State &previous_state) override;
 
     /**
-     * @brief Exports state interfaces to the ROS 2 control system.
-     *
-     * @return A vector of StateInterface objects.
-     */
-    std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
-
-    /**
-     * @brief Exports command interfaces to the ROS 2 control system.
-     *
-     * @return A vector of CommandInterface objects.
-     */
-    std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
-
-    /**
      * @brief Activates the hardware interface.
      *
      * @param previous_state The previous lifecycle state.
      * @return CallbackReturn indicating success or failure.
      */
     hardware_interface::CallbackReturn on_activate(
-        const rclcpp_lifecycle::State &previous_state) override;
-
-    /**
-     * @brief Cleans up the hardware interface.
-     *
-     * @param previous_state The previous lifecycle state.
-     * @return CallbackReturn indicating success or failure.
-     */
-    hardware_interface::CallbackReturn on_cleanup(
         const rclcpp_lifecycle::State &previous_state) override;
 
     /**
@@ -146,6 +123,11 @@ namespace robocops_control
 
     /// Right wheel abstraction.
     Wheel wheel_r_;
+
+    bool lift_authorized_;
+    bool lift_active_;
+    bool unload_active_;
+    bool brushed_active_;
   };
 
 } // namespace robocops_control

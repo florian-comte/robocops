@@ -11,11 +11,15 @@ public:
 
     void send_command(int16_t maxon_left,
                       int16_t maxon_right,
-                      bool brush,
-                      bool unload,
-                      bool lift,
+                      bool brushes_activate,
+                      bool unload_activate,
+                      bool lift_authorize,
                       double *encoder_left,
                       double *encoder_right,
+                      bool *lift_authorized,
+                      bool *lift_active,
+                      bool *unload_active,
+                      bool *brushes_active,
                       bool print_output = false);
 
 private:

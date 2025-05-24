@@ -43,9 +43,9 @@ def generate_launch_description():
         ]
     )
 
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("robocops_control"), "rviz", "diffbot.rviz"]
-    )
+    # rviz_config_file = PathJoinSubstitution(
+    #     [FindPackageShare("robocops_control"), "rviz", "diffbot.rviz"]
+    # )
 
     control_node = Node(
         package="controller_manager",
@@ -61,16 +61,16 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
-    rviz = LaunchConfiguration("rviz")
+    # rviz = LaunchConfiguration("rviz")
 
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-        condition=IfCondition(rviz)
-    )
+    # rviz_node = Node(
+    #     package="rviz2",
+    #     executable="rviz2",
+    #     name="rviz2",
+    #     output="log",
+    #     arguments=["-d", rviz_config_file],
+    #     condition=IfCondition(rviz)
+    # )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -90,13 +90,26 @@ def generate_launch_description():
         ],
     )
 
-    # Delay rviz start after `joint_state_broadcaster`
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+    gpio_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gpio_controller", "--param-file", robot_controllers],
+    )
+
+    delay_gpio_after_robot_controller_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
+            target_action=robot_controller_spawner,
+            on_exit=[gpio_controller_spawner],
         )
     )
+
+    # Delay rviz start after `joint_state_broadcaster`
+    # delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+    #     event_handler=OnProcessExit(
+    #         target_action=joint_state_broadcaster_spawner,
+    #         on_exit=[rviz_node],
+    #     )
+    # )
 
     # Delay start of robot_controller after `joint_state_broadcaster`
     delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
@@ -110,15 +123,9 @@ def generate_launch_description():
         control_node,
         robot_state_pub_node,
         robot_controller_spawner,
-        delay_rviz_after_joint_state_broadcaster_spawner,
+        delay_gpio_after_robot_controller_spawner,
+        #delay_rviz_after_joint_state_broadcaster_spawner,
         delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
     ]
 
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            "rviz",
-            default_value="false",
-            description="Start RViz2 automatically with this launch file.",
-        ),
-        *nodes
-    ])
+    return LaunchDescription(nodes)

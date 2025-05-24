@@ -23,6 +23,21 @@
         <command_interface name="velocity"/>
         <state_interface name="velocity"/>
       </joint>
+
+      <gpio name="brushes">
+        <command_interface name="activate"/>
+        <state_interface name="active"/>
+      </gpio>
+      <gpio name="unload">
+        <command_interface name="activate"/>
+        <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="unload">
+        <command_interface name="authorize"/>
+        <state_interface name="authorized"/>
+        <state_interface name="active"/>
+      </gpio>
     </ros2_control>
 
   </xacro:macro>

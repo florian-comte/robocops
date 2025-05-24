@@ -105,6 +105,8 @@ class TeleopNode(Node):
             group_msg.values = [1.0 if self.gpio_states[group] else 0.0]
             msg.interface_values.append(group_msg)
 
+        print(msg)
+
         self.gpio_pub.publish(msg)
         print(f"{name.capitalize()} toggled to {'ON' if self.gpio_states[name] else 'OFF'}")
 

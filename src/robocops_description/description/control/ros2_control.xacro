@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="robocops_ros2_control" params="name">
+
+    <ros2_control name="${name}" type="system">
+    <hardware>
+        <plugin>robocops_control/RobocopsSystemHardware</plugin>
+        <param name="left_wheel_name">left_wheel_joint</param>
+        <param name="right_wheel_name">right_wheel_joint</param>
+        <param name="device">/dev/ttyACM0</param>
+        <param name="timeout_ms">1000</param>
+        <param name="use_encoders">false</param>
+        <param name="gearbox_ratio">60</param>
+    </hardware>
+   
+      <joint name="left_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="right_wheel_joint">
+        <command_interface name="velocity"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <gpio name="brushes">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
+      <gpio name="unload">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="lift">
+        <command_interface name="authorized"/>
+        <state_interface name="authorized"/>
+        <state_interface name="active"/>
+      </gpio>
+    </ros2_control>
+
+  </xacro:macro>
+
+</robot>

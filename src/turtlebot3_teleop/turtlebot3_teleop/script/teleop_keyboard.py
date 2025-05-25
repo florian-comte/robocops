@@ -192,30 +192,19 @@ def main():
                 target_angular_velocity,
                 (ANG_VEL_STEP_SIZE / 2.0))
 
-            if ROS_DISTRO == 'humble':
-                twist = Twist()
-                twist.linear.x = control_linear_velocity
-                twist.linear.y = 0.0
-                twist.linear.z = 0.0
 
-                twist.angular.x = 0.0
-                twist.angular.y = 0.0
-                twist.angular.z = control_angular_velocity
+            twist_stamped = TwistStamped()
+            twist_stamped.header.stamp = Clock().now().to_msg()
+            twist_stamped.header.frame_id = ''
+            twist_stamped.twist.linear.x = control_linear_velocity
+            twist_stamped.twist.linear.y = 0.0
+            twist_stamped.twist.linear.z = 0.0
 
-                pub.publish(twist)
-            else:
-                twist_stamped = TwistStamped()
-                twist_stamped.header.stamp = Clock().now().to_msg()
-                twist_stamped.header.frame_id = ''
-                twist_stamped.twist.linear.x = control_linear_velocity
-                twist_stamped.twist.linear.y = 0.0
-                twist_stamped.twist.linear.z = 0.0
+            twist_stamped.twist.angular.x = 0.0
+            twist_stamped.twist.angular.y = 0.0
+            twist_stamped.twist.angular.z = control_angular_velocity
 
-                twist_stamped.twist.angular.x = 0.0
-                twist_stamped.twist.angular.y = 0.0
-                twist_stamped.twist.angular.z = control_angular_velocity
-
-                pub.publish(twist_stamped)
+            pub.publish(twist_stamped)
 
     except Exception as e:
         print(e)

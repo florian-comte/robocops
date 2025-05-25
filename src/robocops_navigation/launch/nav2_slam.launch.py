@@ -74,16 +74,22 @@ def generate_launch_description():
     # ------
 
     # --- include ROBOT STATE PUBLISHER launch file and setup ---
-    robot_state_publisher_cmd = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{
-            'use_sim_time': True,
-            'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
-        }],
-        remappings=remappings_nav,
+    # robot_state_publisher_cmd = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': True,
+    #         'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
+    #     }],
+    #     remappings=remappings_nav,
+    # )
+    robot_state_publisher_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(os.path.join(get_package_share_directory('robocops_description'), 'launch'), 'robot_state_publisher.launch.py')
+        ),
+         launch_arguments={'simulation': "true"}.items()
     )
 
     ld.add_action(robot_state_publisher_cmd)

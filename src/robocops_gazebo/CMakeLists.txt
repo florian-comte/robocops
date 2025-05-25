@@ -26,6 +26,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(robocops_description REQUIRED)
 
 ################################################################################
 # Build
@@ -49,7 +50,7 @@ set(dependencies
 
 #ament_target_dependencies(${dependencies})
 
-install(DIRECTORY launch config description worlds
+install(DIRECTORY launch config worlds
   DESTINATION share/${PROJECT_NAME}/
 )
 

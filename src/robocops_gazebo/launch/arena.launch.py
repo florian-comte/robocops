@@ -36,9 +36,9 @@ def generate_launch_description():
 
     robot_state_publisher_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(os.path.join(get_package_share_directory('robocops_gazebo'), 'launch'), 'robot_state_publisher.launch.py')
+            os.path.join(os.path.join(get_package_share_directory('robocops_description'), 'launch'), 'robot_state_publisher.launch.py')
         ),
-        launch_arguments={'robot_model': robot_model}.items()
+         launch_arguments={'simulation': "true"}.items()
     )
     
     world = PathJoinSubstitution([

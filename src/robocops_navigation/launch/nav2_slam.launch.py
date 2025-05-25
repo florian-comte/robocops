@@ -12,7 +12,7 @@ def generate_launch_description():
 
     # --- declare args for launch file ---
     declare_world = DeclareLaunchArgument('world', default_value='arena')
-    declare_robot = DeclareLaunchArgument('robot_model', default_value='robocops_2_wheels')
+    declare_robot = DeclareLaunchArgument('robot_model', default_value='robot')
     declare_init_pose_x = DeclareLaunchArgument('initial_pose_x', default_value='-8.5')
     declare_init_pose_y = DeclareLaunchArgument('initial_pose_y', default_value='-2')
 
@@ -22,8 +22,9 @@ def generate_launch_description():
         PythonExpression(["'", LaunchConfiguration('world'), "' + '.world'"])
     ])
     urdf_file_path = PathJoinSubstitution([
-        get_package_share_directory('robocops_gazebo'),
+        get_package_share_directory('robocops_description'),
         'description',
+        'urdf',
         PythonExpression(["'", LaunchConfiguration('robot_model'), "' + '.urdf.xacro'"])
     ])
 

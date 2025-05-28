@@ -14,7 +14,7 @@ def generate_launch_description():
     rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')
     with_display         = LaunchConfiguration('with_display', default='false')
     with_processor         = LaunchConfiguration('with_processor', default='true')
-
+    fake_tf_zone = LaunchConfiguration('fake_tf_zone', default='true')
     queue_size = LaunchConfiguration('queue_size', default=30)
 
     declare_nn_name_cmd = DeclareLaunchArgument(
@@ -44,6 +44,12 @@ def generate_launch_description():
     declare_with_processor_cmd = DeclareLaunchArgument(
         'with_processor',
         default_value=with_processor,
+        description='Enable or disable processor node of duplos'
+    )
+    
+    declare_fake_tf_zone_cmd = DeclareLaunchArgument(
+        'fake_tf_zone',
+        default_value=fake_tf_zone,
         description='Enable or disable processor node of duplos'
     )
 
@@ -78,6 +84,13 @@ def generate_launch_description():
         condition=IfCondition(with_processor)
     )
     
+    # Node for detections display publisher
+    fake_tf_zone_node = launch_ros.actions.Node(
+        package='robocops_duplos', executable='fake_tf_zone_publisher',
+        output='screen',
+        condition=IfCondition(fake_tf_zone)
+    )
+    
     # Launch description
     ld = LaunchDescription()
     
@@ -88,9 +101,11 @@ def generate_launch_description():
     ld.add_action(declare_with_display_cmd)
     ld.add_action(declare_queue_size_cmd)
     ld.add_action(declare_with_processor_cmd)
+    ld.add_action(declare_fake_tf_zone_cmd)
     
     ld.add_action(duplo_detection_publisher)
     ld.add_action(duplo_detection_viewer)
     ld.add_action(duplo_processor)
+    ld.add_action(fake_tf_zone_node)
 
     return ld

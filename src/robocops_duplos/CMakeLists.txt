@@ -73,6 +73,7 @@ endmacro()
 dai_add_node_ros2(duplo_publisher src/duplo_publisher.cpp)
 dai_add_node_ros2(duplo_viewer src/duplo_viewer.cpp)
 dai_add_node_ros2(duplo_processor src/duplo_processor.cpp)
+dai_add_node_ros2(fake_tf_zone_publisher src/fake_tf_zone_publisher.cpp)
 
 install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
 #install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
@@ -83,6 +84,7 @@ install(TARGETS
         duplo_publisher
         duplo_viewer
         duplo_processor
+        fake_tf_zone_publisher
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

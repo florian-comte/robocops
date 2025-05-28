@@ -172,7 +172,7 @@ private:
         geometry_msgs::msg::PointStamped map_point;
         try
         {
-            map_point = tf_buffer_.transform(camera_point, "map", tf2::durationFromSec(0.1));
+            map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
         }
         catch (tf2::TransformException &ex)
         {

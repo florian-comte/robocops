@@ -17,6 +17,7 @@
 #define BUFFER_SIZE 100
 #define TOLERANCE_CM 20
 #define MIN_COUNT 20
+#define SCORE_THRESHOLD 0.90
 
 #define DROPPING_ZONE_MIN_X 0.0
 #define DROPPING_ZONE_MAX_X 1.0
@@ -204,11 +205,15 @@ private:
         for (const auto &detection : msg->detections)
         {
             robocops_msgs::msg::Duplo duplo;
-            if (transform_coordinates(msg->header, detection, duplo) == 0)
+
+            if (detection.results[0].score > SCORE_THRESHOLD)
             {
-                add_duplo_in_buffer(current_zone_, duplo);
+                if (transform_coordinates(msg->header, detection, duplo) == 0)
+                {
+                    add_duplo_in_buffer(current_zone_, duplo);
+                }
             }
-        }
+                }
     }
 
     void publishOfficialDuplos()

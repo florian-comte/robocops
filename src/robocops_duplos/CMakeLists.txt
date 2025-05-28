@@ -70,8 +70,8 @@ macro(dai_add_node_ros2 node_name node_src)
                         depthai::core)
 endmacro()
 
-dai_add_node_ros2(duplo_detection_publisher src/duplo_publisher.cpp)
-dai_add_node_ros2(duplo_detection_viewer src/duplo_viewer.cpp)
+dai_add_node_ros2(duplo_publisher src/duplo_publisher.cpp)
+dai_add_node_ros2(duplo_viewer src/duplo_viewer.cpp)
 dai_add_node_ros2(duplo_processor src/duplo_processor.cpp)
 
 install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
@@ -80,8 +80,8 @@ install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
 FILES_MATCHING PATTERN "*.py")
 
 install(TARGETS
-        duplo_detection_publisher
-        duplo_detection_viewer
+        duplo_publisher
+        duplo_viewer
         duplo_processor
         DESTINATION lib/${PROJECT_NAME})
 

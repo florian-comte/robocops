@@ -29,7 +29,7 @@ public:
     DuploProcessor() : Node("duplo_processor"), tf_buffer_(get_clock()), tf_listener_(tf_buffer_)
     {
         m_detectionsSub = this->create_subscription<depthai_ros_msgs::msg::SpatialDetectionArray>(
-            "/camera/detections", 30,
+            "/camera/detections", 20,
             std::bind(&DuploProcessor::detectionsCallback, this, std::placeholders::_1));
 
         m_zoneSub = this->create_subscription<std_msgs::msg::Int32>(
@@ -124,10 +124,10 @@ private:
 
     int add_duplo_in_buffer(int zone, robocops_msgs::msg::Duplo &duplo)
     {
-        if (is_in_dropping_zone(duplo.position.point))
-        {
-            return -1;
-        }
+        // if (is_in_dropping_zone(duplo.position.point))
+        // {
+        //     return -1;
+        // }
 
         auto &buffer = get_buffer(zone);
         auto &official = get_official_list(zone);
@@ -143,7 +143,7 @@ private:
                 if (existing.count >= MIN_COUNT)
                 {
                     official.push_back(existing);
-                    buffer.erase(std::remove(buffer.begin(), buffer.end(), existing), buffer.end());
+                    //buffer.erase(std::remove(buffer.begin(), buffer.end(), existing), buffer.end());
                 }
                 return 1;
             }
@@ -203,6 +203,7 @@ private:
             if (transform_coordinates(msg->header, detection, duplo) == 0)
             {
                 add_duplo_in_buffer(current_zone_, duplo);
+                
             }
         }
     }

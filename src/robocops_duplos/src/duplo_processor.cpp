@@ -15,8 +15,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #define BUFFER_SIZE 100
-#define TOLERANCE_CM 5.0
-#define MIN_COUNT 3
+#define TOLERANCE_CM 20
+#define MIN_COUNT 20
 
 #define DROPPING_ZONE_MIN_X 0.0
 #define DROPPING_ZONE_MAX_X 1.0

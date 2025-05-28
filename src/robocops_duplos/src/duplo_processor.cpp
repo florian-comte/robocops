@@ -72,6 +72,8 @@ private:
     std::vector<robocops_msgs::msg::Duplo> zone3_duplos_buffer_;
     std::vector<robocops_msgs::msg::Duplo> zone4_duplos_buffer_;
 
+    std::vector<int> already_official_;
+
     std::vector<robocops_msgs::msg::Duplo> zone1_duplos_;
     std::vector<robocops_msgs::msg::Duplo> zone2_duplos_;
     std::vector<robocops_msgs::msg::Duplo> zone3_duplos_;
@@ -134,16 +136,17 @@ private:
 
         for (auto &existing : buffer)
         {
-            RCLCPP_INFO(this->get_logger(), "ID %d", existing.id);
-            RCLCPP_INFO(this->get_logger(), "Distance %d", calculate_distance(existing.position.point, duplo.position.point));
-            
-             if (calculate_distance(existing.position.point, duplo.position.point) < TOLERANCE_CM / 100.0)
+            if (calculate_distance(existing.position.point, duplo.position.point) < TOLERANCE_CM / 100.0)
             {
                 existing.count += 1;
                 if (existing.count >= MIN_COUNT)
                 {
-                    official.push_back(existing);
-                    //buffer.erase(std::remove(buffer.begin(), buffer.end(), existing), buffer.end());
+                    if (std::find(already_official_.begin(), already_official_.end(), existing.id) == already_official_.end())
+                    {
+                        official.push_back(existing);
+                        already_official_.push_back(existing.id);
+                        RCLCPP_INFO(this->get_logger(), "Duplo %d became official in zone %d", existing.id, zone);
+                    }
                 }
                 return 1;
             }
@@ -156,6 +159,7 @@ private:
         }
 
         duplo.count = 1;
+        duplo.id = current_duplo_id_++;
         buffer.push_back(duplo);
         RCLCPP_INFO(this->get_logger(), "Added new duplo to buffer in zone %d", zone);
         return 0;
@@ -184,13 +188,13 @@ private:
         //     return -1;
         // }
 
-        //transformed_duplo.position = map_point;
+        // transformed_duplo.position = map_point;
 
         transformed_duplo.position = camera_point;
         transformed_duplo.score = untransformed_duplo.results[0].score;
         transformed_duplo.count = 1;
 
-        transformed_duplo.id = current_duplo_id_++;
+        transformed_duplo.id = -1;
 
         return 0;
     }
@@ -203,7 +207,6 @@ private:
             if (transform_coordinates(msg->header, detection, duplo) == 0)
             {
                 add_duplo_in_buffer(current_zone_, duplo);
-                
             }
         }
     }

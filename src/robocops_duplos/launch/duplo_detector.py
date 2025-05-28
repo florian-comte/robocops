@@ -6,6 +6,8 @@ from launch.actions import DeclareLaunchArgument
 import launch_ros.actions
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     nn_name             = LaunchConfiguration('nn_name', default="yolo11n_3.blob")
@@ -16,6 +18,13 @@ def generate_launch_description():
     with_processor         = LaunchConfiguration('with_processor', default='true')
     fake_tf_zone = LaunchConfiguration('fake_tf_zone', default='true')
     queue_size = LaunchConfiguration('queue_size', default=30)
+    
+    robot_state_publisher_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(os.path.join(get_package_share_directory('robocops_description'), 'launch'), 'robot_state_publisher.launch.py')
+        ),
+         launch_arguments={'simulation': "false"}.items()
+    )
 
     declare_nn_name_cmd = DeclareLaunchArgument(
         'nn_name',

@@ -134,7 +134,10 @@ private:
 
         for (auto &existing : buffer)
         {
-            if (calculate_distance(existing.position.point, duplo.position.point) < TOLERANCE_CM / 100.0)
+            RCLCPP_INFO(this->get_logger(), "ID %d", existing.id);
+            RCLCPP_INFO(this->get_logger(), "Distance %d", calculate_distance(existing.position.point, duplo.position.point));
+            
+             if (calculate_distance(existing.position.point, duplo.position.point) < TOLERANCE_CM / 100.0)
             {
                 existing.count += 1;
                 if (existing.count >= MIN_COUNT)

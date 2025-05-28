@@ -172,6 +172,7 @@ private:
         geometry_msgs::msg::PointStamped map_point;
         try
         {
+            RCLCPP_INFO(this->get_logger(), "Camera point frame: %s", camera_point.header.frame_id.c_str());
             map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
         }
         catch (tf2::TransformException &ex)

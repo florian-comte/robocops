@@ -154,7 +154,7 @@ int main(int argc, char **argv)
         auto depth_queue = device.getOutputQueue("depth", queue_size, false);
         auto calibration_handler = device.readCalibration();
 
-        dai::rosBridge::ImageConverter rgb_converter("oak_rgb_camera_optical_frame", false);
+        dai::rosBridge::ImageConverter rgb_converter("camera", false);
         auto rgb_camera_info = rgb_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_A, -1, -1);
         dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgb_publish(rgb_queue,
                                                                                             node,
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
                                                                                             rgb_camera_info,
                                                                                             "camera");
 
-        dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
+        dai::rosBridge::SpatialDetectionConverter detection_converter("camera", 416, 416, false);
         dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
             detection_queue,
             node,
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        dai::rosBridge::SpatialDetectionConverter detection_converter("oak_rgb_camera_optical_frame", 416, 416, false);
+        dai::rosBridge::SpatialDetectionConverter detection_converter("camera", 416, 416, false);
         dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
             detection_queue,
             node,

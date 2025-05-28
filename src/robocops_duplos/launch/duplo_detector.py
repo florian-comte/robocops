@@ -13,6 +13,7 @@ def generate_launch_description():
                                                os.path.join(get_package_share_directory('robocops_camera'), 'resources'))
     rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')
     with_display         = LaunchConfiguration('with_display', default='false')
+    with_processor         = LaunchConfiguration('with_processor', default='true')
 
     queue_size = LaunchConfiguration('queue_size', default=30)
 
@@ -39,6 +40,12 @@ def generate_launch_description():
         default_value=with_display,
         description='Enable or disable publishing of RGB and depth images along with detections'
     )
+    
+    declare_with_processor_cmd = DeclareLaunchArgument(
+        'with_processor',
+        default_value=with_display,
+        description='Enable or disable processor node of duplos'
+    )
 
     declare_queue_size_cmd = DeclareLaunchArgument(
         'queue_size',
@@ -48,7 +55,7 @@ def generate_launch_description():
 
     # Node for object detection publisher
     duplo_detection_publisher = launch_ros.actions.Node(
-        package='robocops_camera', executable='duplo_detection_publisher',
+        package='robocops_duplos', executable='duplo_publisher',
         output='screen',
         parameters=[{'nn_name': nn_name},
                     {'resource_base_folder': resource_base_folder},
@@ -59,9 +66,16 @@ def generate_launch_description():
 
     # Node for detections display publisher
     duplo_detection_viewer = launch_ros.actions.Node(
-        package='robocops_camera', executable='duplo_detection_viewer',
+        package='robocops_duplos', executable='duplo_viewer',
         output='screen',
         condition=IfCondition(with_display)
+    )
+    
+    # Node for detections display publisher
+    duplo_processor = launch_ros.actions.Node(
+        package='robocops_duplos', executable='duplo_processor',
+        output='screen',
+        condition=IfCondition(with_processor)
     )
     
     # Launch description
@@ -73,8 +87,10 @@ def generate_launch_description():
     ld.add_action(declare_mono_resolution_cmd)
     ld.add_action(declare_with_display_cmd)
     ld.add_action(declare_queue_size_cmd)
+    ld.add_action(declare_with_processor_cmd)
     
     ld.add_action(duplo_detection_publisher)
     ld.add_action(duplo_detection_viewer)
+    ld.add_action(duplo_processor)
 
     return ld

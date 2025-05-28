@@ -14,7 +14,10 @@ find_package(depthai_ros_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/GpioCommand.msg"
+  "msg/Duplo.msg"
+  "msg/DuploArray.msg"
+  "srv/RemoveDuplo.srv"
+
   DEPENDENCIES builtin_interfaces geometry_msgs depthai_ros_msgs
 )
 

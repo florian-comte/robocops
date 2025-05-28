@@ -3,21 +3,32 @@
 <package format="3">
   <name>robocops_duplos</name>
   <version>1.0.0</version>
-  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the duplo detection system</description>
+  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the duplo detection using OAD-K D Lite camera + duplo processing</description>
   <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>
   <license>Apache-2.0</license>
 
-  <!-- Build tools -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- Dependencies -->
   <depend>rclcpp</depend>
+  <depend>cv_bridge</depend>
+  <depend>depthai</depend>
   <depend>depthai_ros_msgs</depend>
-  <depend>eigen3_cmake_module</depend>
+  <depend>depthai_bridge</depend>
+  <depend>depthai_descriptions</depend>
+  <depend>image_transport</depend>
+  <depend>libopencv-dev</depend>
+  <depend>ros_environment</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>stereo_msgs</depend>
+  <depend>vision_msgs</depend>
+  <depend>foxglove_msgs</depend>
+  <depend>rviz_imu_plugin</depend>
+  <depend>robocops_msgs</depend>
 
-  <!-- Testing -->
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

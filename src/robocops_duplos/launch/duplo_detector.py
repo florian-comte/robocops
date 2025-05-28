@@ -10,7 +10,7 @@ from launch.conditions import IfCondition
 def generate_launch_description():
     nn_name             = LaunchConfiguration('nn_name', default="yolo11n_3.blob")
     resource_base_folder = LaunchConfiguration('resource_base_folder', default=
-                                               os.path.join(get_package_share_directory('robocops_camera'), 'resources'))
+                                               os.path.join(get_package_share_directory('robocops_duplos'), 'resources'))
     rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')
     with_display         = LaunchConfiguration('with_display', default='false')
     with_processor         = LaunchConfiguration('with_processor', default='true')

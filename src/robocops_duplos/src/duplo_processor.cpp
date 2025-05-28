@@ -169,19 +169,21 @@ private:
         camera_point.point.y = untransformed_duplo.position.y;
         camera_point.point.z = untransformed_duplo.position.z;
 
-        geometry_msgs::msg::PointStamped map_point;
-        try
-        {
-            RCLCPP_INFO(this->get_logger(), "Camera point frame: %s", camera_point.header.frame_id.c_str());
-            map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
-        }
-        catch (tf2::TransformException &ex)
-        {
-            RCLCPP_WARN(this->get_logger(), "TF2 transform failed: %s", ex.what());
-            return -1;
-        }
+        // geometry_msgs::msg::PointStamped map_point;
+        // try
+        // {
+        //     RCLCPP_INFO(this->get_logger(), "Camera point frame: %s", camera_point.header.frame_id.c_str());
+        //     map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
+        // }
+        // catch (tf2::TransformException &ex)
+        // {
+        //     RCLCPP_WARN(this->get_logger(), "TF2 transform failed: %s", ex.what());
+        //     return -1;
+        // }
 
-        transformed_duplo.position = map_point;
+        //transformed_duplo.position = map_point;
+
+        transformed_duplo.position = camera_point;
         transformed_duplo.score = untransformed_duplo.results[0].score;
         transformed_duplo.count = 1;
 

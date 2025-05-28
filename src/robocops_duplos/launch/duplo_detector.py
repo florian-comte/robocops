@@ -43,7 +43,7 @@ def generate_launch_description():
     
     declare_with_processor_cmd = DeclareLaunchArgument(
         'with_processor',
-        default_value=with_display,
+        default_value=with_processor,
         description='Enable or disable processor node of duplos'
     )
 

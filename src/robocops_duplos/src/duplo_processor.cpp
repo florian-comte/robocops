@@ -64,7 +64,7 @@ private:
 
     int current_duplo_id_ = 0;
 
-        tf2_ros::Buffer tf_buffer_;
+    tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
 
     std::vector<robocops_msgs::msg::Duplo> zone1_duplos_buffer_;

@@ -1,0 +1,82 @@
+<root BTCPP_format="4" main_tree_to_execute="Main">
+    <BehaviorTree ID="Main">
+        <Sequence>
+            <Script code=" MAX_INVENTORY:= 10; MIN_TO_GO_ZONE_1:=1; MIN_TO_GO_ZONE_2:=1; MIN_TO_GO_ZONE_3:=2; MIN_TO_GO_ZONE_4:=2; TOTAL_ZONE_1:=15; TOTAL_ZONE_2:=6; TOTAL_ZONE_3:=6; TOTAL_ZONE_4:=6 " />
+
+            <KeepRunningUntilFailure>
+                <Fallback name="ZoneSelector">
+                    <Precondition if="MAX_INVENTORY - current_inventory > MIN_TO_GO_ZONE_3 && TOTAL_ZONE_3 - current_grabbed_zone_3 > MIN_TO_GO_ZONE_3 && never_timed_out_zone_3 && never_timed_out_opening_door" else="FAILURE">
+                        <SubTree ID="Zone3"/>
+                    </Precondition>
+
+                    <Precondition if="current_inventory > MIN_TO_GO_ZONE_4 && TOTAL_ZONE_4 - current_grabbed_zone_4 > MIN_TO_GO_ZONE_4 && never_timed_out_zone_4" else="FAILURE">
+                        <SubTree ID="Zone4"/>
+                    </Precondition>
+
+                    <Precondition if="current_inventory > MIN_TO_GO_ZONE_1 && TOTAL_ZONE_1 - current_grabbed_zone_1 > MIN_TO_GO_ZONE_1 && never_timed_out_zone_1" else="FAILURE">
+                        <SubTree ID="Zone1"/>
+                    </Precondition>
+
+                    <Precondition if="current_inventory > MIN_TO_GO_ZONE_2 && TOTAL_ZONE_2 - current_grabbed_zone_2 > MIN_TO_GO_ZONE_2 && never_timed_out_zone_2" else="FAILURE">
+                        <SubTree ID="Zone2"/>
+                    </Precondition>
+
+                    <SubTree ID="Base"/>
+                </Fallback>
+            </KeepRunningUntilFailure>
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Zone 3 -->
+    <BehaviorTree ID="Zone3">
+        <Sequence>
+            <!-- If door not open, open it -->
+            <Precondition if="!is_door_open" else="FAILURE">
+                
+            </Precondition>
+
+            <GoToPos name="go_to_loc" loc={target_location}/>
+            
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Zone 4 -->
+    <BehaviorTree ID="Zone4">
+        <Sequence>
+            <!-- TODO: work in zone4 -->
+            <Script code=" current_inventory:=10 " />
+
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Zone 1 -->
+    <BehaviorTree ID="Zone1">
+        <Sequence>
+            <!-- TODO: work in zone1 -->
+            <Script code=" current_inventory:=10 " />
+
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Zone 2 -->
+    <BehaviorTree ID="Zone2">
+        <Sequence>
+            <!-- TODO: work in zone2 -->
+            <Script code=" current_inventory:=10 " />
+
+        </Sequence>
+    </BehaviorTree>
+
+    <!-- Base -->
+    <BehaviorTree ID="Base">
+        <Sequence>
+            <!-- TODO: work in base -->
+            <!-- <ComputeReturnToBasePath>
+            <ReturnToBase/>
+            <UnloadRoutine/> -->
+
+            <Script code=" current_inventory:=0 " />
+        </Sequence>
+    </BehaviorTree>
+
+</root>

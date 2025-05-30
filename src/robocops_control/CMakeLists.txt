@@ -50,11 +50,6 @@ install(
 )
 
 install(
-  DIRECTORY description/ros2_control description/urdf description/rviz
-  DESTINATION share/robocops_control
-)
-
-install(
   DIRECTORY bringup/launch bringup/config
   DESTINATION share/robocops_control
 )

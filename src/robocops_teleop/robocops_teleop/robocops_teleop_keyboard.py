@@ -24,14 +24,14 @@ Movement:
 q  s  d
    x    
 
-z/x : Increase/decrease linear velocity
+z/s : Increase/decrease linear velocity
 q/d : Increase/decrease angular velocity
-s or space : Stop
+a : Stop
 
 GPIO toggles:
 w : Toggle brushes
-c : Toggle lift
-e : Toggle unload
+x : Toggle lift
+c : Toggle unload
 
 CTRL-C to quit
 """
@@ -128,9 +128,9 @@ def main():
                 break
             if key == 'w':
                 node.toggle_gpio("brushes")
-            elif key == 'x':
-                node.toggle_gpio("unload")
             elif key == 'c':
+                node.toggle_gpio("unload")
+            elif key == 'x':
                 node.toggle_gpio("lift")
 
             node.update_velocity(key)

@@ -4,11 +4,11 @@
 #include <Arduino.h>
 #include <Servo.h>
 
-#define SERVO_MOTOR_COUNT 2
+#define SERVO_MOTOR_COUNT 1
 
 enum servo_motor_position {
-    UNLOAD_DOOR_MOTOR = 0,
-    UNLOAD_LATCH_MOTOR = 1
+    UNLOAD_DOOR_MOTOR = 0
+    //UNLOAD_LATCH_MOTOR = 1
 };
 
 extern double servo_target_angles[SERVO_MOTOR_COUNT];

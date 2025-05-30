@@ -19,9 +19,6 @@
 bool active_lift_routine = 0;
 bool authorized_lift_routine = 0;
 
-double previous_loop = 0;
-double loop_start = 0;
-
 /**
    @brief Arduino setup function.
 */
@@ -36,7 +33,7 @@ void setup() {
   init_lift_ultrasound_sensor();
 
   // Init unload routine
-  unload_state = UNLOAD_OPEN_LATCH; 
+  unload_state = UNLOAD_OPEN_DOOR; 
 
   // Init lift routine
   // todo
@@ -83,7 +80,7 @@ void loop() {
 
   // DRI
   for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
-    set_dri_motor_state(i, dri_target_speeds[i]); 
+    set_dri_motor_state(i, (dri_target_speeds[i] >= 0), abs(dri_target_speeds[i])); 
   }
   
   // Servo
@@ -139,7 +136,7 @@ int handle_serial_command() {
     }
 
     if((activate_unload_routine == 1) && (unload_state == UNLOAD_IDLE)){
-      unload_state = UNLOAD_OPEN_LATCH; 
+      unload_state = UNLOAD_OPEN_DOOR; 
     }
     
     // Apply speeds

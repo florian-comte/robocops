@@ -5,8 +5,8 @@
  * These pins enable or disable motor output.
  */
 const int MAXON_MOTOR_ENABLE_PINS[MAXON_MOTOR_COUNT] = {
-    41,  // REAR_RIGHT
-    39 // REAR_LEFT
+    36,  // REAR_RIGHT
+    37 // REAR_LEFT
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT
 };
@@ -25,8 +25,8 @@ const int IS_INVERSED_MAXON_MOTOR[MAXON_MOTOR_COUNT] = {
  * These pins control motor speed using pulse-width modulation.
  */
 const int MAXON_MOTOR_PWM_PINS[MAXON_MOTOR_COUNT] = {
-    3,  // REAR_RIGHT
-    4 // REAR_LEFT
+    6,  // REAR_RIGHT
+    7 // REAR_LEFT
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT
 };
@@ -38,8 +38,8 @@ double maxon_target_speeds[MAXON_MOTOR_COUNT];
  * These pins control the motor direction (forward/reverse).
  */
 const int MAXON_MOTOR_DIRECTION_PINS[MAXON_MOTOR_COUNT] = {
-    40,  // REAR_RIGHT
-    38 // REAR_LEFT
+    34,  // REAR_RIGHT
+    35 // REAR_LEFT
 
     //40, // FRONT_LEFT
     //41, // FRONT_RIGHT

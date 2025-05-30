@@ -15,42 +15,50 @@ void handle_unload_routine() {
     case UNLOAD_IDLE:
       break;
 
-    case UNLOAD_OPEN_LATCH:
+    /*case UNLOAD_OPEN_LATCH:
       servo_target_angles[UNLOAD_LATCH_SERVO_NAME] = UNLOAD_LATCH_SERVO_OPEN_POS;
       unload_timer = millis();
       unload_state = UNLOAD_OPEN_DOOR;
-      break;
+      break;*/
 
     case UNLOAD_OPEN_DOOR:
-      if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_LATCH) {
-        servo_target_angles[UNLOAD_DOOR_SERVO_NAME] = UNLOAD_DOOR_SERVO_OPEN_POS;
-        unload_timer = millis();
-        unload_state = UNLOAD_CONVOYER;
-      }
+      //if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_LATCH) {
+      servo_target_angles[UNLOAD_DOOR_SERVO_NAME] = UNLOAD_DOOR_SERVO_OPEN_POS;
+      unload_timer = millis();
+      unload_state = UNLOAD_CONVOYER;
+      //}
       break;
 
     case UNLOAD_CONVOYER:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
         dri_target_speeds[UNLOAD_CONVOYER_NAME] = UNLOAD_CONVOYER_SPEED;
         unload_timer = millis();
+        unload_state = REVERSE_CONVOYER;
+      }
+      break;
+
+    case REVERSE_CONVOYER:
+      if (millis() - unload_timer > UNLOAD_TIME_TO_CONVOY) {
+        dri_target_speeds[UNLOAD_CONVOYER_NAME] = -UNLOAD_CONVOYER_SPEED;
+        unload_timer = millis();
         unload_state = UNLOAD_CLOSE_DOOR;
       }
       break;
 
     case UNLOAD_CLOSE_DOOR:
-      if (millis() - unload_timer > UNLOAD_TIME_TO_CONVOY) {
+      if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
         dri_target_speeds[UNLOAD_CONVOYER_NAME] = DRI_MIN_PWM;
         servo_target_angles[UNLOAD_DOOR_SERVO_NAME] = UNLOAD_DOOR_SERVO_CLOSED_POS;
         unload_timer = millis();
-        unload_state = UNLOAD_CLOSE_LATCH;
+        unload_state = UNLOAD_IDLE;
       }
       break;
 
-    case UNLOAD_CLOSE_LATCH:
+    /*case UNLOAD_CLOSE_LATCH:
       if (millis() - unload_timer > UNLOAD_TIME_TO_OPEN_DOOR) {
         servo_target_angles[UNLOAD_LATCH_SERVO_NAME] = UNLOAD_LATCH_SERVO_CLOSED_POS;
         unload_state = UNLOAD_IDLE;
       }
-      break;
+      break;*/
   }
 }

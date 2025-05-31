@@ -4,8 +4,8 @@
 
     <xacro:include filename="robot_core.xacro" />
     <xacro:include filename="lidar.xacro" />
-    <xacro:include filename="camera_holder.xacro" />
-    <xacro:include filename="camera.xacro" />
+    <!-- <xacro:include filename="camera_holder.xacro" />
+    <xacro:include filename="camera.xacro" /> -->
 
     <xacro:if value="$(arg simulation)">
         <xacro:include filename="$(find robocops_description)/description/control/gazebo_control.xacro"/>

@@ -245,6 +245,14 @@ ssh-keygen
 
 sudo apt update && sudo apt install ros-dev-tools
 
+sudo apt install ros-jazzy-depthai-ros
+
+sudo apt install ros-jazzy-navigation2
+
+sudo apt install ros-jazzy-nav2-bringup
+
+sudo apt install ros-jazzy-ros2-control ros-jazzy-ros2-controllers
+
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y

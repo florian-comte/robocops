@@ -93,27 +93,102 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool *brushes_active,
                                 bool print_output)
 {
-
-    std::stringstream ss;
-    ss << maxon_left << " " << maxon_right << " " << brushes_activate << " " << unload_activate << " " << lift_authorize << "\n";
-
-    serial_conn_.FlushIOBuffers();
-    serial_conn_.Write(ss.str());
-
-    std::string response = "";
-    try
+    if (!connected())
     {
-        // Read includes the \n.
-        serial_conn_.ReadLine(response, '\n', timeout_ms_);
-    }
-    catch (const LibSerial::ReadTimeout &)
-    {
-        std::cerr << "[ROBOCOPS_CONTROL] ReadLine timed out." << std::endl;
+        std::cerr << "[Serial] Port not connected." << std::endl;
+        return;
     }
 
-    if (print_output)
+    uint8_t cmd[5];
+
+    // Offset motor speeds to avoid negative numbers (since Arduino expects unsigned)
+    maxon_left += 10000;
+    maxon_right += 10000;
+
+    // Encode speeds into 2 bytes each (big-endian)
+    cmd[0] = (maxon_left >> 8) & 0xFF;
+    cmd[1] = maxon_left & 0xFF;
+    cmd[2] = (maxon_right >> 8) & 0xFF;
+    cmd[3] = maxon_right & 0xFF;
+
+    // Encode control signals into bit flags in cmd[4]
+    cmd[4] = 0;
+    cmd[4] |= (brushes_activate & 1);
+    cmd[4] |= ((unload_activate & 1) << 1);
+    cmd[4] |= ((lift_authorize & 1) << 2);
+
+    fd_set write_fds;
+    FD_ZERO(&write_fds);
+    FD_SET(serial_fd_, &write_fds);
+    struct timeval tv_write = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
+
+    if (select(serial_fd_ + 1, nullptr, &write_fds, nullptr, &tv_write) > 0)
     {
-        std::cout << "Sent: " << ss.str() << std::endl;
-        std::cout << "Received: " << response << std::endl;
+        if (write(serial_fd_, cmd, 5) != 5)
+        {
+            perror("[Serial] Failed to write full command");
+            return;
+        }
+    }
+    else
+    {
+        std::cerr << "[Serial] Write timeout or error" << std::endl;
+        return;
+    }
+
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(serial_fd_, &read_fds);
+    struct timeval tv_read = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
+
+    if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
+    {
+        uint8_t response[10];
+        int n = read(serial_fd_, response, 5);
+        if (n != 10)
+        {
+            perror("[Serial] Failed to read full response");
+            return;
+        }
+
+        // Extract encoder values
+        *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]);
+        *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
+
+        // Extract GPIO states from response[4]
+        *brushes_active = static_cast<bool>((response[4] >> 0) & 1);
+        *unload_active = static_cast<bool>((response[4] >> 1) & 1);
+        *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
+        *lift_active = static_cast<bool>((response[4] >> 3) & 1);
+
+        uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
+        double distance_cm = distance_mm / 10.0;
+
+        uint16_t lift_convoyer_speed = static_cast<int16_t>((response[5] << 8) | response[6]);
+
+        // Print debug if wanted
+        if (print_output)
+        {
+            std::cout << "[Serial] Sent command: ";
+            for (int i = 0; i < 5; ++i)
+                std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
+
+            std::cout << std::dec; // switch back to decimal output
+            std::cout << "\n[Serial] Encoders: L=" << *encoder_left
+                      << " R=" << *encoder_right << std::endl;
+
+            std::cout << "[Serial] GPIO States: "
+                      << "Brushes=" << *brushes_active
+                      << ", Unload=" << *unload_active
+                      << ", Lift Authorized=" << *lift_authorized
+                      << ", Lift Active=" << *lift_active
+                      << ", Lift ultrasound distance: " << distance_cm
+                      << ", Lift convoyer speed: " << lift_convoyer_speed
+                      << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "[Serial] Read timeout or error" << std::endl;
     }
 }

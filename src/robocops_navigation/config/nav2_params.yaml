@@ -29,7 +29,7 @@ amcl:
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0
+    transform_tolerance: 0.5
     update_min_a: 0.2
     update_min_d: 0.25
     z_hit: 0.5
@@ -175,8 +175,8 @@ local_costmap:
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.2
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.6
+        cost_scaling_factor: 4.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
@@ -263,8 +263,8 @@ global_costmap:
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.2
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.6
+        cost_scaling_factor: 4.0
       always_send_full_costmap: true
 
 map_server:

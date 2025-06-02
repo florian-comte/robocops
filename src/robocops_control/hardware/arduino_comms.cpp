@@ -181,7 +181,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Lift Authorized=" << *lift_authorized
                       << ", Lift Active=" << *lift_active
                       << ", Button Active=" << *button_active
-                      << ", Emergency active: " << emergency_active
+                      << ", Emergency active: " << *emergency_active
                       << ", Lift ultrasound distance: " << distance_cm
                       << ", Lift convoyer speed: " << lift_convoyer_speed
                       << std::endl;

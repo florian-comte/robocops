@@ -95,7 +95,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
 {
 
     std::stringstream ss;
-    ss << maxon_left << " " << maxon_right << " " << brushes_activate << " " << unload_activate << " " << lift_authorized << "\n";
+    ss << maxon_left << " " << maxon_right << " " << brushes_activate << " " << unload_activate << " " << lift_authorize << "\n";
 
     serial_conn_.FlushIOBuffers();
     serial_conn_.Write(ss.str());

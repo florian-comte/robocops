@@ -44,6 +44,7 @@
 
       <gpio name="emergency">
         <command_interface name="active"/>
+        <state_interface name="active"/>
       </gpio>
     </ros2_control>
 

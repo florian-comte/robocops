@@ -84,6 +84,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool *unload_active,
                                 bool *brushes_active,
                                 bool *button_active,
+                                bool *emergency_active,
                                 bool print_output)
 {
     if (!connected())
@@ -156,6 +157,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
         *lift_active = static_cast<bool>((response[4] >> 3) & 1);
         *button_active = static_cast<bool>((response[4] >> 4) & 1);
+        *emergency_active = static_cast<bool>((response[4] >> 5) & 1);
 
         uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
         double distance_cm = distance_mm / 10.0;
@@ -179,6 +181,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Lift Authorized=" << *lift_authorized
                       << ", Lift Active=" << *lift_active
                       << ", Button Active=" << *button_active
+                      << ", Emergency active: " << emergency_active
                       << ", Lift ultrasound distance: " << distance_cm
                       << ", Lift convoyer speed: " << lift_convoyer_speed
                       << std::endl;

@@ -23,6 +23,7 @@ public:
                       bool *unload_active,
                       bool *brushes_active,
                       bool *button_active,
+                      bool *emergency_active,
                       bool print_output = false);
 
 private:

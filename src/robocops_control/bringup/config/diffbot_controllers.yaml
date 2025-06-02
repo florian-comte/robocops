@@ -94,3 +94,6 @@ gpio_controller:
       button:
         - interfaces:
           - active
+      emergency:
+        - interfaces:
+          - active

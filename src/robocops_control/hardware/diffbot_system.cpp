@@ -202,6 +202,8 @@ namespace robocops_control
 
     set_state("button/active", button_active_ ? 1.0 : 0.0);
 
+    set_state("emergency/active", emergency_active_ ? 1.0 : 0.0);
+
     return hardware_interface::return_type::OK;
   }
 
@@ -235,6 +237,7 @@ namespace robocops_control
         &unload_active_,
         &brushes_active_,
         &button_active_,
+        &emergency_active_,
         true);
 
     return hardware_interface::return_type::OK;

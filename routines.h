@@ -25,16 +25,38 @@ enum UnloadState {
   //UNLOAD_OPEN_LATCH,
   UNLOAD_OPEN_DOOR,
   UNLOAD_CONVOYER,
-  REVERSE_CONVOYER,
+  UNLOAD_REVERSE_CONVOYER,
   UNLOAD_CLOSE_DOOR,
+  UNLOAD_CLOSING
   //UNLOAD_CLOSE_LATCH
 };
 
 extern UnloadState unload_state;
 extern unsigned long unload_timer;
 
+// --- LIFT ROUTINE ---
+
+#define LIFT_TIME_TO_UP 5000
+#define LIFT_TIME_TO_CONVOY 1000
+#define LIFT_CONVOYER_NAME CONVOYER_LIFT
+#define LIFT_CONVOYER_SPEED 200
+#define LIFT_UP_POSITION 1270
+#define LIFT_DOWN_POSITION 0
+
+enum LiftState {
+  LIFT_IDLE,
+  LIFT_UP,
+  LIFT_CONVOYER,
+  LIFT_REVERSE_CONVOYER,
+  LIFT_DOWN,
+  LIFT_DOWNING
+};
+
+extern LiftState lift_state;
+extern unsigned long lift_timer;
 
 extern void handle_routines();
 void handle_unload_routine();
+void handle_lift_routine();
 
 #endif // ROUTINES_H

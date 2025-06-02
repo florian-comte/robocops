@@ -5,9 +5,9 @@
 #include <NewPing.h>
 
 #define LIFT_ULTRASOUND_WINDOW 20
-#define LIFT_ULTRASOUND_MAX_DISTANCE 50
+#define LIFT_ULTRASOUND_MAX_DISTANCE 35
 
-extern int lift_ultrasound_averaged_distance;
+extern double lift_ultrasound_averaged_distance;
 
 void update_lift_ultrasound_sensor();
 void init_lift_ultrasound_sensor();

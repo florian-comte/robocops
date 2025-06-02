@@ -13,7 +13,7 @@ void init_servo_motors_drivers() {
     for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
         servoMotors[i].attach(SERVO_MOTOR_PINS[i]);
 
-        servo_target_angles[i] = 90;
+        servo_target_angles[i] = 135;
     }
 }
 

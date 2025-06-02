@@ -5,18 +5,17 @@
 #include "maxon_encoder.h"
 #include "routines.h"
 #include "lift_ultrasound_sensor.h"
+#include "lift_driver.h"
 
 // Communication baudrate
 #define BAUDRATE 57600
 
 // PWM from 0 to 255
-#define BRUSH_SPEED 255
+#define BRUSH_SPEED 240
 
 // Distance of ultrasound to activate the lift routine (cm)
-#define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 10
+#define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 32
 
-// todo: need to be replaced by michel's logic
-bool active_lift_routine = 0;
 bool authorized_lift_routine = 0;
 
 /**
@@ -31,13 +30,13 @@ void setup() {
   init_l298n_motor_drivers();
   init_dri_motor_drivers();
   init_lift_ultrasound_sensor();
+  init_lift();
 
   // Init unload routine
-  unload_state = UNLOAD_OPEN_DOOR; 
+  unload_state = UNLOAD_IDLE; 
 
   // Init lift routine
-  // todo
-
+  lift_state = LIFT_IDLE;
 }
 
 /**
@@ -48,13 +47,13 @@ void loop() {
   handle_routines();
 
   // Update lift ultrasound sensor
-  if(authorized_lift_routine == 1 && active_lift_routine == 0){
+  if(authorized_lift_routine == 1 && lift_state == LIFT_IDLE){
       update_lift_ultrasound_sensor();
 
       // Check if routine should be started
       if(lift_ultrasound_averaged_distance <= ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE){
-        // todo michel: start lift routine
-        active_lift_routine = 1;
+        lift_state = LIFT_UP;
+        lift_ultrasound_averaged_distance = LIFT_ULTRASOUND_MAX_DISTANCE;
       }
   } else {
     // By security, reset the current lift ultrasound value to MAX_DISTANCE when not updating it
@@ -80,6 +79,7 @@ void loop() {
 
   // DRI
   for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
+    Serial.println(dri_target_speeds[i]);
     set_dri_motor_state(i, (dri_target_speeds[i] >= 0), abs(dri_target_speeds[i])); 
   }
   
@@ -87,6 +87,8 @@ void loop() {
   for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
     set_servo_motor_angle(i, servo_target_angles[i]); 
   }
+
+  update_lift();
 }
 
 // From raspberry
@@ -130,9 +132,11 @@ int handle_serial_command() {
     if(brush_signal == 1){
       l298n_target_speeds[BRUSH_LEFT] = BRUSH_SPEED;
       l298n_target_speeds[BRUSH_RIGHT] = BRUSH_SPEED;
+
     } else {
       l298n_target_speeds[BRUSH_LEFT] = L298N_MIN_PWM;
       l298n_target_speeds[BRUSH_RIGHT] = L298N_MIN_PWM;
+
     }
 
     if((activate_unload_routine == 1) && (unload_state == UNLOAD_IDLE)){
@@ -158,7 +162,7 @@ int handle_serial_command() {
     response[4] |= brush_signal & 0x01;
     response[4] |= (((unload_state != UNLOAD_IDLE) & 0x01) << 1);
     response[4] |= (authorized_lift_routine & 0x01) << 2;
-    response[4] |= (active_lift_routine & 0x01) << 3;
+    response[4] |= ((lift_state != LIFT_IDLE) & 0x01) << 3;
     
     Serial.write(response, 5);
   }

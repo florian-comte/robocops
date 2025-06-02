@@ -12,7 +12,7 @@ def generate_launch_description():
 
     # --- declare args for launch file ---
     declare_world = DeclareLaunchArgument('world', default_value='arena')
-    declare_robot = DeclareLaunchArgument('robot_model', default_value='robocops_2_wheels')
+    declare_robot = DeclareLaunchArgument('robot_model', default_value='robot')
     declare_init_pose_x = DeclareLaunchArgument('initial_pose_x', default_value='-8.5')
     declare_init_pose_y = DeclareLaunchArgument('initial_pose_y', default_value='-2')
 
@@ -22,15 +22,16 @@ def generate_launch_description():
         PythonExpression(["'", LaunchConfiguration('world'), "' + '.world'"])
     ])
     urdf_file_path = PathJoinSubstitution([
-        get_package_share_directory('robocops_gazebo'),
+        get_package_share_directory('robocops_description'),
         'description',
+        'urdf',
         PythonExpression(["'", LaunchConfiguration('robot_model'), "' + '.urdf.xacro'"])
     ])
 
     gazebo_params_file = os.path.join(get_package_share_directory('robocops_gazebo'), 'config', 'gz_bridge.yaml')
     rviz_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'rviz2_nav2_params.rviz')
     nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params.yaml')
-    map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'test_arena.yaml')
+    map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'test2_arena.yaml')
     remappings_nav = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
     ld.add_action(declare_world)
@@ -74,16 +75,22 @@ def generate_launch_description():
     # ------
 
     # --- include ROBOT STATE PUBLISHER launch file and setup ---
-    robot_state_publisher_cmd = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{
-            'use_sim_time': True,
-            'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
-        }],
-        remappings=remappings_nav,
+    # robot_state_publisher_cmd = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': True,
+    #         'robot_description': Command(['xacro ', urdf_file_path, ' sim_mode:=' ])
+    #     }],
+    #     remappings=remappings_nav,
+    # )
+    robot_state_publisher_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(os.path.join(get_package_share_directory('robocops_description'), 'launch'), 'robot_state_publisher.launch.py')
+        ),
+         launch_arguments={'simulation': "true"}.items()
     )
 
     ld.add_action(robot_state_publisher_cmd)

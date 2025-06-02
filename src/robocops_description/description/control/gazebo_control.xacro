@@ -5,7 +5,7 @@
             <!-- Wheel Information -->
             <left_joint>left_wheel_joint</left_joint>
             <right_joint>right_wheel_joint</right_joint>
-            <wheel_separation>0.32</wheel_separation>
+            <wheel_separation>0.43</wheel_separation>
             <wheel_radius>0.06</wheel_radius>
 
             <!-- Limits -->

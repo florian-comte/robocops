@@ -64,6 +64,7 @@ gpio_controller:
       - unload
       - lift
       - button
+      - emergency
     command_interfaces:
       brushes:
         - interfaces:

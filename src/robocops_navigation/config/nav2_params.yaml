@@ -269,7 +269,7 @@ global_costmap:
 
 map_server:
   ros__parameters:
-    yaml_filename: "test_arena.yaml"
+    yaml_filename: "test2_arena.yaml"
 
 map_saver:
   ros__parameters:

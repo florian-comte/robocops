@@ -1,85 +1,75 @@
 #include "arduino_comms.hpp"
 #include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include "utils.hpp"
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <algorithm>
+#include <cstdint>
+#include <sys/select.h>
 
-/**
- * @brief Converts an integer baud rate to a LibSerial::BaudRate enum.
- *
- * @param baud_rate The integer baud rate to convert.
- * @return Corresponding LibSerial::BaudRate value, or BAUD_57600 as default for unsupported rates.
- */
-LibSerial::BaudRate ArduinoComms::convert_baud_rate(int baud_rate)
+void ArduinoComms::connect(const std::string &serial_device, int32_t timeout_ms)
 {
-    switch (baud_rate)
+    timeout_ms_ = timeout_ms;
+
+    // Open the serial device with read/write access, no controlling terminal, and synchronous I/O
+    // Here serial_fd_ is the file descriptor, small integer that uniquely identifies an open file or I/O resource within a process
+    serial_fd_ = open(serial_device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (serial_fd_ < 0)
     {
-    case 1200:
-        return LibSerial::BaudRate::BAUD_1200;
-    case 1800:
-        return LibSerial::BaudRate::BAUD_1800;
-    case 2400:
-        return LibSerial::BaudRate::BAUD_2400;
-    case 4800:
-        return LibSerial::BaudRate::BAUD_4800;
-    case 9600:
-        return LibSerial::BaudRate::BAUD_9600;
-    case 19200:
-        return LibSerial::BaudRate::BAUD_19200;
-    case 38400:
-        return LibSerial::BaudRate::BAUD_38400;
-    case 57600:
-        return LibSerial::BaudRate::BAUD_57600;
-    case 115200:
-        return LibSerial::BaudRate::BAUD_115200;
-    case 230400:
-        return LibSerial::BaudRate::BAUD_230400;
-    default:
-        std::cout << "Error! Baud rate " << baud_rate << " not supported! Default to 57600" << std::endl;
-        return LibSerial::BaudRate::BAUD_57600;
+        perror("Error opening serial port");
+        return;
+    }
+
+    // Create a termios struct and clear it
+    struct termios tty;
+    memset(&tty, 0, sizeof tty);
+    if (tcgetattr(serial_fd_, &tty) != 0)
+    {
+        perror("Error from tcgetattr");
+        return;
+    }
+
+    // Set baud rate to 57600 (input and output)
+    cfsetospeed(&tty, B57600);
+    cfsetispeed(&tty, B57600);
+
+    // Configure terminal settings:
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;         // 8 data bits
+    tty.c_iflag &= ~IGNBRK;                             // Disable break processing
+    tty.c_lflag = 0;                                    // No signaling chars, no echo, no canonical input
+    tty.c_oflag = 0;                                    // No remapping, no delays
+    tty.c_cc[VMIN] = 5;                                 // Minimum number of bytes to read
+    tty.c_cc[VTIME] = std::min(timeout_ms_ / 100, 255); // Read timeout in 0.1s units
+
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // No software flow control
+    tty.c_cflag |= (CLOCAL | CREAD);        // Enable receiver, ignore modem control lines
+    tty.c_cflag &= ~(PARENB | PARODD);      // No parity
+    tty.c_cflag &= ~CSTOPB;                 // One stop bit
+    tty.c_cflag &= ~CRTSCTS;                // No hardware flow control
+
+    // Apply the settings immediately
+    if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0)
+    {
+        perror("Error from tcsetattr");
+        return;
     }
 }
 
-/**
- * @brief Opens and configures the serial connection.
- *
- * @param serial_device Path to the serial device (e.g., "/dev/ttyUSB0").
- * @param baud_rate Baud rate for communication.
- * @param timeout_ms Timeout for reading responses, in milliseconds.
- */
-void ArduinoComms::connect(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms)
-{
-    timeout_ms_ = timeout_ms;
-    serial_conn_.Open(serial_device);
-    serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
-}
-
-/**
- * @brief Closes the serial connection if it is open.
- */
 void ArduinoComms::disconnect()
 {
-    serial_conn_.Close();
+    if (connected())
+    {
+        close(serial_fd_);
+        serial_fd_ = -1;
+    }
 }
 
-/**
- * @brief Checks whether the serial port is currently open.
- *
- * @return true if connected, false otherwise.
- */
 bool ArduinoComms::connected() const
 {
-    return serial_conn_.IsOpen();
+    return serial_fd_ >= 0;
 }
 
-/**
- * @brief Sends motor speed commands to the Arduino.
- *
- * The command format is "m <rear_motor_speed> <left_motor_speed>\n".
- *
- * @param rear_motor_speed Speed command for the rear motor.
- * @param left_motor_speed Speed command for the left motor.
- */
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
                                 bool brushes_activate,

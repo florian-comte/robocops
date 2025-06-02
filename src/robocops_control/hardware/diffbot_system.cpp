@@ -90,7 +90,7 @@ namespace robocops_control
     {
       comms_.disconnect();
     }
-    comms_.connect(device_, timeout_ms_);
+    comms_.connect(device_, 57600, timeout_ms_);
 
     for (const auto &[name, descr] : joint_state_interfaces_)
     {

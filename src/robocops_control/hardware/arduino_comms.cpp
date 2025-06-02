@@ -1,75 +1,85 @@
 #include "arduino_comms.hpp"
 #include <iostream>
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstring>
-#include <algorithm>
-#include <cstdint>
-#include <sys/select.h>
+#include <sstream>
+#include <cstdlib>
+#include "utils.hpp"
 
-void ArduinoComms::connect(const std::string &serial_device, int32_t timeout_ms)
+/**
+ * @brief Converts an integer baud rate to a LibSerial::BaudRate enum.
+ *
+ * @param baud_rate The integer baud rate to convert.
+ * @return Corresponding LibSerial::BaudRate value, or BAUD_57600 as default for unsupported rates.
+ */
+LibSerial::BaudRate ArduinoComms::convert_baud_rate(int baud_rate)
+{
+    switch (baud_rate)
+    {
+    case 1200:
+        return LibSerial::BaudRate::BAUD_1200;
+    case 1800:
+        return LibSerial::BaudRate::BAUD_1800;
+    case 2400:
+        return LibSerial::BaudRate::BAUD_2400;
+    case 4800:
+        return LibSerial::BaudRate::BAUD_4800;
+    case 9600:
+        return LibSerial::BaudRate::BAUD_9600;
+    case 19200:
+        return LibSerial::BaudRate::BAUD_19200;
+    case 38400:
+        return LibSerial::BaudRate::BAUD_38400;
+    case 57600:
+        return LibSerial::BaudRate::BAUD_57600;
+    case 115200:
+        return LibSerial::BaudRate::BAUD_115200;
+    case 230400:
+        return LibSerial::BaudRate::BAUD_230400;
+    default:
+        std::cout << "Error! Baud rate " << baud_rate << " not supported! Default to 57600" << std::endl;
+        return LibSerial::BaudRate::BAUD_57600;
+    }
+}
+
+/**
+ * @brief Opens and configures the serial connection.
+ *
+ * @param serial_device Path to the serial device (e.g., "/dev/ttyUSB0").
+ * @param baud_rate Baud rate for communication.
+ * @param timeout_ms Timeout for reading responses, in milliseconds.
+ */
+void ArduinoComms::connect(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms)
 {
     timeout_ms_ = timeout_ms;
-
-    // Open the serial device with read/write access, no controlling terminal, and synchronous I/O
-    // Here serial_fd_ is the file descriptor, small integer that uniquely identifies an open file or I/O resource within a process
-    serial_fd_ = open(serial_device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-    if (serial_fd_ < 0)
-    {
-        perror("Error opening serial port");
-        return;
-    }
-
-    // Create a termios struct and clear it
-    struct termios tty;
-    memset(&tty, 0, sizeof tty);
-    if (tcgetattr(serial_fd_, &tty) != 0)
-    {
-        perror("Error from tcgetattr");
-        return;
-    }
-
-    // Set baud rate to 57600 (input and output)
-    cfsetospeed(&tty, B57600);
-    cfsetispeed(&tty, B57600);
-
-    // Configure terminal settings:
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;         // 8 data bits
-    tty.c_iflag &= ~IGNBRK;                             // Disable break processing
-    tty.c_lflag = 0;                                    // No signaling chars, no echo, no canonical input
-    tty.c_oflag = 0;                                    // No remapping, no delays
-    tty.c_cc[VMIN] = 5;                                 // Minimum number of bytes to read
-    tty.c_cc[VTIME] = std::min(timeout_ms_ / 100, 255); // Read timeout in 0.1s units
-
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // No software flow control
-    tty.c_cflag |= (CLOCAL | CREAD);        // Enable receiver, ignore modem control lines
-    tty.c_cflag &= ~(PARENB | PARODD);      // No parity
-    tty.c_cflag &= ~CSTOPB;                 // One stop bit
-    tty.c_cflag &= ~CRTSCTS;                // No hardware flow control
-
-    // Apply the settings immediately
-    if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0)
-    {
-        perror("Error from tcsetattr");
-        return;
-    }
+    serial_conn_.Open(serial_device);
+    serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
 }
 
+/**
+ * @brief Closes the serial connection if it is open.
+ */
 void ArduinoComms::disconnect()
 {
-    if (connected())
-    {
-        close(serial_fd_);
-        serial_fd_ = -1;
-    }
+    serial_conn_.Close();
 }
 
+/**
+ * @brief Checks whether the serial port is currently open.
+ *
+ * @return true if connected, false otherwise.
+ */
 bool ArduinoComms::connected() const
 {
-    return serial_fd_ >= 0;
+    return serial_conn_.IsOpen();
 }
 
+/**
+ * @brief Sends motor speed commands to the Arduino.
+ *
+ * The command format is "m <rear_motor_speed> <left_motor_speed>\n".
+ *
+ * @param rear_motor_speed Speed command for the rear motor.
+ * @param left_motor_speed Speed command for the left motor.
+ */
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
                                 bool brushes_activate,
@@ -83,95 +93,26 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool *brushes_active,
                                 bool print_output)
 {
-    if (!connected())
+
+    std::stringstream ss;
+    ss << maxon_left << " " << maxon_right << " " << brushes_activate << " " << unload_activate << " " << lift_authorized << "\n";
+
+    serial_conn_.FlushIOBuffers();
+    serial_conn_.Write(ss.str());
+
+    std::string response = "";
+    try
     {
-        std::cerr << "[Serial] Port not connected." << std::endl;
-        return;
+        // Read includes the \n.
+        serial_conn_.ReadLine(response, '\n', timeout_ms_);
+    }
+    catch (const LibSerial::ReadTimeout &)
+    {
+        std::cerr << "[ROBOCOPS_CONTROL] ReadLine timed out." << std::endl;
     }
 
-    uint8_t cmd[5];
-
-    // Offset motor speeds to avoid negative numbers (since Arduino expects unsigned)
-    maxon_left += 10000;
-    maxon_right += 10000;
-
-    // Encode speeds into 2 bytes each (big-endian)
-    cmd[0] = (maxon_left >> 8) & 0xFF;
-    cmd[1] = maxon_left & 0xFF;
-    cmd[2] = (maxon_right >> 8) & 0xFF;
-    cmd[3] = maxon_right & 0xFF;
-
-    // Encode control signals into bit flags in cmd[4]
-    cmd[4] = 0;
-    cmd[4] |= (brushes_activate & 1);
-    cmd[4] |= ((unload_activate & 1) << 1);
-    cmd[4] |= ((lift_authorize & 1) << 2);
-
-    fd_set write_fds;
-    FD_ZERO(&write_fds);
-    FD_SET(serial_fd_, &write_fds);
-    struct timeval tv_write = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
-
-    if (select(serial_fd_ + 1, nullptr, &write_fds, nullptr, &tv_write) > 0)
+    if (print_output)
     {
-        if (write(serial_fd_, cmd, 5) != 5)
-        {
-            perror("[Serial] Failed to write full command");
-            return;
-        }
-    }
-    else
-    {
-        std::cerr << "[Serial] Write timeout or error" << std::endl;
-        return;
-    }
-
-    fd_set read_fds;
-    FD_ZERO(&read_fds);
-    FD_SET(serial_fd_, &read_fds);
-    struct timeval tv_read = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
-
-    if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
-    {
-        uint8_t response[5];
-        int n = read(serial_fd_, response, 5);
-        if (n != 5)
-        {
-            perror("[Serial] Failed to read full response");
-            return;
-        }
-
-        // Extract encoder values
-        *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]);
-        *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
-
-        // Extract GPIO states from response[4]
-        *brushes_active = static_cast<bool>((response[4] >> 0) & 1);
-        *unload_active = static_cast<bool>((response[4] >> 1) & 1);
-        *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
-        *lift_active = static_cast<bool>((response[4] >> 3) & 1);
-
-        // Print debug if wanted
-        if (print_output)
-        {
-            std::cout << "[Serial] Sent command: ";
-            for (int i = 0; i < 5; ++i)
-                std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
-
-            std::cout << std::dec; // switch back to decimal output
-            std::cout << "\n[Serial] Encoders: L=" << *encoder_left
-                      << " R=" << *encoder_right << std::endl;
-
-            std::cout << "[Serial] GPIO States: "
-                      << "Brushes=" << *brushes_active
-                      << ", Unload=" << *unload_active
-                      << ", Lift Authorized=" << *lift_authorized
-                      << ", Lift Active=" << *lift_active
-                      << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "[Serial] Read timeout or error" << std::endl;
+        std::cout << "Received: " << response << std::endl;
     }
 }

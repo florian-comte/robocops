@@ -24,6 +24,15 @@ def generate_launch_description():
     ld.add_action(lidar_node)
     # ------
 
+    # --- activate the laserscan FILTER node ---
+    filter_lidar_node = Node(
+        package='robocops_navigation',
+        executable='lidar_filter',
+        output='screen',
+    )
+    ld.add_action(filter_lidar_node)
+    # ------
+
     # --- launch RVIZ2 configuration ---
     rviz_visualise_robot = Node(
         package='rviz2',

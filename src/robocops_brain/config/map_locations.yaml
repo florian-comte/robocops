@@ -1,0 +1,6 @@
+# Defines object locations as [x, y, theta]
+drop_point: [-1.0, -0.5, -2.25]
+zone4_outside_entry: [0.5, 4.0, 0.785]
+zone4_inside_entry: [0.5, 4.0, 0.785]
+zone3_outside_entry: [0.5, 4.0, 0.785]
+zone3_inside_entry: [0.5, 4.0, 0.785]

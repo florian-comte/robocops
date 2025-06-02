@@ -11,6 +11,8 @@
 #include "behaviortree_cpp/xml_parsing.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 
+#include "navigation_behaviors.h"
+
 using namespace std::chrono_literals;
 
 class BtRunner : public rclcpp::Node
@@ -20,6 +22,9 @@ public:
     {
         this->declare_parameter<std::string>("tree_xml_file", "");
         tree_xml_file_ = this->get_parameter("tree_xml_file").as_string();
+
+        this->declare_parameter<std::string>("locations_file", "");
+        locations_file_ = this->get_parameter("locations_file").as_string();
     }
 
     void execute()
@@ -42,9 +47,13 @@ public:
         RCLCPP_INFO(this->get_logger(), "Loading Behavior Tree from: %s", tree_xml_file_.c_str());
 
         BT::BehaviorTreeFactory factory;
+        factory.registerNodeType<SetLocations>("SetLocations");
+        factory.registerNodeType<GetLocationFromQueue>("GetLocationFromQueue");
+        factory.registerNodeType<GoToPose>("GoToPose", shared_from_this());
 
         auto blackboard = BT::Blackboard::create();
-        RCLCPP_INFO(this->get_logger(), "Blackboard created");
+
+        blackboard->set<std::string>("locations_file", locations_file_);
 
         blackboard->set<int>("current_inventory", 0);
         blackboard->set<int>("current_grabbed_zone_1", 0);
@@ -99,6 +108,7 @@ public:
 
     // Configuration parameters.
     std::string tree_xml_file_;
+    std::string locations_file_;
 
     // ROS and BehaviorTree.CPP variables.
     rclcpp::TimerBase::SharedPtr timer_;

@@ -19,6 +19,9 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBSERIAL REQUIRED libserial)
+
 ## COMPILE
 add_library(
   robocops_control
@@ -33,6 +36,11 @@ target_compile_features(robocops_control PUBLIC cxx_std_17)
 target_include_directories(robocops_control PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
   $<INSTALL_INTERFACE:include/robocops_control>
+  ${LIBSERIAL_INCLUDE_DIRS} 
+)
+
+target_link_libraries(robocops_control
+  PUBLIC ${LIBSERIAL_LIBRARIES}
 )
 
 ament_target_dependencies(

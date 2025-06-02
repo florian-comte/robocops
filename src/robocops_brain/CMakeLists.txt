@@ -25,15 +25,14 @@ find_package(yaml-cpp REQUIRED)
 
 # Install directories
 install(DIRECTORY
-  behavior_trees launch
+  behavior_trees launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Install C++ nodes
-# set(AUTONOMY_SOURCES
-#     src/navigation_behaviors.cpp 
-#     src/vision_behaviors.cpp
-# )
+#Install C++ nodes
+set(AUTONOMY_SOURCES
+    src/navigation_behaviors.cpp 
+)
 
 set(TARGET_DEPENDS
     ament_index_cpp rclcpp rclcpp_action

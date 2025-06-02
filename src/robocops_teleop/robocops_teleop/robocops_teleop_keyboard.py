@@ -45,12 +45,15 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_order = ["brushes", "unload", "lift"]
+gpio_order = ["brushes", "unload", "lift", "button", "emergency"]
 
 gpio_interfaces = {
     "brushes": "active",
     "unload": "active",
-    "lift": "authorized"
+    "lift": "authorized",
+    "button": "active",
+    "emergency": "active"
+
 }
 
 def get_key():
@@ -132,6 +135,10 @@ def main():
                 node.toggle_gpio("unload")
             elif key == 'x':
                 node.toggle_gpio("lift")
+            elif key == 'e':
+                node.toggle_gpio("emergency")
+            elif key == 'v':
+                node.toggle_gpio("button")
 
             node.update_velocity(key)
             node.publish_velocity()

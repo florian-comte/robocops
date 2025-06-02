@@ -133,9 +133,9 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
     {
-        uint8_t response[5];
+        uint8_t response[10];
         int n = read(serial_fd_, response, 5);
-        if (n != 5)
+        if (n != 10)
         {
             perror("[Serial] Failed to read full response");
             return;
@@ -150,6 +150,11 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *unload_active = static_cast<bool>((response[4] >> 1) & 1);
         *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
         *lift_active = static_cast<bool>((response[4] >> 3) & 1);
+
+        uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
+        double distance_cm = distance_mm / 10.0;
+
+        uint16_t lift_convoyer_speed = static_cast<int16_t>((response[5] << 8) | response[6]);
 
         // Print debug if wanted
         if (print_output)
@@ -167,6 +172,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Unload=" << *unload_active
                       << ", Lift Authorized=" << *lift_authorized
                       << ", Lift Active=" << *lift_active
+                      << ", Lift ultrasound distance: " << distance_cm
+                      << ", Lift convoyer speed: " << lift_convoyer_speed
                       << std::endl;
         }
     }

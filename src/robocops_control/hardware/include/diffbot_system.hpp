@@ -118,6 +118,7 @@ namespace robocops_control
         bool lift_active_;
         bool unload_active_;
         bool brushes_active_;
+        bool button_active_;
     };
 
 } // namespace robocops_control

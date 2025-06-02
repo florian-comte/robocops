@@ -200,6 +200,8 @@ namespace robocops_control
     // Set state active brushes
     set_state("brushes/active", brushes_active_ ? 1.0 : 0.0);
 
+    set_state("button/active", button_active_ ? 1.0 : 0.0);
+
     return hardware_interface::return_type::OK;
   }
 
@@ -224,12 +226,15 @@ namespace robocops_control
         static_cast<bool>(get_command("brushes/active")),
         static_cast<bool>(get_command("unload/active")),
         static_cast<bool>(get_command("lift/authorized")),
+        static_cast<bool>(get_command("button/active")),
+        static_cast<bool>(get_command("emergency/active")),
         &left_wheel_encoder_,
         &right_wheel_encoder_,
         &lift_authorized_,
         &lift_active_,
         &unload_active_,
         &brushes_active_,
+        &button_active_,
         true);
 
     return hardware_interface::return_type::OK;

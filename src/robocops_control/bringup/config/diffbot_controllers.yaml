@@ -63,6 +63,7 @@ gpio_controller:
       - brushes
       - unload
       - lift
+      - button
     command_interfaces:
       brushes:
         - interfaces:
@@ -73,6 +74,12 @@ gpio_controller:
       lift:
         - interfaces:
           - authorized
+      button:
+        - interfaces:
+          - active
+      emergency:
+        - interfaces:
+          - active
     state_interfaces:
       brushes:
         - interfaces:
@@ -84,3 +91,6 @@ gpio_controller:
         - interfaces:
           - active
           - authorized
+      button:
+        - interfaces:
+          - active

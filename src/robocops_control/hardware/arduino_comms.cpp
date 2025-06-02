@@ -75,12 +75,15 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool brushes_activate,
                                 bool unload_activate,
                                 bool lift_authorize,
+                                bool button_activate,
+                                bool emergency_activate,
                                 double *encoder_left,
                                 double *encoder_right,
                                 bool *lift_authorized,
                                 bool *lift_active,
                                 bool *unload_active,
                                 bool *brushes_active,
+                                bool *button_active,
                                 bool print_output)
 {
     if (!connected())
@@ -106,6 +109,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= (brushes_activate & 1);
     cmd[4] |= ((unload_activate & 1) << 1);
     cmd[4] |= ((lift_authorize & 1) << 2);
+    cmd[4] |= ((button_activate & 1) << 3);
+    cmd[4] |= ((emergency_activate & 1) << 4);
 
     fd_set write_fds;
     FD_ZERO(&write_fds);
@@ -150,6 +155,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *unload_active = static_cast<bool>((response[4] >> 1) & 1);
         *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
         *lift_active = static_cast<bool>((response[4] >> 3) & 1);
+        *button_active = static_cast<bool>((response[4] >> 4) & 1);
 
         uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
         double distance_cm = distance_mm / 10.0;
@@ -172,6 +178,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Unload=" << *unload_active
                       << ", Lift Authorized=" << *lift_authorized
                       << ", Lift Active=" << *lift_active
+                      << ", Button Active=" << *button_active
                       << ", Lift ultrasound distance: " << distance_cm
                       << ", Lift convoyer speed: " << lift_convoyer_speed
                       << std::endl;

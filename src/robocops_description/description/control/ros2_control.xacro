@@ -36,6 +36,15 @@
         <state_interface name="authorized"/>
         <state_interface name="active"/>
       </gpio>
+
+      <gpio name="button">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="emergency">
+        <command_interface name="active"/>
+      </gpio>
     </ros2_control>
 
   </xacro:macro>

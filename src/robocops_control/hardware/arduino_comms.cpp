@@ -113,6 +113,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     if (print_output)
     {
+        std::cout << "Sent: " << ss.str() << std::endl;
         std::cout << "Received: " << response << std::endl;
     }
 }

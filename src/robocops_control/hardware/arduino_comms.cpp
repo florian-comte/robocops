@@ -154,7 +154,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
         uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
         double distance_cm = distance_mm / 10.0;
 
-        uint16_t lift_convoyer_speed = static_cast<int16_t>((response[7] << 8) | response[8]);
+        int16_t lift_convoyer_speed = static_cast<int16_t>((response[7] << 8) | response[8]);
 
         // Print debug if wanted
         if (print_output)

@@ -12,7 +12,7 @@ class ScanFilter(Node):
         self.pub = self.create_publisher(LaserScan, '/filtered_scan', 10)
         self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 10)
 
-        self.width = 1
+        self.width = 5
         self.extent = self.width / 2.0
         self.get_logger().info("Publishing the filtered_scan topic...")
 

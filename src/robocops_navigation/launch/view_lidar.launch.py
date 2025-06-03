@@ -14,7 +14,7 @@ def generate_launch_description():
     # --- launch the RPLIDAR node ---
     lidar_node = Node(
         package='rplidar_ros',
-        executable='rplidar_node',
+        executable='rplidar_composition',
         output='screen',
         parameters=[{
             'serial_port': '/dev/LIDAR',
@@ -27,23 +27,23 @@ def generate_launch_description():
     # ------
 
     # --- activate the laserscan FILTER node ---
-    # filter_lidar_node = Node(
-    #     package='robocops_navigation',
-    #     executable='lidar_filter',
-    #     output='screen',
-    # )
-    # ld.add_action(filter_lidar_node)
-
     filter_lidar_node = Node(
-            package="laser_filters",
-            executable="scan_to_scan_filter_chain",
-            parameters=[
-                PathJoinSubstitution([
-                    get_package_share_directory("robocops_navigation"),
-                    "config", 'lidar_filter_conf.yaml',
-                ])],
+        package='robocops_navigation',
+        executable='lidar_filter',
+        output='screen',
     )
     ld.add_action(filter_lidar_node)
+
+    # filter_lidar_node = Node(
+    #         package="laser_filters",
+    #         executable="scan_to_scan_filter_chain",
+    #         parameters=[
+    #             PathJoinSubstitution([
+    #                 get_package_share_directory("robocops_navigation"),
+    #                 "config", 'lidar_filter_conf.yaml',
+    #             ])],
+    # )
+    # ld.add_action(filter_lidar_node)
     # ------
 
     # # --- launch RVIZ2 configuration ---

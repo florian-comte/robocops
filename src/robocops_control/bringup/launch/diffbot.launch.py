@@ -61,6 +61,12 @@ def generate_launch_description():
         output="both",
         parameters=[robot_description],
     )
+    
+    joint_state_publiser_node =  Node(
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        name="joint_state_publisher",
+    )
 
     # rviz = LaunchConfiguration("rviz")
 
@@ -123,6 +129,7 @@ def generate_launch_description():
     nodes = [
         control_node,
         robot_state_pub_node,
+        joint_state_publiser_node,
         robot_controller_spawner,
         delay_gpio_after_robot_controller_spawner,
         #delay_rviz_after_joint_state_broadcaster_spawner,

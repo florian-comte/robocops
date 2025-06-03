@@ -148,8 +148,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
         }
 
         // Extract encoder values
-        *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]);
-        *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]);
+        *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]) - 10000;
+        *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]) - 10000;
 
         // Extract GPIO states from response[4]
         *brushes_active = static_cast<bool>((response[4] >> 0) & 1);

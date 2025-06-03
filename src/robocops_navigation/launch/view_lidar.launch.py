@@ -13,7 +13,7 @@ def generate_launch_description():
 
     # --- launch the RPLIDAR node ---
     lidar_node = Node(
-        package='robocops_lidar',
+        package='rplidar_ros',
         executable='rplidar_composition',
         output='screen',
         parameters=[{

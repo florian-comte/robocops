@@ -9,8 +9,8 @@ from sensor_msgs.msg import LaserScan
 class ScanFilter(Node):
     def __init__(self):
         super().__init__('front_scan_filter')
-        self.pub = self.create_publisher(LaserScan, '/scan_filtered', 100)
-        self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 100)
+        self.pub = self.create_publisher(LaserScan, '/scan_filtered', 200)
+        self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 200)
 
         self.front_angle_limit = radians(180 / 2)
 
@@ -18,8 +18,8 @@ class ScanFilter(Node):
         num_points = len(msg.ranges)
         angles = linspace(msg.angle_min, msg.angle_max, num_points)
 
-        self.get_logger().info(f"Scan received with {num_points} points.")
-        self.get_logger().info(f"Angle range: {degrees(msg.angle_min):.2f}° to {degrees(msg.angle_max):.2f}°")
+        # self.get_logger().info(f"Scan received with {num_points} points.")
+        # self.get_logger().info(f"Angle range: {degrees(msg.angle_min):.2f}° to {degrees(msg.angle_max):.2f}°")
         
         # Filter the scan
         new_ranges = []
@@ -31,7 +31,7 @@ class ScanFilter(Node):
             else:
                 new_ranges.append(inf)
 
-        self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
+        # self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
 
         msg.ranges = new_ranges
         self.pub.publish(msg)

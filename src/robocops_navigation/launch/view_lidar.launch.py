@@ -3,7 +3,8 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from launch.substitutions import PathJoinSubstitution
- 
+ from launch_ros.substitutions import FindPackageShare
+
 def generate_launch_description():
     ld = LaunchDescription()
 
@@ -27,23 +28,27 @@ def generate_launch_description():
     # ------
 
     # --- activate the laserscan FILTER node ---
-    filter_lidar_node = Node(
-        package='robocops_navigation',
-        executable='lidar_filter',
-        output='screen',
-    )
-    ld.add_action(filter_lidar_node)
-
     # filter_lidar_node = Node(
-    #         package="laser_filters",
-    #         executable="scan_to_scan_filter_chain",
-    #         parameters=[
-    #             PathJoinSubstitution([
-    #                 get_package_share_directory("robocops_navigation"),
-    #                 "config", 'lidar_filter_conf.yaml',
-    #             ])],
+    #     package='robocops_navigation',
+    #     executable='lidar_filter',
+    #     output='screen',
     # )
-    #ld.add_action(filter_lidar_node)
+    # ld.add_action(filter_lidar_node)
+
+    filter_lidar_node = Node(
+        package="laser_filters",
+        executable="scan_to_scan_filter_chain",
+        name="scan_filter",
+        parameters=[
+            {'transform_tolerance': 0.2},
+            PathJoinSubstitution([
+                FindPackageShare("robocops_navigation"),
+                "config", "lidar_filter_conf.yaml"
+            ])
+        ]
+    )
+
+    ld.add_action(filter_lidar_node)
     # ------
 
     # # --- launch RVIZ2 configuration ---

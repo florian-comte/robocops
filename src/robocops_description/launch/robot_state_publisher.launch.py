@@ -41,5 +41,10 @@ def generate_launch_description():
             executable='robot_state_publisher',
             output='screen',
             parameters=[params]
-        )
+        ),
+        Node(
+            package="joint_state_publisher",
+            executable="joint_state_publisher",
+            name="joint_state_publisher",
+        ),
     ])

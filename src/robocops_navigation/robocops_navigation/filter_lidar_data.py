@@ -2,11 +2,10 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy import Time
 from numpy import linspace, inf
 from math import radians, degrees
 from sensor_msgs.msg import LaserScan
-import time
-import rospy
 class ScanFilter(Node):
     def __init__(self):
         super().__init__('front_scan_filter')
@@ -35,7 +34,7 @@ class ScanFilter(Node):
         # self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
         
         msg.ranges = new_ranges
-        msg.header.stamp = rospy.get_rostime()
+        msg.header.stamp = time.Time()
         self.pub.publish(msg)
 
 def main(args=None):

@@ -18,7 +18,7 @@ class ScanFilter(Node):
 
     def scan_filter_callback(self,msg):
         angles = linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
-        points = [r * sin(theta) if (theta < -2.5 or theta > 2.5) else inf for r,theta in zip(msg.ranges, angles)]
+        points = [r * sin(theta) if (theta < 0.0 or theta > 3.14) else inf for r,theta in zip(msg.ranges, angles)]
         new_ranges = [r if abs(y) < self.extent else inf for r,y in zip(msg.ranges, points)]
         msg.ranges = new_ranges
         self.pub.publish(msg)

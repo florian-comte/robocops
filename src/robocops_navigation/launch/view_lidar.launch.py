@@ -43,7 +43,7 @@ def generate_launch_description():
     #                 "config", 'lidar_filter_conf.yaml',
     #             ])],
     # )
-    ld.add_action(filter_lidar_node)
+    #ld.add_action(filter_lidar_node)
     # ------
 
     # # --- launch RVIZ2 configuration ---

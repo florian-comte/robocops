@@ -46,14 +46,14 @@ def generate_launch_description():
     ld.add_action(filter_lidar_node)
     # ------
 
-    # --- launch RVIZ2 configuration ---
-    rviz_visualise_robot = Node(
-        package='rviz2',
-        executable='rviz2',
-        arguments=['-d', rviz_params_file],
-        output='screen'
-    )
-    ld.add_action(rviz_visualise_robot)
+    # # --- launch RVIZ2 configuration ---
+    # rviz_visualise_robot = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     arguments=['-d', rviz_params_file],
+    #     output='screen'
+    # )
+    # ld.add_action(rviz_visualise_robot)
     # ------
  
     return ld

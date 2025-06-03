@@ -40,7 +40,6 @@ def generate_launch_description():
         executable="scan_to_scan_filter_chain",
         name="scan_filter",
         parameters=[
-            {'transform_tolerance': 0.2},
             PathJoinSubstitution([
                 FindPackageShare("robocops_navigation"),
                 "config", "lidar_filter_conf.yaml"

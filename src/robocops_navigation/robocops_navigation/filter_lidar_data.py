@@ -7,14 +7,14 @@ from sensor_msgs.msg import LaserScan
 class ScanFilter(Node):
     def __init__(self):
         super().__init__('stretch_scan_filter')
-        self.pub = self.create_publisher(LaserScan, '/filtered_scan', 10)
+        self.pub = self.create_publisher(LaserScan, '/scan_filtered', 10)
         self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 10)
 
         self.width = 1
         self.extent = self.width / 2.0
     def scan_filter_callback(self,msg):
         angles = linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
-        points = [r * sin(theta) if (theta < -1.13446 or theta > 1.13446) else inf for r,theta in zip(msg.ranges, angles)]
+        points = [r * sin(theta) if (theta < 1.13446 or theta > -1.13446) else inf for r,theta in zip(msg.ranges, angles)]
         new_ranges = [r if abs(y) < self.extent else inf for r,y in zip(msg.ranges, points)]
         msg.ranges = new_ranges
         self.pub.publish(msg)

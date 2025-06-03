@@ -1,6 +1,5 @@
 scan_to_scan_filter_chain:
   ros__parameters:
-    tf_message_filter_tolerance: 0.1
     filter1:
       name: angle
       type: laser_filters/LaserScanAngularBoundsFilter

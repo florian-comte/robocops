@@ -247,6 +247,11 @@ sudo apt update && sudo apt install ros-dev-tools
 
 sudo apt install ros-jazzy-depthai-ros ros-jazzy-ros2-control ros-jazzy-ros2-controllers ros-jazzy-navigation2 ros-jazzy-nav2-bringup
 
+sudo apt install ros-jazzy-slam-toolbox
+sudo apt install ros-foxy-rmw-cyclonedds-cpp
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y

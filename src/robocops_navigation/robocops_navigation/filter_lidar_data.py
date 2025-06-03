@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from numpy import linspace, inf
-from math import radians
+from math import radians, degrees
 from sensor_msgs.msg import LaserScan
 
 class ScanFilter(Node):
@@ -12,15 +12,30 @@ class ScanFilter(Node):
         self.pub = self.create_publisher(LaserScan, '/scan_filtered', 10)
         self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 10)
 
-        self.front_angle_limit = radians(220 / 2) 
+        self.front_angle_limit = radians(180 / 2)
 
     def scan_filter_callback(self, msg):
-        angles = linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
+        num_points = len(msg.ranges)
+        angles = linspace(msg.angle_min, msg.angle_max, num_points)
 
-        new_ranges = [
-            r if -self.front_angle_limit <= theta <= self.front_angle_limit else inf
-            for r, theta in zip(msg.ranges, angles)
-        ]
+        self.get_logger().info(f"Scan received with {num_points} points.")
+        self.get_logger().info(f"Angle range: {degrees(msg.angle_min):.2f}° to {degrees(msg.angle_max):.2f}°")
+
+        # Print some sample angles and ranges
+        for i in [0, num_points // 4, num_points // 2, 3 * num_points // 4, num_points - 1]:
+            self.get_logger().info(f"Sample point {i}: angle = {degrees(angles[i]):.2f}°, range = {msg.ranges[i]:.2f}")
+
+        # Filter the scan
+        new_ranges = []
+        kept_count = 0
+        for r, theta in zip(msg.ranges, angles):
+            if -self.front_angle_limit <= theta <= self.front_angle_limit:
+                new_ranges.append(r)
+                kept_count += 1
+            else:
+                new_ranges.append(inf)
+
+        self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
 
         msg.ranges = new_ranges
         self.pub.publish(msg)

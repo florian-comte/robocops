@@ -5,6 +5,7 @@ from rclpy.node import Node
 from numpy import linspace, inf
 from math import radians, degrees
 from sensor_msgs.msg import LaserScan
+import time
 
 class ScanFilter(Node):
     def __init__(self):
@@ -32,8 +33,10 @@ class ScanFilter(Node):
                 new_ranges.append(inf)
 
         # self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
-
+        
         msg.ranges = new_ranges
+        msg.header.stamp.sec = time()
+        msg.header.stamp.nsec = time.time_ns()
         self.pub.publish(msg)
 
 def main(args=None):

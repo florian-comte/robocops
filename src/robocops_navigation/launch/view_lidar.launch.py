@@ -14,7 +14,7 @@ def generate_launch_description():
     # --- launch the RPLIDAR node ---
     lidar_node = Node(
         package='rplidar_ros',
-        executable='rplidar_composition',
+        executable='rplidar_node',
         output='screen',
         parameters=[{
             'serial_port': '/dev/LIDAR',

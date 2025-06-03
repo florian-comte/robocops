@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from rclpy import Time
+from rclpy import time
 from numpy import linspace, inf
 from math import radians, degrees
 from sensor_msgs.msg import LaserScan

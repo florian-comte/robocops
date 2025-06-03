@@ -3,8 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
-
+ 
 def generate_launch_description():
     ld = LaunchDescription()
 
@@ -36,17 +35,14 @@ def generate_launch_description():
     # ld.add_action(filter_lidar_node)
 
     filter_lidar_node = Node(
-        package="laser_filters",
-        executable="scan_to_scan_filter_chain",
-        name="scan_filter",
-        parameters=[
-            PathJoinSubstitution([
-                FindPackageShare("robocops_navigation"),
-                "config", "lidar_filter_conf.yaml"
-            ])
-        ]
+            package="laser_filters",
+            executable="scan_to_scan_filter_chain",
+            parameters=[
+                PathJoinSubstitution([
+                    get_package_share_directory("robocops_navigation"),
+                    "config", 'lidar_filter_conf.yaml',
+                ])],
     )
-
     ld.add_action(filter_lidar_node)
     # ------
 

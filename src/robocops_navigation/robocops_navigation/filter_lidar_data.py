@@ -20,16 +20,12 @@ class ScanFilter(Node):
 
         self.get_logger().info(f"Scan received with {num_points} points.")
         self.get_logger().info(f"Angle range: {degrees(msg.angle_min):.2f}° to {degrees(msg.angle_max):.2f}°")
-
-        # Print some sample angles and ranges
-        for i in [0, num_points // 4, num_points // 2, 3 * num_points // 4, num_points - 1]:
-            self.get_logger().info(f"Sample point {i}: angle = {degrees(angles[i]):.2f}°, range = {msg.ranges[i]:.2f}")
-
+        
         # Filter the scan
         new_ranges = []
         kept_count = 0
         for r, theta in zip(msg.ranges, angles):
-            if -self.front_angle_limit <= theta <= self.front_angle_limit:
+            if -self.front_angle_limit - radians(180 / 2) <= theta <= self.front_angle_limit - radians(180 / 2):
                 new_ranges.append(r)
                 kept_count += 1
             else:

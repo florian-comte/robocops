@@ -34,7 +34,7 @@ class ScanFilter(Node):
         # self.get_logger().info(f"Filtered scan: kept {kept_count} out of {num_points} points ({100 * kept_count / num_points:.1f}%)")
         
         msg.ranges = new_ranges
-        msg.header.stamp = self.get_clock().now()
+        msg.header.stamp = self.get_clock().now().to_msg()
         self.pub.publish(msg)
 
 def main(args=None):

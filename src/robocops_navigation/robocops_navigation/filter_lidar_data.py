@@ -9,8 +9,8 @@ from sensor_msgs.msg import LaserScan
 class ScanFilter(Node):
     def __init__(self):
         super().__init__('front_scan_filter')
-        self.pub = self.create_publisher(LaserScan, '/scan_filtered', 200)
-        self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 200)
+        self.pub = self.create_publisher(LaserScan, '/scan_filtered', 10)
+        self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 10)
 
         self.front_angle_limit = radians(200 / 2)
 

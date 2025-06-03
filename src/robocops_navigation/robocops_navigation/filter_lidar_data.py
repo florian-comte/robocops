@@ -25,7 +25,7 @@ class ScanFilter(Node):
         new_ranges = []
         kept_count = 0
         for r, theta in zip(msg.ranges, angles):
-            if -self.front_angle_limit - radians(180 / 2) <= theta <= self.front_angle_limit - radians(180 / 2):
+            if -self.front_angle_limit + radians(180 / 2) <= theta <= self.front_angle_limit + radians(180 / 2):
                 new_ranges.append(r)
                 kept_count += 1
             else:

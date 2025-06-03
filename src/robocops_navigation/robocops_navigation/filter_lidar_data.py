@@ -12,7 +12,7 @@ class ScanFilter(Node):
         self.pub = self.create_publisher(LaserScan, '/scan_filtered', 200)
         self.sub = self.create_subscription(LaserScan, '/scan', self.scan_filter_callback, 200)
 
-        self.front_angle_limit = radians(180 / 2)
+        self.front_angle_limit = radians(200 / 2)
 
     def scan_filter_callback(self, msg):
         num_points = len(msg.ranges)

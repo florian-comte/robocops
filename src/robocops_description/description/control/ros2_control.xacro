@@ -7,7 +7,7 @@
         <plugin>robocops_control/RobocopsSystemHardware</plugin>
         <param name="left_wheel_name">left_wheel_joint</param>
         <param name="right_wheel_name">right_wheel_joint</param>
-        <param name="device">/dev/ttyACM0</param>
+        <param name="device">/dev/ARDUINO</param>
         <param name="timeout_ms">1000</param>
         <param name="use_encoders">false</param>
         <param name="gearbox_ratio">60</param>
@@ -26,6 +26,7 @@
         <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
+      
       <gpio name="unload">
         <command_interface name="active"/>
         <state_interface name="active"/>

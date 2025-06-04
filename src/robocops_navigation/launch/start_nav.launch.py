@@ -107,12 +107,4 @@ def generate_launch_description():
             output='screen',
             parameters=[nav2_params_path]
         ),
-
-        Node(
-            package='opennav_docking',
-            executable='docking_server',
-            name='docking_server',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
     ])

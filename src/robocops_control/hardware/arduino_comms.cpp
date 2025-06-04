@@ -145,9 +145,9 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
     {
-        uint8_t response[9];
-        int n = read(serial_fd_, response, 9);
-        if (n != 9)
+        uint8_t response[5];
+        int n = read(serial_fd_, response, 5);
+        if (n != 5)
         {
             perror("[Serial] Failed to read full response");
             return;

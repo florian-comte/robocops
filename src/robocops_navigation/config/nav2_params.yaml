@@ -418,7 +418,7 @@ collision_monitor:
 
 velocity_smoother:
   ros__parameters:
-    smoothing_frequency: 20.0
+    smoothing_frequency: 30.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
     max_velocity: [0.5, 0.0, 2.5]

@@ -52,6 +52,10 @@ namespace robocops_control
     lift_active_ = false;
     unload_active_ = false;
     brushes_active_ = false;
+    button_active_ = false;
+    emergency_active_ = false;
+    slope_up_active_ = false;
+    slope_down_active_ = false;
 
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
@@ -204,6 +208,10 @@ namespace robocops_control
 
     set_state("emergency/active", emergency_active_ ? 1.0 : 0.0);
 
+    set_state("slope_up/active", slope_up_active_ ? 1.0 : 0.0);
+
+    set_state("slope_down/active", slope_down_active_ ? 1.0 : 0.0);
+
     return hardware_interface::return_type::OK;
   }
 
@@ -230,6 +238,8 @@ namespace robocops_control
         static_cast<bool>(get_command("lift/authorized")),
         static_cast<bool>(get_command("button/active")),
         static_cast<bool>(get_command("emergency/active")),
+        static_cast<bool>(get_command("slope_up/active")),
+        static_cast<bool>(get_command("slope_down/active")),
         &left_wheel_encoder_,
         &right_wheel_encoder_,
         &lift_authorized_,
@@ -238,6 +248,8 @@ namespace robocops_control
         &brushes_active_,
         &button_active_,
         &emergency_active_,
+        &slope_up_,
+        &slope_down_active_,
         true);
 
     return hardware_interface::return_type::OK;

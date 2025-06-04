@@ -65,6 +65,8 @@ gpio_controller:
       - lift
       - button
       - emergency
+      - slope_up
+      - slope_down
     command_interfaces:
       brushes:
         - interfaces:
@@ -79,6 +81,12 @@ gpio_controller:
         - interfaces:
           - active
       emergency:
+        - interfaces:
+          - active
+      slope_up:
+        - interfaces:
+          - active
+      slope_down:
         - interfaces:
           - active
     state_interfaces:
@@ -96,5 +104,11 @@ gpio_controller:
         - interfaces:
           - active
       emergency:
+        - interfaces:
+          - active
+      slope_up:
+        - interfaces:
+          - active
+      slope_down:
         - interfaces:
           - active

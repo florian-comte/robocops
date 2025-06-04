@@ -77,6 +77,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool lift_authorize,
                                 bool button_activate,
                                 bool emergency_activate,
+                                bool slope_up_activate,
+                                bool slope_down_activate,
                                 double *encoder_left,
                                 double *encoder_right,
                                 bool *lift_authorized,
@@ -85,6 +87,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool *brushes_active,
                                 bool *button_active,
                                 bool *emergency_active,
+                                bool *slope_up_active,
+                                bool *slope_down_active,
                                 bool print_output)
 {
     if (!connected())
@@ -112,6 +116,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
     cmd[4] |= ((lift_authorize & 1) << 2);
     cmd[4] |= ((button_activate & 1) << 3);
     cmd[4] |= ((emergency_activate & 1) << 4);
+    cmd[4] |= ((slope_up_activate & 1) << 5);
+    cmd[4] |= ((slope_down_activate & 1) << 6);
 
     fd_set write_fds;
     FD_ZERO(&write_fds);
@@ -158,11 +164,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *lift_active = static_cast<bool>((response[4] >> 3) & 1);
         *button_active = static_cast<bool>((response[4] >> 4) & 1);
         *emergency_active = static_cast<bool>((response[4] >> 5) & 1);
-
-        uint16_t distance_mm = static_cast<int16_t>((response[5] << 8) | response[6]);
-        double distance_cm = distance_mm / 10.0;
-
-        int16_t lift_convoyer_speed = static_cast<int16_t>((response[7] << 8) | response[8]);
+        *slope_up_active = static_cast<bool>((response[4] >> 6) & 1);
+        *slope_down_active = static_cast<bool>((response[4] >> 7) & 1);
 
         // Print debug if wanted
         if (print_output)
@@ -182,8 +185,9 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Lift Active=" << *lift_active
                       << ", Button Active=" << *button_active
                       << ", Emergency active: " << *emergency_active
-                      << ", Lift ultrasound distance: " << distance_cm
-                      << ", Lift convoyer speed: " << lift_convoyer_speed
+                      << ", Slope up active: " << *slope_up_active
+                      << ", Slope down active: " << *slope_down_active
+
                       << std::endl;
         }
     }

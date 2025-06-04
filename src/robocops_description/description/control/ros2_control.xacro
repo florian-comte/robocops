@@ -47,6 +47,16 @@
         <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
+
+      <gpio name="slope_up">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="slope_down">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
     </ros2_control>
 
   </xacro:macro>

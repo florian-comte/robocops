@@ -16,6 +16,8 @@ public:
                       bool lift_authorize,
                       bool button_activate,
                       bool emergency_activate,
+                      bool slope_up_activate,
+                      bool slope_down_activate,
                       double *encoder_left,
                       double *encoder_right,
                       bool *lift_authorized,
@@ -24,6 +26,8 @@ public:
                       bool *brushes_active,
                       bool *button_active,
                       bool *emergency_active,
+                      bool *slope_up_active,
+                      bool *slope_down_active,
                       bool print_output = false);
 
 private:

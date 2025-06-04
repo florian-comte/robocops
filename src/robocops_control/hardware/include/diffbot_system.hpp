@@ -120,6 +120,8 @@ namespace robocops_control
         bool brushes_active_;
         bool button_active_;
         bool emergency_active_;
+        bool slope_up_active_;
+        bool slope_down_active_;
     };
 
 } // namespace robocops_control

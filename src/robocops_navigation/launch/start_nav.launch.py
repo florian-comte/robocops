@@ -1,114 +1,26 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression, Command
+from launch_ros.substitutions import FindPackageShare
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 import os
 
-
 def generate_launch_description():
-    # Parameters
-    nav2_params_path = os.path.join(
-        get_package_share_directory('robocops_navigation'),
-        'config',
-        'nav2_params.yaml'
+    ld = LaunchDescription()
+
+    nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params.yaml')
+    map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'mapv1.yaml')
+
+    nav2_launch_file = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('nav2_bringup'),
+                         'launch/bringup_launch.py')
+        ),
+        launch_arguments={'slam': 'False', 'map': map_file, 'use_sim_time': 'False', 'params_file': nav2_yaml, 'autostart': 'True'}.items()
     )
 
-    return LaunchDescription([
-        Node(
-            package='nav2_map_server',
-            executable='map_server',
-            name='map_server',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
+    ld.add_action(nav2_launch_file)
 
-        Node(
-            package='nav2_amcl',
-            executable='amcl',
-            name='amcl',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_controller',
-            executable='controller_server',
-            name='controller_server',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_planner',
-            executable='planner_server',
-            name='planner_server',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_behaviors',
-            executable='behavior_server',
-            name='behavior_server',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_bt_navigator',
-            executable='bt_navigator',
-            name='bt_navigator',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_waypoint_follower',
-            executable='waypoint_follower',
-            name='waypoint_follower',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_navigation',
-            output='screen',
-            parameters=[{
-                'use_sim_time': False,
-                'autostart': True,
-                'node_names': [
-                    'map_server',
-                    'amcl',
-                    'controller_server',
-                    'planner_server',
-                    'behavior_server',
-                    'bt_navigator',
-                    'waypoint_follower',
-                    'collision_monitor',
-                    'velocity_smoother'
-                ]
-            }]
-        ),
-
-
-        # Optional Components:
-        Node(
-            package='nav2_collision_monitor',
-            executable='collision_monitor',
-            name='collision_monitor',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-
-        Node(
-            package='nav2_velocity_smoother',
-            executable='velocity_smoother',
-            name='velocity_smoother',
-            output='screen',
-            parameters=[nav2_params_path]
-        ),
-    ])
+    return ld

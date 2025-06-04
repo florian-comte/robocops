@@ -12,6 +12,9 @@
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 
 #include "navigation_behaviors.h"
+#include "blocking_gpio_behavior.h"
+//#include "search_and_grab.h"
+#include "set_pose_behavior.h"
 
 using namespace std::chrono_literals;
 
@@ -50,10 +53,22 @@ public:
         factory.registerNodeType<SetLocations>("SetLocations");
         factory.registerNodeType<GetLocationFromQueue>("GetLocationFromQueue");
         factory.registerNodeType<GoToPose>("GoToPose", shared_from_this());
+        factory.registerNodeType<BlockingGPIO>("BlockingGPIO", shared_from_this());
+        factory.registerNodeType<SetPose>("SetPose", shared_from_this());
 
         auto blackboard = BT::Blackboard::create();
 
         blackboard->set<std::string>("locations_file", locations_file_);
+
+        blackboard->set<int>("MAX_INVENTORY", 10);
+        blackboard->set<int>("MIN_TO_GO_ZONE_1", 1);
+        blackboard->set<int>("MIN_TO_GO_ZONE_2", 1);
+        blackboard->set<int>("MIN_TO_GO_ZONE_3", 2);
+        blackboard->set<int>("MIN_TO_GO_ZONE_4", 2);
+        blackboard->set<int>("TOTAL_ZONE_1", 15);
+        blackboard->set<int>("TOTAL_ZONE_2", 6);
+        blackboard->set<int>("TOTAL_ZONE_3", 6);
+        blackboard->set<int>("TOTAL_ZONE_4", 6);
 
         blackboard->set<int>("current_inventory", 0);
         blackboard->set<int>("current_grabbed_zone_1", 0);
@@ -67,6 +82,8 @@ public:
         blackboard->set<bool>("never_timed_out_opening_door", true);
 
         blackboard->set<bool>("is_door_open", false);
+
+        
 
         RCLCPP_INFO(this->get_logger(), "Attempting to create tree from XML...");
 

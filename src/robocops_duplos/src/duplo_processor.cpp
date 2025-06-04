@@ -24,6 +24,24 @@
 #define DROPPING_ZONE_MIN_Y 0.0
 #define DROPPING_ZONE_MAX_Y 1.0
 
+// Zone 2: Right-bottom quadrant
+#define ZONE2_MIN_X 1.0
+#define ZONE2_MAX_X 2.0
+#define ZONE2_MIN_Y 0.0
+#define ZONE2_MAX_Y 1.0
+
+// Zone 3: Left-top quadrant
+#define ZONE3_MIN_X 0.0
+#define ZONE3_MAX_X 1.0
+#define ZONE3_MIN_Y 1.0
+#define ZONE3_MAX_Y 2.0
+
+// Zone 4: Right-top quadrant
+#define ZONE4_MIN_X 1.0
+#define ZONE4_MAX_X 2.0
+#define ZONE4_MIN_Y 1.0
+#define ZONE4_MAX_Y 2.0
+
 class DuploProcessor : public rclcpp::Node
 {
 public:
@@ -32,13 +50,6 @@ public:
         m_detectionsSub = this->create_subscription<depthai_ros_msgs::msg::SpatialDetectionArray>(
             "/camera/detections", 20,
             std::bind(&DuploProcessor::detectionsCallback, this, std::placeholders::_1));
-
-        m_zoneSub = this->create_subscription<std_msgs::msg::Int32>(
-            "/zone", 10,
-            [this](const std_msgs::msg::Int32::SharedPtr msg)
-            {
-                current_zone_ = msg->data;
-            });
 
         for (int i = 0; i < 4; ++i)
         {
@@ -61,8 +72,6 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Service<robocops_msgs::srv::RemoveDuplo>::SharedPtr remove_duplo_service_;
 
-    int current_zone_ = 1;
-
     int current_duplo_id_ = 0;
 
     tf2_ros::Buffer tf_buffer_;
@@ -83,12 +92,6 @@ private:
     double calculate_distance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b)
     {
         return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
-    }
-
-    bool is_in_dropping_zone(const geometry_msgs::msg::Point &pt)
-    {
-        return pt.x >= DROPPING_ZONE_MIN_X && pt.x <= DROPPING_ZONE_MAX_X &&
-               pt.y >= DROPPING_ZONE_MIN_Y && pt.y <= DROPPING_ZONE_MAX_Y;
     }
 
     std::vector<robocops_msgs::msg::Duplo> &get_buffer(int zone)
@@ -125,12 +128,14 @@ private:
         }
     }
 
-    int add_duplo_in_buffer(int zone, robocops_msgs::msg::Duplo &duplo)
+    int add_duplo_in_buffer(robocops_msgs::msg::Duplo &duplo)
     {
-        // if (is_in_dropping_zone(duplo.position.point))
-        // {
-        //     return -1;
-        // }
+        int zone = get_zone(duplo);
+
+        if (zone == -1)
+        {
+            return -1;
+        }
 
         auto &buffer = get_buffer(zone);
         auto &official = get_official_list(zone);
@@ -166,6 +171,42 @@ private:
         return 0;
     }
 
+    int get_zone(const robocops_msgs::msg::Duplo &duplo)
+    {
+        const auto &pt = duplo.position.point;
+
+        // If in dropping zone, return -1
+        if (pt.x >= DROPPING_ZONE_MIN_X && pt.x <= DROPPING_ZONE_MAX_X &&
+            pt.y >= DROPPING_ZONE_MIN_Y && pt.y <= DROPPING_ZONE_MAX_Y)
+        {
+            return -1;
+        }
+
+        // Zone 2
+        if (pt.x >= ZONE2_MIN_X && pt.x < ZONE2_MAX_X &&
+            pt.y >= ZONE2_MIN_Y && pt.y < ZONE2_MAX_Y)
+        {
+            return 2;
+        }
+
+        // Zone 3
+        if (pt.x >= ZONE3_MIN_X && pt.x < ZONE3_MAX_X &&
+            pt.y >= ZONE3_MIN_Y && pt.y < ZONE3_MAX_Y)
+        {
+            return 3;
+        }
+
+        // Zone 4
+        if (pt.x >= ZONE4_MIN_X && pt.x < ZONE4_MAX_X &&
+            pt.y >= ZONE4_MIN_Y && pt.y < ZONE4_MAX_Y)
+        {
+            return 4;
+        }
+
+        // Default to zone 1
+        return 1;
+    }
+
     int transform_coordinates(
         const std_msgs::msg::Header &header,
         const depthai_ros_msgs::msg::SpatialDetection &untransformed_duplo,
@@ -177,21 +218,18 @@ private:
         camera_point.point.y = untransformed_duplo.position.y;
         camera_point.point.z = untransformed_duplo.position.z;
 
-        // geometry_msgs::msg::PointStamped map_point;
-        // try
-        // {
-        //     RCLCPP_INFO(this->get_logger(), "Camera point frame: %s", camera_point.header.frame_id.c_str());
-        //     map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
-        // }
-        // catch (tf2::TransformException &ex)
-        // {
-        //     RCLCPP_WARN(this->get_logger(), "TF2 transform failed: %s", ex.what());
-        //     return -1;
-        // }
+        geometry_msgs::msg::PointStamped map_point;
+        try
+        {
+            map_point = tf_buffer_.transform(camera_point, "map", tf2::durationFromSec(0.1));
+        }
+        catch (tf2::TransformException &ex)
+        {
+            RCLCPP_WARN(this->get_logger(), "TF2 transform failed: %s", ex.what());
+            return -1;
+        }
 
-        // transformed_duplo.position = map_point;
-
-        transformed_duplo.position = camera_point;
+        transformed_duplo.position = map_point;
         transformed_duplo.score = untransformed_duplo.results[0].score;
         transformed_duplo.count = 1;
 
@@ -210,10 +248,10 @@ private:
             {
                 if (transform_coordinates(msg->header, detection, duplo) == 0)
                 {
-                    add_duplo_in_buffer(current_zone_, duplo);
+                    add_duplo_in_buffer(duplo);
                 }
             }
-                }
+        }
     }
 
     void publishOfficialDuplos()

@@ -1,89 +1,80 @@
 <root BTCPP_format="4" main_tree_to_execute="Main">
     <BehaviorTree ID="Main">
         <Sequence>
-            <Script code=" MAX_INVENTORY:= 10; MIN_TO_GO_ZONE_1:=1; MIN_TO_GO_ZONE_2:=1; MIN_TO_GO_ZONE_3:=2; MIN_TO_GO_ZONE_4:=2; TOTAL_ZONE_1:=15; TOTAL_ZONE_2:=6; TOTAL_ZONE_3:=6; TOTAL_ZONE_4:=6 " />
             <SetLocations name="set_locations" num_locs="{num_locs}" loc_names="{loc_names}" loc_poses="{loc_poses}"/>
 
             <KeepRunningUntilFailure>
                 <Fallback name="ZoneSelector">
                     <Precondition if="MAX_INVENTORY - current_inventory > MIN_TO_GO_ZONE_3 && TOTAL_ZONE_3 - current_grabbed_zone_3 > MIN_TO_GO_ZONE_3 && never_timed_out_zone_3 && never_timed_out_opening_door" else="FAILURE">
                         <Sequence>
-                            <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_outside_entry"/>
-                            <SubTree ID="Zone3"/>
+                            <!-- If door not open, go and have back next to button and open it -->
+                            <Precondition if="!is_door_open" else="SUCCESS">
+                                <Sequence>
+                                    <!-- Position the robot  -->
+                                    <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position"/>
+
+                                    <!-- Activate the blocking routine -->
+                                    <Fallback>
+                                        <BlockingGPIO gpio_name="button" interface_name="active" timeout="15.0"/>
+                                        <Sequence>
+                                            <Script code="never_timed_out_opening_door := false"/>
+                                        </Sequence>
+                                    </Fallback>
+                                </Sequence>
+                            </Precondition>
+
+                            <!-- If door is open, enter zone 3 and  -->
+                            <Precondition if="never_timed_out_opening_door" else="FAILURE">
+                                <Sequence>
+                                    <Script code="is_door_open := true"/>
+                                    <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry"/>
+
+                                    <!-- Switch to search and grab in zone 3 -->
+                                    <!-- <SearchAndGrab zone=3/> -->
+                                </Sequence>
+                            </Precondition>
                         </Sequence>
                     </Precondition>
 
                     <Precondition if="current_inventory > MIN_TO_GO_ZONE_4 && TOTAL_ZONE_4 - current_grabbed_zone_4 > MIN_TO_GO_ZONE_4 && never_timed_out_zone_4" else="FAILURE">
                         <Sequence>
+                            <!-- Go to zone 4 entry -->
                             <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry"/>
-                            <SubTree ID="Zone4"/>
+
+                            <!-- Activate slopeup blocking routine -->
+                            <BlockingGPIO gpio_name="slopeup" interface_name="active" timeout="15.0"/>
+
+                            <!-- Define manually current robot position -->
+                            <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}"/>
+
+                            <!-- Search and grab zone 4 -->
+                            <!-- <SearchAndGrab zone="4" /> -->
+                            <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry"/>
+                            
+                            <!-- Activate slopedown blocking routine -->
+                            <BlockingGPIO gpio_name="slopedown" interface_name="active" timeout="15.0"/>
+
+                            <!-- Define manually current robot position -->
+                            <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_entry}"/>
                         </Sequence>
                     </Precondition>
 
                     <Precondition if="current_inventory > MIN_TO_GO_ZONE_1 && TOTAL_ZONE_1 - current_grabbed_zone_1 > MIN_TO_GO_ZONE_1 && never_timed_out_zone_1" else="FAILURE">
-                        <SubTree ID="Zone1"/>
+                        <Sequence>
+                            <!-- Search and grab in zone 1 -->
+                            <!-- <SearchAndGrab zone="1" /> -->
+                            <Script code="" />
+                        </Sequence>
                     </Precondition>
 
-                    <SubTree ID="Base"/>
+                    <Sequence>
+                        <!-- <ComputeReturnToBasePath>  -->
+                        <!-- <ReturnToBase/> -->
+
+                        <BlockingGPIO gpio_name="unload" interface_name="active" timeout="15.0"/>
+                    </Sequence>
                 </Fallback>
             </KeepRunningUntilFailure>
-        </Sequence>
-    </BehaviorTree>
-
-    <!-- Zone 3 -->
-    <BehaviorTree ID="Zone3">
-        <Sequence>
-            <!-- If door not open, open it -->
-            <Precondition if="!is_door_open" else="SUCCESS">
-                <SubTree ID="OpenDoor"/>
-            </Precondition>
-
-            <!-- Enter zone 3 -->
-            <GoToPose name="enter_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry"/>
-            <!-- <SearchAndGrab zone="3" /> -->
-
-            <GoToPose name="exit_zone3" loc_poses="{loc_poses}" loc="zone3_outside_entry"/>
-        </Sequence>
-    </BehaviorTree>
-
-    <!-- Zone 4 -->
-    <BehaviorTree ID="Zone4">
-        <Sequence>
-            <!-- Enter zone 4 -->
-            <GoToPose name="enter_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry"/>
-            <!-- <SlopeUp /> -->
-            <!-- <SearchAndGrab zone="4" /> -->
-            <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry"/>
-            <!-- <SlopeDown /> -->
-        </Sequence>
-    </BehaviorTree>
-
-    <!-- Zone 1 -->
-    <BehaviorTree ID="Zone1">
-        <Sequence>
-            <!-- TODO: work in zone1 -->
-            <Script code=" current_inventory:=10 " />
-        </Sequence>
-    </BehaviorTree>
-
-    <!-- Base -->
-    <BehaviorTree ID="Base">
-        <Sequence>
-            <!-- TODO: work in base -->
-            <!-- <ComputeReturnToBasePath>
-            <ReturnToBase/>
-            <UnloadRoutine/> -->
-
-            <Script code=" current_inventory:=0 " />
-        </Sequence>
-    </BehaviorTree>
-
-    <!-- Open Door -->
-    <BehaviorTree ID="OpenDoor">
-        <Sequence>
-            <!-- TODO: open the door -->
-            <Script code=" current_inventory:=10 " />
-
         </Sequence>
     </BehaviorTree>
 </root>

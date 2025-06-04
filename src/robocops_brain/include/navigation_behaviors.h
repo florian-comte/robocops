@@ -1,3 +1,6 @@
+#ifndef NAVIGATION_BT_H_
+#define NAVIGATION_BT_H_
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
@@ -71,3 +74,5 @@ class GoToPose : public BT::StatefulActionNode
     // Action client callbacks
     void result_callback(const GoalHandleNav::WrappedResult& result);
 };
+
+#endif //NAVIGATION_BT_H_

@@ -13,6 +13,8 @@ find_package(rclpy REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(robocops_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(cv_bridge REQUIRED)
@@ -32,12 +34,16 @@ install(DIRECTORY
 #Install C++ nodes
 set(AUTONOMY_SOURCES
     src/navigation_behaviors.cpp 
+    src/blocking_gpio_behavior.cpp
+    #src/search_and_grab.cpp
+    src/set_pose_behavior.cpp
 )
 
 set(TARGET_DEPENDS
     ament_index_cpp rclcpp rclcpp_action
     nav2_msgs sensor_msgs cv_bridge image_transport
     behaviortree_cpp tf2 tf2_ros tf2_geometry_msgs yaml-cpp
+    control_msgs robocops_msgs 
 )
 
 include_directories(include)

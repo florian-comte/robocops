@@ -79,6 +79,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim_time': False,
+                'autostart': True,
                 'node_names': [
                     'map_server',
                     'amcl',
@@ -86,10 +87,13 @@ def generate_launch_description():
                     'planner_server',
                     'behavior_server',
                     'bt_navigator',
-                    'waypoint_follower'
+                    'waypoint_follower',
+                    'collision_monitor',
+                    'velocity_smoother'
                 ]
             }]
         ),
+
 
         # Optional Components:
         Node(

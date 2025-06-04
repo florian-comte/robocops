@@ -78,7 +78,7 @@ def generate_launch_description():
             name='lifecycle_manager_navigation',
             output='screen',
             parameters=[{
-                'use_sim_time': 'false',
+                'use_sim_time': False,
                 'node_names': [
                     'map_server',
                     'amcl',

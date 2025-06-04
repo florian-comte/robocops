@@ -248,7 +248,7 @@ namespace robocops_control
         &brushes_active_,
         &button_active_,
         &emergency_active_,
-        &slope_up_,
+        &slope_up_active_,
         &slope_down_active_,
         true);
 

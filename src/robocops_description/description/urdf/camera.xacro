@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+    <xacro:property name="tilt_deg_cam" value="25"/>
+    <xacro:property name="tilt_rad_cam" value="${tilt_deg_cam * pi / 180.0}"/>
+
     <joint name="camera_joint" type="fixed">
         <parent link="camera_holder2"/>
         <child link="camera_oak"/>
@@ -31,9 +34,9 @@
     </gazebo>
 
     <joint name="camera_point_joint" type="fixed">
-        <parent link="camera_oak"/>
+        <parent link="base_link"/>
         <child link="camera"/>
-        <origin xyz="0.001 0 0.005"/>
+        <origin xyz="37 0 17.65" rpy="0 ${tilt_rad_cam} 0"/>
     </joint>
 
     <!-- This is the link that is centered on the rgb sensor and should be used for transform -->

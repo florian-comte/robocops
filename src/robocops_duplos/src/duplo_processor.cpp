@@ -216,9 +216,9 @@ private:
     {
         geometry_msgs::msg::PointStamped camera_point;
         camera_point.header = header;
-        camera_point.point.x = untransformed_duplo.position.x;
-        camera_point.point.y = untransformed_duplo.position.y;
-        camera_point.point.z = untransformed_duplo.position.z;
+        camera_point.point.x = untransformed_duplo.position.z;
+        camera_point.point.y = untransformed_duplo.position.x;
+        camera_point.point.z = untransformed_duplo.position.y;
 
         geometry_msgs::msg::PointStamped map_point;
         try

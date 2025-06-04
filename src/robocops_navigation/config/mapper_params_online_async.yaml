@@ -15,14 +15,16 @@ slam_toolbox:
     base_frame: base_link
     scan_topic: /scan_filtered
     use_map_saver: true
-    mode: localization #mapping
+    mode: mapping
+    # mode: localization
+
 
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    map_file_name: /home/robocops/robocops/my_map2.pgm
-    map_start_pose: [-11.8, -9.42, 0]
-    map_start_at_dock: true
+    # map_file_name: /home/robocops/robocops/my_map2.pgm
+    # map_start_pose: [-11.8, -9.42, 0]
+    # map_start_at_dock: true
 
     debug_logging: false
     throttle_scans: 1

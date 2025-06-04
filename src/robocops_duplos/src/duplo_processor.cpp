@@ -15,7 +15,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #define BUFFER_SIZE 100
-#define TOLERANCE_CM 20
+#define TOLERANCE_CM 10
 #define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
 
@@ -130,12 +130,14 @@ private:
 
     int add_duplo_in_buffer(robocops_msgs::msg::Duplo &duplo)
     {
-        int zone = get_zone(duplo);
+        // int zone = get_zone(duplo);
 
-        if (zone == -1)
-        {
-            return -1;
-        }
+        // if (zone == -1)
+        // {
+        //     return -1;
+        // }
+
+        int zone = 1;
 
         auto &buffer = get_buffer(zone);
         auto &official = get_official_list(zone);
@@ -221,7 +223,7 @@ private:
         geometry_msgs::msg::PointStamped map_point;
         try
         {
-            map_point = tf_buffer_.transform(camera_point, "map", tf2::durationFromSec(0.1));
+            map_point = tf_buffer_.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
         }
         catch (tf2::TransformException &ex)
         {

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
-    <xacro:property name="tilt_deg" value="30"/>
+    <xacro:property name="tilt_deg" value="20"/>
     <xacro:property name="tilt_rad" value="${tilt_deg * pi / 180.0}"/>
 
     <joint name="camera_holder_joint" type="fixed">

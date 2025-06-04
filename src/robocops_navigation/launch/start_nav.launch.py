@@ -15,8 +15,8 @@ def generate_launch_description():
 
     nav2_launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('robocops_navigation'),
-                         'launch/bringup.launch.py')
+            os.path.join(get_package_share_directory('nav2_bringup'),
+                         'launch/bringup_launch.py')
         ),
         launch_arguments={'slam': 'False', 'map': map_file, 'use_sim_time': 'False', 'params_file': nav2_yaml, 'autostart': 'True'}.items()
     )

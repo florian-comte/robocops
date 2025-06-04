@@ -36,7 +36,7 @@
     <joint name="camera_point_joint" type="fixed">
         <parent link="base_link"/>
         <child link="camera"/>
-        <origin xyz="0.037 0 0.01765" rpy="0 ${tilt_rad_cam} 0"/>
+        <origin xyz="0.37 0 0.1765" rpy="0 ${tilt_rad_cam} 0"/>
     </joint>
 
     <!-- This is the link that is centered on the rgb sensor and should be used for transform -->

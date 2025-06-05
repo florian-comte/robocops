@@ -11,7 +11,7 @@ from geometry_msgs.msg import TwistStamped
 from control_msgs.msg import DynamicInterfaceGroupValues
 from control_msgs.msg import InterfaceValue
 
-MAX_LIN_VEL = 1.0
+MAX_LIN_VEL = 0.8
 MAX_ANG_VEL = 1.0
 LIN_STEP = 0.05
 ANG_STEP = 0.05

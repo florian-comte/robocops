@@ -4,19 +4,13 @@
 #include "dri_driver.h"
 #include "maxon_encoder.h"
 #include "routines.h"
-#include "lift_ultrasound_sensor.h"
 #include "lift_driver.h"
+#include "ir_sensor.h"
 
 // Communication baudrate
 #define BAUDRATE 57600
 
-// PWM from 0 to 255
-#define BRUSH_SPEED 240
-
-// Distance of ultrasound to activate the lift routine (cm)
-#define ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE 32
-
-bool authorized_lift_routine = 0;
+bool emergency_stop = 0;
 
 /**
    @brief Arduino setup function.
@@ -29,14 +23,15 @@ void setup() {
   init_servo_motors_drivers();
   init_l298n_motor_drivers();
   init_dri_motor_drivers();
-  init_lift_ultrasound_sensor();
+  init_ir_sensors();
   init_lift();
 
-  // Init unload routine
   unload_state = UNLOAD_IDLE; 
-
-  // Init lift routine
   lift_state = LIFT_IDLE;
+  button_state = BUTTON_IDLE;
+  slope_up_state = SLOPE_UP_IDLE;
+  slope_down_state = SLOPE_DOWN_IDLE;
+  capture_state = CAPTURE_IDLE;
 }
 
 /**
@@ -44,22 +39,37 @@ void setup() {
 */
 void loop() {
   handle_serial_command();
+
+  // Check emergency
+  if(emergency_stop){
+      for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
+        set_maxon_motor_state(i, 0, 0, 0);
+      }
+
+      for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
+        set_l298n_motor_state(i, 0, 0);
+      }
+    
+      for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
+        set_dri_motor_state(i, 0, 0); 
+      }
+    return;
+  }
+
+  // --- Update routines
   handle_routines();
 
-  // Update lift ultrasound sensor
-  if(authorized_lift_routine == 1 && lift_state == LIFT_IDLE){
-      update_lift_ultrasound_sensor();
-
-      // Check if routine should be started
-      if(lift_ultrasound_averaged_distance <= ULTRASOUND_SENSOR_LIFT_DETECTION_VALUE){
-        lift_state = LIFT_UP;
-        lift_ultrasound_averaged_distance = LIFT_ULTRASOUND_MAX_DISTANCE;
-      }
+  // --- Update states
+  if(lift_state == LIFT_IDLE){
+    update_ir_sensors();
   } else {
-    // By security, reset the current lift ultrasound value to MAX_DISTANCE when not updating it
-    lift_ultrasound_averaged_distance = LIFT_ULTRASOUND_MAX_DISTANCE;
+    for(int i = 0; i < IR_SENSOR_COUNT; i++){
+      ir_activated_averaged[i] = 0;
+    }
   }
   
+  // --- Update commands
+
   // Maxon motors
   for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {
     int enable = maxon_target_speeds[i] != 0;
@@ -69,6 +79,11 @@ void loop() {
     maxon_encoder_speeds[i] = read_maxon_encoder(i);
   }
 
+  // Servo
+  for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
+    set_servo_motor_angle(i, servo_target_angles[i]); 
+  }
+
   // L298N
   for (int i = 0; i < L298N_MOTOR_COUNT; i++) {
     int enable = l298n_target_speeds[i] != 0;
@@ -76,18 +91,13 @@ void loop() {
     int pwm = abs(l298n_target_speeds[i]);
     set_l298n_motor_state(i, direction, pwm);
   }
-
+  
   // DRI
   for (int i = 0; i < DRI_MOTOR_COUNT; i++) {
-    Serial.println(dri_target_speeds[i]);
     set_dri_motor_state(i, (dri_target_speeds[i] >= 0), abs(dri_target_speeds[i])); 
   }
-  
-  // Servo
-  for (int i = 0; i < SERVO_MOTOR_COUNT; i++) {
-    set_servo_motor_angle(i, servo_target_angles[i]); 
-  }
 
+  // Lift
   update_lift();
 }
 
@@ -120,36 +130,56 @@ int handle_serial_command() {
     maxon_right -= 10000;    
 
     // 1 = Activate brush, 0 = Deactivate brush
-    bool brush_signal = buf[4] & 0x01;
+    bool brush_activated = buf[4] & 0x01;
 
     // 1 = Activate unload routine, 0 = Close back
     bool activate_unload_routine = (buf[4] >> 1) & 0x01;
 
-    // 1 = Authorized lift routine, 0 = Not authorized lift routine
-    authorized_lift_routine = (buf[4] >> 2) & 0x01;
+    bool activate_button_routine = (buf[4] >> 3) & 0x01;
 
-    // Activate / Deactivate brushes
-    if(brush_signal == 1){
-      l298n_target_speeds[BRUSH_LEFT] = BRUSH_SPEED;
-      l298n_target_speeds[BRUSH_RIGHT] = BRUSH_SPEED;
+    emergency_stop = (buf[4] >> 4) & 0x01;
 
-    } else {
-      l298n_target_speeds[BRUSH_LEFT] = L298N_MIN_PWM;
-      l298n_target_speeds[BRUSH_RIGHT] = L298N_MIN_PWM;
+    bool activate_slope_up_routine = (buf[4] >> 5) & 0x01;
+    bool activate_slope_down_routine = (buf[4] >> 6) & 0x01;
+
+    if(!emergency_stop){
+      // Activate / deactivate capture routine
+      if(brush_activated == 1){
+        if(capture_state == CAPTURE_IDLE && lift_state == LIFT_IDLE){
+            capture_state = CAPTURE_BRUSHING;
+        }
+      } else {
+        capture_state = CAPTURE_IDLE;
+      }
+  
+      if((activate_unload_routine == 1) && lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN && (unload_state == UNLOAD_IDLE) && ((button_state == BUTTON_IDLE) || (button_state == BUTTON_FINISHED))){
+        unload_state = UNLOAD_OPEN_DOOR; 
+      }
+  
+      if((activate_button_routine == 1) && (button_state == BUTTON_IDLE) && (unload_state == UNLOAD_IDLE)){
+        button_state = BUTTON_BACKWARD; 
+      }
+
+      if((activate_slope_up_routine == 1) && slope_up_state == SLOPE_UP_IDLE){
+        // todo
+        slope_up_state = SLOPE_UP_IDLE; 
+      }
+
+      if((activate_slope_down_routine == 1) && slope_down_state == SLOPE_DOWN_IDLE){
+        // todo
+        slope_down_state = SLOPE_DOWN_IDLE; 
+      }
+      
+      // Apply speeds
+      if((button_state == BUTTON_FINISHED || button_state == BUTTON_IDLE) && slope_up_state == SLOPE_UP_IDLE && slope_down_state == SLOPE_DOWN_IDLE) {
+        maxon_target_speeds[MAXON_REAR_LEFT] = maxon_left;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = maxon_right;
+      }
 
     }
-
-    if((activate_unload_routine == 1) && (unload_state == UNLOAD_IDLE)){
-      unload_state = UNLOAD_OPEN_DOOR; 
-    }
-    
-    // Apply speeds
-    maxon_target_speeds[MAXON_REAR_LEFT] = maxon_left;
-    maxon_target_speeds[MAXON_REAR_RIGHT] = maxon_right;
-
     // Return infos to rasp
-    int16_t maxon_encoder_left = maxon_encoder_speeds[MAXON_REAR_LEFT];
-    int16_t maxon_encoder_right = maxon_encoder_speeds[MAXON_REAR_RIGHT];
+    int16_t maxon_encoder_left = maxon_encoder_speeds[MAXON_REAR_LEFT] + 10000;
+    int16_t maxon_encoder_right = maxon_encoder_speeds[MAXON_REAR_RIGHT] + 10000;
 
     byte response[5];
 
@@ -159,11 +189,15 @@ int handle_serial_command() {
     response[3] = lowByte(maxon_encoder_right);
 
     response[4] = 0;
-    response[4] |= brush_signal & 0x01;
+    response[4] |= brush_activated & 0x01;
     response[4] |= (((unload_state != UNLOAD_IDLE) & 0x01) << 1);
-    response[4] |= (authorized_lift_routine & 0x01) << 2;
+    response[4] |= (0 & 0x01) << 2;
     response[4] |= ((lift_state != LIFT_IDLE) & 0x01) << 3;
-    
+    response[4] |= ((button_state != BUTTON_IDLE) & 0x01) << 4;
+    response[4] |= (emergency_stop & 0x01) << 5;
+    response[4] |= ((slope_up_state != SLOPE_UP_IDLE) & 0x01) << 6;
+    response[4] |= ((slope_down_state != SLOPE_DOWN_IDLE) & 0x01) << 7;
+
     Serial.write(response, 5);
   }
 }

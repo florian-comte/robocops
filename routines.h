@@ -42,6 +42,7 @@ extern unsigned long unload_timer;
 #define LIFT_CONVOYER_SPEED 200
 #define LIFT_UP_POSITION 1270
 #define LIFT_DOWN_POSITION 0
+#define LIFT_CONVOYER_JERK_DURATION 200
 
 enum LiftState {
   LIFT_IDLE,
@@ -55,8 +56,71 @@ enum LiftState {
 extern LiftState lift_state;
 extern unsigned long lift_timer;
 
+
+// --- BUTTON ROUTINE ---
+
+#define BUTTON_TIME_TO_DRIVE 3000
+
+enum ButtonState {
+  BUTTON_IDLE,
+  BUTTON_BACKWARD,
+  BUTTON_FORWARD,
+  BUTTON_GOING_FORWARD,
+  BUTTON_FINISHED
+};
+
+extern ButtonState button_state;
+extern unsigned long button_timer;
+
+// --- SLOPE UP ROUTINE ---
+
+enum SlopeUpState {
+  SLOPE_UP_IDLE,
+};
+
+extern SlopeUpState slope_up_state;
+extern unsigned long slope_up_timer;
+
+// --- SLOPE DOWN ROUTINE ---
+
+enum SlopeDownState {
+  SLOPE_DOWN_IDLE,
+};
+
+extern SlopeDownState slope_down_state;
+extern unsigned long slope_down_timer;
+
+// --- CAPTURE ROUTINE ---
+
+// PWM from 0 to 255
+#define CAPTURE_BRUSH_SPEED 240
+#define CAPTURE_BRUSHING_STOP_AFTER 1000
+#define CAPTURE_SMALL_BACKWARD_TIMEOUT 10000
+#define CAPTURE_SMALL_CONVOYER_SPEED 80
+#define CAPTURE_SMALL_CONVOYER_INTERVAL 500 
+#define CAPTURE_SMALL_CONVOYER_DURATION 200 
+
+enum CaptureState {
+  // Nothing done
+  CAPTURE_IDLE,
+  // Brushes activated
+  // If first sensor detected => Capture small backward
+  CAPTURE_BRUSHING,
+  // Wait til detection from back ir or timeout
+  CAPTURE_SMALL_BACKWARD,
+  // Wait for lift to put back in capture idle
+  CAPTURE_CAPTURED
+};
+
+extern CaptureState capture_state;
+extern unsigned long capture_timer;
+
 extern void handle_routines();
 void handle_unload_routine();
 void handle_lift_routine();
+void handle_button_routine();
+void handle_slope_up_routine();
+void handle_slope_down_routine();
+void handle_capture_routine();
 
 #endif // ROUTINES_H

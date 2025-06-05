@@ -1,12 +1,13 @@
 #include "maxon_encoder.h"
+#include "maxon_driver.h"
 
 /**
  * @brief Analog input pin mapping for motor encoder speed signals.
  * These pins are used to read the encoder voltage corresponding to motor RPM.
  */
 const int MAXON_MOTOR_ENCODER_SPEED_PINS[MAXON_MOTOR_COUNT] = {
-   A0,  // REAR_RIGHT,
-   A1 // REAR_LEFT
+   A4,  // REAR_RIGHT, A5
+   A6 // REAR_LEFT A7
    //    40, // FRONT_LEFT
    // 41, // FRONT_RIGHT
     
@@ -38,6 +39,15 @@ void init_maxon_motor_encoders() {
 float read_maxon_encoder(maxon_motor_position motor){
   int raw_analog = analogRead(MAXON_MOTOR_ENCODER_SPEED_PINS[motor]);
 
+  // 0 et 818.4
+
+  // 0 -> -10 000 ou 10 000
+
+  // - 818.4/2 et 818.4/2
+  raw_analog = raw_analog - MAXON_MAX_ANALOG_VALUE / 2;
+
+  raw_analog = IS_INVERSED_MAXON_MOTOR[motor] ? raw_analog : -raw_analog;
+
   // Map voltage range [0–MAX_ANALOG_VALUE] to speed range [-10000 RPM to 10000 RPM]
-  return map(raw_analog, 0, MAXON_MAX_ANALOG_VALUE, MAXON_MIN_ENCODER_SPEED, MAXON_MAX_ENCODER_SPEED);  
+  return map(raw_analog, -MAXON_MAX_ANALOG_VALUE/2, MAXON_MAX_ANALOG_VALUE/2, MAXON_MIN_ENCODER_SPEED, MAXON_MAX_ENCODER_SPEED);  
 }

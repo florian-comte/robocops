@@ -13,7 +13,7 @@ enum dri_motor_position {
     CONVOYER_LIFT = 1
 };
 
-extern double dri_target_speeds[DRI_MOTOR_COUNT];
+extern int dri_target_speeds[DRI_MOTOR_COUNT];
 
 void init_dri_motor_drivers();
 void set_dri_motor_state(dri_motor_position motor, int direction, int pwm);

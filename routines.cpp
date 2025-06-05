@@ -3,10 +3,25 @@
 #include "maxon_driver.h"
 #include "servo_driver.h"
 #include "lift_driver.h"
+#include "l298n_driver.h"
+#include "ir_sensor.h"
 
 void handle_routines(){
-  handle_unload_routine();
+  if(lift_state == LIFT_IDLE && capture_state == CAPTURE_CAPTURED){
+    capture_state = CAPTURE_IDLE;
+    lift_state = LIFT_UP;
+  }
+
+  // For jerk
+  if(lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN){
+    handle_unload_routine();
+  }
+  
   handle_lift_routine();
+  handle_button_routine();
+  handle_slope_down_routine();
+  handle_slope_up_routine();
+  handle_capture_routine();
 }
 
 // --- Unload routine ---
@@ -75,9 +90,10 @@ void handle_unload_routine() {
 
 // --- Lift routine
 
-
 LiftState lift_state = LIFT_IDLE;
 unsigned long lift_timer = 0;
+bool lift_jerk_reversed_direction = 0;
+unsigned long lift_jerk_timer = 0;
 
 void handle_lift_routine() {
   switch (lift_state) {      
@@ -95,10 +111,22 @@ void handle_lift_routine() {
         dri_target_speeds[LIFT_CONVOYER_NAME] = LIFT_CONVOYER_SPEED;
         lift_timer = millis();
         lift_state = LIFT_REVERSE_CONVOYER;
+        lift_jerk_timer = millis();
       }
       break;
 
     case LIFT_REVERSE_CONVOYER:
+      if(millis() - lift_jerk_timer > LIFT_CONVOYER_JERK_DURATION){
+        if(lift_jerk_reversed_direction){
+          dri_target_speeds[UNLOAD_CONVOYER_NAME] = UNLOAD_CONVOYER_SPEED;
+          lift_jerk_reversed_direction = false;
+          lift_jerk_timer = millis();
+        } else {
+          dri_target_speeds[UNLOAD_CONVOYER_NAME] = -UNLOAD_CONVOYER_SPEED;
+          lift_jerk_reversed_direction = true;
+          lift_jerk_timer = millis();
+        }
+      }
       if (millis() - lift_timer > LIFT_TIME_TO_CONVOY) {
         dri_target_speeds[LIFT_CONVOYER_NAME] = -LIFT_CONVOYER_SPEED;
         lift_timer = millis();
@@ -108,6 +136,7 @@ void handle_lift_routine() {
 
     case LIFT_DOWN:
       if (millis() - lift_timer > LIFT_TIME_TO_CONVOY) {
+        dri_target_speeds[UNLOAD_CONVOYER_NAME] = 0;
         dri_target_speeds[LIFT_CONVOYER_NAME] = DRI_MIN_PWM;
         stepper_target_position = LIFT_DOWN_POSITION;
         lift_timer = millis();
@@ -119,6 +148,154 @@ void handle_lift_routine() {
       if (millis() - lift_timer > LIFT_TIME_TO_UP || is_lift_done()) {
         lift_state = LIFT_IDLE;
       }
+      break;
+  }
+}
+
+// --- Button routine
+
+ButtonState button_state = BUTTON_IDLE;
+unsigned long button_timer = 0;
+
+void handle_button_routine() {
+  switch (button_state) {      
+    case BUTTON_IDLE:
+      break;
+      
+    case BUTTON_BACKWARD:
+      button_timer = millis();
+      button_state = BUTTON_FORWARD;
+      maxon_target_speeds[MAXON_REAR_LEFT] = -3000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = -3000;
+      break;
+      
+    case BUTTON_FORWARD:
+      if (millis() - button_timer > BUTTON_TIME_TO_DRIVE) {
+        button_timer = millis();
+        button_state = BUTTON_GOING_FORWARD;
+        maxon_target_speeds[MAXON_REAR_LEFT] = 3000;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 3000;
+      }
+      break;
+
+    case BUTTON_GOING_FORWARD:
+      if (millis() - button_timer > BUTTON_TIME_TO_DRIVE) {
+        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+        button_state = BUTTON_FINISHED; 
+      }
+      break;
+
+    case BUTTON_FINISHED:
+      break;
+  }
+}
+
+// --- Slope up routine
+
+SlopeUpState slope_up_state = SLOPE_UP_IDLE;
+unsigned long slope_up_timer = 0;
+
+void handle_slope_up_routine() {
+  switch (slope_up_state) {      
+    case SLOPE_UP_IDLE:
+      break;
+  }
+}
+
+
+// --- Slope up routine
+
+SlopeDownState slope_down_state = SLOPE_DOWN_IDLE;
+unsigned long slope_down_timer = 0;
+
+void handle_slope_down_routine() {
+  switch (slope_down_state) {      
+    case SLOPE_DOWN_IDLE:
+      break;
+  }
+}
+
+// --- Capture routine
+
+CaptureState capture_state = CAPTURE_IDLE;
+unsigned long capture_timer = 0;
+unsigned long next_small_convoyer = -1;
+unsigned long current_small_convoyer = -1;
+bool front_detected_something = false;
+
+void handle_capture_routine() {
+  switch (capture_state) {      
+    case CAPTURE_IDLE:
+      break;
+      
+    case CAPTURE_BRUSHING:
+      l298n_target_speeds[BRUSH_LEFT] = CAPTURE_BRUSH_SPEED;
+      l298n_target_speeds[BRUSH_RIGHT] = CAPTURE_BRUSH_SPEED;
+
+      if(front_detected_something){
+        if(millis() - capture_timer > CAPTURE_BRUSHING_STOP_AFTER){
+          l298n_target_speeds[BRUSH_LEFT] = 0;
+          l298n_target_speeds[BRUSH_RIGHT] = 0;
+     
+          capture_state = CAPTURE_SMALL_BACKWARD;
+          capture_timer = millis();
+          front_detected_something = false;
+        }
+      }
+
+      if(duplo_detected_in_back_lift()){
+        l298n_target_speeds[BRUSH_LEFT] = 0;
+        l298n_target_speeds[BRUSH_RIGHT] = 0;
+   
+        capture_state = CAPTURE_SMALL_BACKWARD;
+        capture_timer = millis();
+        front_detected_something = false;
+      }
+
+      if(duplo_detected_in_front_lift() && !front_detected_something){
+        capture_timer = millis();
+        front_detected_something = true;
+      }
+      
+      break;
+    case CAPTURE_SMALL_BACKWARD:
+      // Small backward logic
+      if(current_small_convoyer == -1){
+        if(millis() > next_small_convoyer || next_small_convoyer == -1){
+          current_small_convoyer = millis();
+          dri_target_speeds[LIFT_CONVOYER_NAME] = CAPTURE_SMALL_CONVOYER_SPEED;
+        }
+      } else {
+        if(millis() - current_small_convoyer > CAPTURE_SMALL_CONVOYER_DURATION){
+          dri_target_speeds[LIFT_CONVOYER_NAME] = 0;
+          next_small_convoyer = millis() + CAPTURE_SMALL_CONVOYER_INTERVAL;
+          current_small_convoyer = -1;
+        }
+      }
+     
+      if(millis() - capture_timer > CAPTURE_SMALL_BACKWARD_TIMEOUT){
+        if(!duplo_detected_in_front_lift()){
+          current_small_convoyer = -1;
+          next_small_convoyer = -1;
+          dri_target_speeds[LIFT_CONVOYER_NAME] = 0;
+          capture_state = CAPTURE_CAPTURED; 
+        } else {
+          // todo: here maybe eject duplos ? 
+        }
+      }
+
+      // If duplo detected
+      if(duplo_detected_in_back_lift() && !duplo_detected_in_front_lift()){
+        current_small_convoyer = -1;
+        next_small_convoyer = -1;
+        dri_target_speeds[LIFT_CONVOYER_NAME] = 0;
+        capture_state = CAPTURE_CAPTURED;
+      }
+      
+      break;
+      
+    case CAPTURE_CAPTURED:
       break;
   }
 }

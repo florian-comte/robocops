@@ -7,7 +7,7 @@ const int DRI_MOTOR_EN_PINS[DRI_MOTOR_COUNT] = {
 
 const int DRI_MOTOR_PWM_PINS[DRI_MOTOR_COUNT] = {
   11, // CONVOYER_BACK
-  9 // CONVOYER_LIFT
+  8 // CONVOYER_LIFT
 };
 
 const int IS_INVERSED_DRI_MOTOR[DRI_MOTOR_COUNT] = {
@@ -15,7 +15,7 @@ const int IS_INVERSED_DRI_MOTOR[DRI_MOTOR_COUNT] = {
   0 // CONVOYER_LIFT
 };
 
-double dri_target_speeds[DRI_MOTOR_COUNT];
+int dri_target_speeds[DRI_MOTOR_COUNT];
 
 void init_dri_motor_drivers() {
     for (int i = 0; i < DRI_MOTOR_COUNT; i++) {

@@ -141,6 +141,7 @@ void handle_lift_routine() {
       
       if (millis() - lift_timer > LIFT_TIME_TO_CONVOY) {
         dri_target_speeds[LIFT_CONVOYER_NAME] = -LIFT_CONVOYER_SPEED;
+        dri_target_speeds[UNLOAD_CONVOYER_NAME] = 0;
         lift_timer = millis();
         lift_state = LIFT_DOWN;
       }
@@ -148,7 +149,6 @@ void handle_lift_routine() {
 
     case LIFT_DOWN:
       if (millis() - lift_timer > LIFT_TIME_TO_CONVOY) {
-        dri_target_speeds[UNLOAD_CONVOYER_NAME] = 0;
         dri_target_speeds[LIFT_CONVOYER_NAME] = DRI_MIN_PWM;
         stepper_target_position = LIFT_DOWN_POSITION;
         lift_timer = millis();
@@ -241,6 +241,8 @@ void handle_capture_routine() {
     case CAPTURE_IDLE:
       // By security reset the detection
       front_detected_something = false;
+      l298n_target_speeds[BRUSH_LEFT] = 0;
+      l298n_target_speeds[BRUSH_RIGHT] = 0;
       break;
       
     case CAPTURE_BRUSHING:

@@ -14,7 +14,7 @@ float next_back_ir_capture;
 
 void init_ir_sensors(){
   for(int i = 0; i < IR_SENSOR_COUNT; i++){
-    pinMode(i, INPUT);
+    pinMode(IR_SENSORS_PINS[i], INPUT);
     ir_activated_averaged[i] = 0;
   }
 

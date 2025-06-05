@@ -8,9 +8,11 @@
 #include "ir_sensor.h"
 
 #define BAUDRATE 57600
+#define STATES_BUFFER_SIZE 11
+#define COMMANDS_BUFFER_SIZE 5
 
-byte commands_buffer[5];
-byte states_buffer[9];
+byte commands_buffer[COMMANDS_BUFFER_SIZE];
+byte states_buffer[STATES_BUFFER_SIZE];
 
 bool command_emergency = 0;
 
@@ -28,6 +30,8 @@ int16_t state_maxon_right = 0;
 
 int16_t state_other_one = 0;
 int16_t state_other_two = 0;
+
+int16_t state_nb_captured_duplos = 0;
 
 void update_commands(){
   if(command_emergency){
@@ -47,6 +51,7 @@ void update_commands(){
     if(command_capture){
       if(capture_state == CAPTURE_IDLE && lift_state == LIFT_IDLE){
           capture_state = CAPTURE_BRUSHING;
+          state_nb_captured_duplos++;
       }
     } else {
       capture_state = CAPTURE_IDLE;
@@ -109,7 +114,7 @@ void update_commands(){
 }
 
 void update_states(){
-  // 
+  // only update ir sensor if lift not working
   if(lift_state == LIFT_IDLE){
     update_ir_sensors();
   } else {
@@ -146,7 +151,7 @@ void loop() {
   update_commands();
 }
 
-// From Raspberry Pi:
+// From Raspberry Pi (5 bytes):
 //  - 16 bits: wanted_maxon_left    (commands_buffer[0] << 8 | commands_buffer[1]) - 10000
 //  - 16 bits: wanted_maxon_right   (commands_buffer[2] << 8 | commands_buffer[3]) - 10000
 //  - 1 bit : command_capture       (commands_buffer[4] >> 0) & 0x01
@@ -156,21 +161,19 @@ void loop() {
 //  - 1 bit : command_slope_down    (commands_buffer[4] >> 4) & 0x01
 //  - 1 bit : command_emergency     (commands_buffer[4] >> 5) & 0x01
 
-// To Raspberry Pi:
+// To Raspberry Pi (11 bytes):
 //  - 16 bits: state_maxon_left     (states_buffer[0] << 8 | states_buffer[1])
 //  - 16 bits: state_maxon_right    (states_buffer[2] << 8 | states_buffer[3])
-//  - 1 bit : active_brush          (states_buffer[4] >> 0) & 0x01
-//  - 1 bit : active_unload         (states_buffer[4] >> 1) & 0x01
-//  - 1 bit : active_lift           (states_buffer[4] >> 2) & 0x01
-//  - 1 bit : active_button         (states_buffer[4] >> 3) & 0x01
-//  - 1 bit : active_slope_up       (states_buffer[4] >> 4) & 0x01
-//  - 1 bit : active_slope_down     (states_buffer[4] >> 5) & 0x01
-//  - 1 bit : emergency_stop_active (states_buffer[4] >> 6) & 0x01
-//  - 1 bit : reserved              (states_buffer[4] >> 7) & 0x01 (can be repurposed)
+//  - 1 bit : capture_active        (states_buffer[4] >> 0) & 0x01
+//  - 1 bit : unload_active         (states_buffer[4] >> 1) & 0x01
+//  - 1 bit : button_active         (states_buffer[4] >> 2) & 0x01
+//  - 1 bit : slope_up_active       (states_buffer[4] >> 3) & 0x01
+//  - 1 bit : slope_down_active     (states_buffer[4] >> 4) & 0x01
+//  - 1 bit : emergency_active      (states_buffer[4] >> 5) & 0x01
+//  - 16 bits: nb_duplos_captured   (states_buffer[5] << 8 | states_buffer[6])
+//  - 16 bits: state_other_one      (states_buffer[7] << 8 | states_buffer[8])
+//  - 16 bits: state_other_two      (states_buffer[9] << 8 | states_buffer[10])
 
-// Additional state data (optional):
-//  - 16 bits: state_other_one      (states_buffer[5] << 8 | states_buffer[6])
-//  - 16 bits: state_other_two      (states_buffer[7] << 8 | states_buffer[8])
 int handle_serial_command() {
   if (Serial.available() >= 5) {    
     Serial.readBytes(commands_buffer, 5);
@@ -199,19 +202,20 @@ int handle_serial_command() {
 
     states_buffer[4] = 0;
     states_buffer[4] |= ((capture_state != CAPTURE_IDLE) & 0x01);
-    states_buffer[4] |= ((capture_state != CAPTURE_CAPTURED) & 0x01) << 1;
-    states_buffer[4] |= ((unload_state != UNLOAD_IDLE) & 0x01) << 2;
-    states_buffer[4] |= ((lift_state != LIFT_IDLE) & 0x01) << 3;
-    states_buffer[4] |= ((button_state != BUTTON_IDLE) & 0x01) << 4;
-    states_buffer[4] |= ((slope_up_state != SLOPE_UP_IDLE) & 0x01) << 5;
-    states_buffer[4] |= ((slope_down_state != SLOPE_DOWN_IDLE) & 0x01) << 6;
-    states_buffer[4] |= (command_emergency & 0x01) << 7;
+    states_buffer[4] |= ((unload_state != UNLOAD_IDLE) & 0x01) << 1;
+    states_buffer[4] |= ((button_state != BUTTON_IDLE) & 0x01) << 2;
+    states_buffer[4] |= ((slope_up_state != SLOPE_UP_IDLE) & 0x01) << 3;
+    states_buffer[4] |= ((slope_down_state != SLOPE_DOWN_IDLE) & 0x01) << 4;
+    states_buffer[4] |= (command_emergency & 0x01) << 5;
 
-    states_buffer[5] = highByte(state_other_one);
-    states_buffer[6] = lowByte(state_other_one);
-    states_buffer[7] = highByte(state_other_two);
-    states_buffer[8] = lowByte(state_other_two);
+    states_buffer[5] = highByte(state_nb_captured_duplos);
+    states_buffer[6] = lowByte(state_nb_captured_duplos);
+
+    states_buffer[7] = highByte(state_other_one);
+    states_buffer[8] = lowByte(state_other_one);
+    states_buffer[9] = highByte(state_other_two);
+    states_buffer[10] = lowByte(state_other_two);
     
-    Serial.write(states_buffer, 9);
+    Serial.write(states_buffer, 11);
   }
 }

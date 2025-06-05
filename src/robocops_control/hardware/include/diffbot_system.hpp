@@ -114,14 +114,15 @@ namespace robocops_control
         double left_wheel_encoder_;
         double right_wheel_encoder_;
 
-        bool lift_authorized_;
-        bool lift_active_;
+        bool capture_active_;
         bool unload_active_;
-        bool brushes_active_;
         bool button_active_;
-        bool emergency_active_;
         bool slope_up_active_;
         bool slope_down_active_;
+        bool emergency_active_;
+
+        int nb_captured_duplos_;
+
     };
 
 } // namespace robocops_control

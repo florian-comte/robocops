@@ -60,55 +60,52 @@ gpio_controller:
   ros__parameters:
     type: gpio_controllers/GpioCommandController
     gpios:
-      - brushes
+      - capture
       - unload
-      - lift
       - button
-      - emergency
       - slope_up
       - slope_down
+      - emergency
+      - captured_duplos
     command_interfaces:
-      brushes:
+      capture:
         - interfaces:
           - active
       unload:
         - interfaces:
           - active
-      lift:
-        - interfaces:
-          - authorized
       button:
         - interfaces:
-          - active
-      emergency:
-        - interfaces:
-          - active
+          - authorized
       slope_up:
         - interfaces:
           - active
       slope_down:
+        - interfaces:
+          - active
+      emergency:
         - interfaces:
           - active
     state_interfaces:
-      brushes:
+      capture:
         - interfaces:
           - active
+          - captured
       unload:
         - interfaces:
           - active
-      lift:
-        - interfaces:
-          - active
-          - authorized
       button:
         - interfaces:
-          - active
-      emergency:
-        - interfaces:
-          - active
+          - authorized
       slope_up:
         - interfaces:
           - active
       slope_down:
         - interfaces:
           - active
+      emergency:
+        - interfaces:
+          - active
+      captured_duplos:
+        - interfaces:
+          - number

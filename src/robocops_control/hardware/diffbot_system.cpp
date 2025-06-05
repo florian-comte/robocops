@@ -48,14 +48,14 @@ namespace robocops_control
     left_wheel_encoder_ = 0;
     right_wheel_encoder_ = 0;
 
-    lift_authorized_ = false;
-    lift_active_ = false;
     unload_active_ = false;
-    brushes_active_ = false;
+    capture_active_ = false;
     button_active_ = false;
     emergency_active_ = false;
     slope_up_active_ = false;
     slope_down_active_ = false;
+
+    nb_captured_duplos_ = 0;
 
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
@@ -194,23 +194,13 @@ namespace robocops_control
       set_state(right_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
     }
 
-    // Set state authorized/active lift
-    set_state("lift/authorized", lift_authorized_ ? 1.0 : 0.0);
-    set_state("lift/active", lift_active_ ? 1.0 : 0.0);
-
-    // Set state active unload
+    set_state("capture/active", capture_active_ ? 1.0 : 0.0);
     set_state("unload/active", unload_active_ ? 1.0 : 0.0);
-
-    // Set state active brushes
-    set_state("brushes/active", brushes_active_ ? 1.0 : 0.0);
-
-    set_state("button/active", button_active_ ? 1.0 : 0.0);
-
     set_state("emergency/active", emergency_active_ ? 1.0 : 0.0);
-
     set_state("slope_up/active", slope_up_active_ ? 1.0 : 0.0);
-
     set_state("slope_down/active", slope_down_active_ ? 1.0 : 0.0);
+
+    set_state("captured_duplos/number", nb_captured_duplos_);
 
     return hardware_interface::return_type::OK;
   }
@@ -233,23 +223,21 @@ namespace robocops_control
     comms_.send_command(
         static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(left_wheel_name_ + "/velocity"))),
         static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(right_wheel_name_ + "/velocity"))),
-        static_cast<bool>(get_command("brushes/active")),
+        static_cast<bool>(get_command("capture/active")),
         static_cast<bool>(get_command("unload/active")),
-        static_cast<bool>(get_command("lift/authorized")),
         static_cast<bool>(get_command("button/active")),
-        static_cast<bool>(get_command("emergency/active")),
         static_cast<bool>(get_command("slope_up/active")),
         static_cast<bool>(get_command("slope_down/active")),
+        static_cast<bool>(get_command("emergency/active")),
         &left_wheel_encoder_,
         &right_wheel_encoder_,
-        &lift_authorized_,
-        &lift_active_,
+        &capture_active_,
         &unload_active_,
-        &brushes_active_,
         &button_active_,
-        &emergency_active_,
         &slope_up_active_,
         &slope_down_active_,
+        &emergency_active_,
+        &nb_captured_duplos_,
         true);
 
     return hardware_interface::return_type::OK;

@@ -72,23 +72,21 @@ bool ArduinoComms::connected() const
 
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
-                                bool brushes_activate,
+                                bool capture_activate,
                                 bool unload_activate,
-                                bool lift_authorize,
                                 bool button_activate,
-                                bool emergency_activate,
                                 bool slope_up_activate,
                                 bool slope_down_activate,
+                                bool emergency_activate,
                                 double *encoder_left,
                                 double *encoder_right,
-                                bool *lift_authorized,
-                                bool *lift_active,
+                                bool *capture_active,
                                 bool *unload_active,
-                                bool *brushes_active,
                                 bool *button_active,
-                                bool *emergency_active,
                                 bool *slope_up_active,
                                 bool *slope_down_active,
+                                bool *emergency_active,
+                                int *nb_captured_duplos,
                                 bool print_output)
 {
     if (!connected())
@@ -111,13 +109,12 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     // Encode control signals into bit flags in cmd[4]
     cmd[4] = 0;
-    cmd[4] |= (brushes_activate & 1);
+    cmd[4] |= (capture_activate & 1);
     cmd[4] |= ((unload_activate & 1) << 1);
-    cmd[4] |= ((lift_authorize & 1) << 2);
-    cmd[4] |= ((button_activate & 1) << 3);
-    cmd[4] |= ((emergency_activate & 1) << 4);
-    cmd[4] |= ((slope_up_activate & 1) << 5);
-    cmd[4] |= ((slope_down_activate & 1) << 6);
+    cmd[4] |= ((button_activate & 1) << 2);
+    cmd[4] |= ((slope_up_activate & 1) << 3);
+    cmd[4] |= ((slope_down_activate & 1) << 4);
+    cmd[4] |= ((emergency_activate & 1) << 5);
 
     fd_set write_fds;
     FD_ZERO(&write_fds);
@@ -145,9 +142,9 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
     if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv_read) > 0)
     {
-        uint8_t response[5];
-        int n = read(serial_fd_, response, 5);
-        if (n != 5)
+        uint8_t response[11];
+        int n = read(serial_fd_, response, 11);
+        if (n != 11)
         {
             perror("[Serial] Failed to read full response");
             return;
@@ -158,14 +155,19 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]) - 10000;
 
         // Extract GPIO states from response[4]
-        *brushes_active = static_cast<bool>((response[4] >> 0) & 1);
+        *capture_active = static_cast<bool>((response[4] >> 0) & 1);
         *unload_active = static_cast<bool>((response[4] >> 1) & 1);
-        *lift_authorized = static_cast<bool>((response[4] >> 2) & 1);
-        *lift_active = static_cast<bool>((response[4] >> 3) & 1);
-        *button_active = static_cast<bool>((response[4] >> 4) & 1);
+        *button_active = static_cast<bool>((response[4] >> 2) & 1);
+        *slope_up_active = static_cast<bool>((response[4] >> 3) & 1);
+        *slope_down_active = static_cast<bool>((response[4] >> 4) & 1);
         *emergency_active = static_cast<bool>((response[4] >> 5) & 1);
-        *slope_up_active = static_cast<bool>((response[4] >> 6) & 1);
-        *slope_down_active = static_cast<bool>((response[4] >> 7) & 1);
+
+        // Extract nb duplos
+        *nb_captured_duplos = static_cast<int16_t>((response[5] << 8) | response[6]);
+
+        // Extract other values
+        int16_t other_value_one = static_cast<int16_t>((response[7] << 8) | response[8]);
+        int16_t other_value_two = static_cast<int16_t>((response[9] << 8) | response[10]);
 
         // Print debug if wanted
         if (print_output)
@@ -174,20 +176,23 @@ void ArduinoComms::send_command(int16_t maxon_left,
             for (int i = 0; i < 5; ++i)
                 std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
 
-            std::cout << std::dec; // switch back to decimal output
+            std::cout << std::dec;
             std::cout << "\n[Serial] Encoders: L=" << *encoder_left
                       << " R=" << *encoder_right << std::endl;
 
             std::cout << "[Serial] GPIO States: "
-                      << "Brushes=" << *brushes_active
-                      << ", Unload=" << *unload_active
-                      << ", Lift Authorized=" << *lift_authorized
-                      << ", Lift Active=" << *lift_active
-                      << ", Button Active=" << *button_active
-                      << ", Emergency active: " << *emergency_active
+                      << "Capture: " << *capture_active
+                      << ", Unload: " << *unload_active
+                      << ", Button Active: " << *button_active
                       << ", Slope up active: " << *slope_up_active
                       << ", Slope down active: " << *slope_down_active
+                      << ", Emergency active: " << *emergency_active
+                      << ", Nb duplos captured: " << nb_captured_duplos
+                      << std::endl;
 
+            std::cout << "[Serial] Debug values: "
+                      << "Other value 1: " << other_value_one
+                      << ", Other value 2: " << other_value_two
                       << std::endl;
         }
     }

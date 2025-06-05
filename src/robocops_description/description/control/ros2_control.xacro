@@ -22,7 +22,7 @@
         <state_interface name="velocity"/>
       </joint>
 
-      <gpio name="brushes">
+      <gpio name="capture">
         <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
@@ -32,18 +32,7 @@
         <state_interface name="active"/>
       </gpio>
 
-      <gpio name="lift">
-        <command_interface name="authorized"/>
-        <state_interface name="authorized"/>
-        <state_interface name="active"/>
-      </gpio>
-
       <gpio name="button">
-        <command_interface name="active"/>
-        <state_interface name="active"/>
-      </gpio>
-
-      <gpio name="emergency">
         <command_interface name="active"/>
         <state_interface name="active"/>
       </gpio>
@@ -56,6 +45,15 @@
       <gpio name="slope_down">
         <command_interface name="active"/>
         <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="emergency">
+        <command_interface name="active"/>
+        <state_interface name="active"/>
+      </gpio>
+
+      <gpio name="captured_duplos">
+        <state_interface name="number"/>
       </gpio>
     </ros2_control>
 

@@ -11,23 +11,21 @@ public:
 
     void send_command(int16_t maxon_left,
                       int16_t maxon_right,
-                      bool brushes_activate,
+                      bool capture_activate,
                       bool unload_activate,
-                      bool lift_authorize,
                       bool button_activate,
-                      bool emergency_activate,
                       bool slope_up_activate,
                       bool slope_down_activate,
+                      bool emergency_activate,
                       double *encoder_left,
                       double *encoder_right,
-                      bool *lift_authorized,
-                      bool *lift_active,
+                      bool *capture_active,
                       bool *unload_active,
-                      bool *brushes_active,
                       bool *button_active,
-                      bool *emergency_active,
                       bool *slope_up_active,
                       bool *slope_down_active,
+                      bool *emergency_active,
+                      int *nb_captured_duplos,
                       bool print_output = false);
 
 private:

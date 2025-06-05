@@ -76,7 +76,7 @@ gpio_controller:
           - active
       button:
         - interfaces:
-          - authorized
+          - active
       slope_up:
         - interfaces:
           - active

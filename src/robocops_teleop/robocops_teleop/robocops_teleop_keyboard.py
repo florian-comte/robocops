@@ -49,7 +49,7 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_order = ["capture", "unload", "button", "slope_up", "slope_down" "emergency"]
+gpio_order = ["capture", "unload", "button", "slope_up", "slope_down", "emergency"]
 
 gpio_interfaces = {
     "capture": "active",

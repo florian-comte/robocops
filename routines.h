@@ -92,7 +92,6 @@ extern unsigned long slope_down_timer;
 
 // --- CAPTURE ROUTINE ---
 
-// PWM from 0 to 255
 #define CAPTURE_BRUSH_SPEED 240
 #define CAPTURE_BRUSHING_STOP_AFTER 1000
 #define CAPTURE_SMALL_BACKWARD_TIMEOUT 10000
@@ -101,20 +100,16 @@ extern unsigned long slope_down_timer;
 #define CAPTURE_SMALL_CONVOYER_DURATION 200 
 
 enum CaptureState {
-  // Nothing done
   CAPTURE_IDLE,
-  // Brushes activated
-  // If first sensor detected => Capture small backward
   CAPTURE_BRUSHING,
-  // Wait til detection from back ir or timeout
   CAPTURE_SMALL_BACKWARD,
-  // Wait for lift to put back in capture idle
   CAPTURE_CAPTURED
 };
 
 extern CaptureState capture_state;
 extern unsigned long capture_timer;
 
+extern void init_routines();
 extern void handle_routines();
 void handle_unload_routine();
 void handle_lift_routine();

@@ -6,13 +6,23 @@
 #include "l298n_driver.h"
 #include "ir_sensor.h"
 
+void init_routines(){
+  unload_state = UNLOAD_IDLE; 
+  lift_state = LIFT_IDLE;
+  button_state = BUTTON_IDLE;
+  slope_up_state = SLOPE_UP_IDLE;
+  slope_down_state = SLOPE_DOWN_IDLE;
+  capture_state = CAPTURE_IDLE;
+}
+
 void handle_routines(){
+  // If ready to lift
   if(lift_state == LIFT_IDLE && capture_state == CAPTURE_CAPTURED){
     capture_state = CAPTURE_IDLE;
     lift_state = LIFT_UP;
   }
 
-  // For jerk
+  // For jerk (prioritized compare to unload)
   if(lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN){
     handle_unload_routine();
   }
@@ -116,6 +126,7 @@ void handle_lift_routine() {
       break;
 
     case LIFT_REVERSE_CONVOYER:
+      // jerk in parrallel
       if(millis() - lift_jerk_timer > LIFT_CONVOYER_JERK_DURATION){
         if(lift_jerk_reversed_direction){
           dri_target_speeds[UNLOAD_CONVOYER_NAME] = UNLOAD_CONVOYER_SPEED;
@@ -127,6 +138,7 @@ void handle_lift_routine() {
           lift_jerk_timer = millis();
         }
       }
+      
       if (millis() - lift_timer > LIFT_TIME_TO_CONVOY) {
         dri_target_speeds[LIFT_CONVOYER_NAME] = -LIFT_CONVOYER_SPEED;
         lift_timer = millis();
@@ -227,6 +239,8 @@ bool front_detected_something = false;
 void handle_capture_routine() {
   switch (capture_state) {      
     case CAPTURE_IDLE:
+      // By security reset the detection
+      front_detected_something = false;
       break;
       
     case CAPTURE_BRUSHING:
@@ -242,6 +256,11 @@ void handle_capture_routine() {
           capture_timer = millis();
           front_detected_something = false;
         }
+      } else {
+        if(duplo_detected_in_front_lift()){
+          capture_timer = millis();
+          front_detected_something = true;
+        }
       }
 
       if(duplo_detected_in_back_lift()){
@@ -249,16 +268,11 @@ void handle_capture_routine() {
         l298n_target_speeds[BRUSH_RIGHT] = 0;
    
         capture_state = CAPTURE_SMALL_BACKWARD;
-        capture_timer = millis();
         front_detected_something = false;
-      }
-
-      if(duplo_detected_in_front_lift() && !front_detected_something){
-        capture_timer = millis();
-        front_detected_something = true;
       }
       
       break;
+      
     case CAPTURE_SMALL_BACKWARD:
       // Small backward logic
       if(current_small_convoyer == -1){

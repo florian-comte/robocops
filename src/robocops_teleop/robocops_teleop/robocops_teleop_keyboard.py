@@ -143,7 +143,8 @@ def main():
                 node.toggle_gpio("slope_up")
             elif key == 'b':
                 node.toggle_gpio("slope_down")
-
+            elif key == 'e':
+                node.toggle_gpio("emergency")
             node.update_velocity(key)
             node.publish_velocity()
     except Exception as e:

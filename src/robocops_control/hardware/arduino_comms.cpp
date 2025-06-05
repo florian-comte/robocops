@@ -187,7 +187,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Slope up active: " << *slope_up_active
                       << ", Slope down active: " << *slope_down_active
                       << ", Emergency active: " << *emergency_active
-                      << ", Nb duplos captured: " << nb_captured_duplos
+                      << ", Nb duplos captured: " << *nb_captured_duplos
                       << std::endl;
 
             std::cout << "[Serial] Debug values: "

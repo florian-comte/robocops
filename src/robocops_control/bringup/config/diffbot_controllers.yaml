@@ -90,13 +90,12 @@ gpio_controller:
       capture:
         - interfaces:
           - active
-          - captured
       unload:
         - interfaces:
           - active
       button:
         - interfaces:
-          - authorized
+          - active
       slope_up:
         - interfaces:
           - active

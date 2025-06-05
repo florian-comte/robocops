@@ -29,9 +29,13 @@ q/d : Increase/decrease angular velocity
 a : Stop
 
 GPIO toggles:
-w : Toggle brushes
-x : Toggle lift
-c : Toggle unload
+w : Toggle capture routine
+x : Toggle unload routine
+c : Toggle button routine
+v : Toggle slope_up routine
+b : Toggle slope_down routine
+
+Emergency stop: e
 
 CTRL-C to quit
 """
@@ -45,15 +49,15 @@ KEY_BINDINGS = {
     'a': (0, 0),
 }
 
-gpio_order = ["brushes", "unload", "lift", "button", "emergency"]
+gpio_order = ["capture", "unload", "button", "slope_up", "slope_down" "emergency"]
 
 gpio_interfaces = {
-    "brushes": "active",
+    "capture": "active",
     "unload": "active",
-    "lift": "authorized",
     "button": "active",
+    "slope_up": "active",
+    "slope_down": "active",
     "emergency": "active"
-
 }
 
 def get_key():
@@ -130,15 +134,15 @@ def main():
             if key == '\x03':  # Ctrl-C
                 break
             if key == 'w':
-                node.toggle_gpio("brushes")
-            elif key == 'c':
-                node.toggle_gpio("unload")
+                node.toggle_gpio("capture")
             elif key == 'x':
-                node.toggle_gpio("lift")
-            elif key == 'e':
-                node.toggle_gpio("emergency")
-            elif key == 'v':
+                node.toggle_gpio("unload")
+            elif key == 'c':
                 node.toggle_gpio("button")
+            elif key == 'v':
+                node.toggle_gpio("slope_up")
+            elif key == 'b':
+                node.toggle_gpio("slope_down")
 
             node.update_velocity(key)
             node.publish_velocity()

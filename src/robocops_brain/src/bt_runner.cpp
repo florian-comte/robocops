@@ -13,7 +13,7 @@
 
 #include "navigation_behaviors.h"
 #include "blocking_gpio_behavior.h"
-//#include "search_and_grab.h"
+#include "search_and_grab_behavior.h"
 #include "set_pose_behavior.h"
 
 using namespace std::chrono_literals;
@@ -55,6 +55,7 @@ public:
         factory.registerNodeType<GoToPose>("GoToPose", shared_from_this());
         factory.registerNodeType<BlockingGPIO>("BlockingGPIO", shared_from_this());
         factory.registerNodeType<SetPose>("SetPose", shared_from_this());
+        factory.registerNodeType<SearchAndGrab>("SearchAndGrab", shared_from_this());
 
         auto blackboard = BT::Blackboard::create();
 
@@ -82,8 +83,6 @@ public:
         blackboard->set<bool>("never_timed_out_opening_door", true);
 
         blackboard->set<bool>("is_door_open", false);
-
-        
 
         RCLCPP_INFO(this->get_logger(), "Attempting to create tree from XML...");
 

@@ -30,7 +30,7 @@
                                     <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry"/>
 
                                     <!-- Switch to search and grab in zone 3 -->
-                                    <!-- <SearchAndGrab zone=3/> -->
+                                    <SearchAndGrab zone=3/>
                                 </Sequence>
                             </Precondition>
                         </Sequence>
@@ -41,18 +41,18 @@
                             <!-- Go to zone 4 entry -->
                             <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry"/>
 
-                            <!-- Activate slopeup blocking routine -->
-                            <BlockingGPIO gpio_name="slopeup" interface_name="active" timeout="15.0"/>
+                            <!-- Activate slope_up blocking routine -->
+                            <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout="15.0"/>
 
                             <!-- Define manually current robot position -->
                             <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}"/>
 
                             <!-- Search and grab zone 4 -->
-                            <!-- <SearchAndGrab zone="4" /> -->
+                            <SearchAndGrab zone="4" />
                             <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry"/>
                             
-                            <!-- Activate slopedown blocking routine -->
-                            <BlockingGPIO gpio_name="slopedown" interface_name="active" timeout="15.0"/>
+                            <!-- Activate slope_down blocking routine -->
+                            <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout="15.0"/>
 
                             <!-- Define manually current robot position -->
                             <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_entry}"/>
@@ -62,7 +62,7 @@
                     <Precondition if="current_inventory > MIN_TO_GO_ZONE_1 && TOTAL_ZONE_1 - current_grabbed_zone_1 > MIN_TO_GO_ZONE_1 && never_timed_out_zone_1" else="FAILURE">
                         <Sequence>
                             <!-- Search and grab in zone 1 -->
-                            <!-- <SearchAndGrab zone="1" /> -->
+                            <SearchAndGrab zone="1" />
                             <Script code="" />
                         </Sequence>
                     </Precondition>

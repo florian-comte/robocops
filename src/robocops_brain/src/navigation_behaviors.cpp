@@ -121,6 +121,11 @@ BT::NodeStatus GoToPose::onStart()
         return BT::NodeStatus::FAILURE;
     }
 
+    // Should check if on the path there are some duplos (take into consideration the width of the robot)
+    // TODO
+    // if yes, should center the robot
+    // and active the brushes
+
     // Read the YAML file
     BT::Expected<std::string> loc = getInput<std::string>("loc");
 

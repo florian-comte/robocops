@@ -1,5 +1,5 @@
-#ifndef BLOCKING_GPIO_H_
-#define BLOCKING_GPIO_H_
+#ifndef SEARCH_AND_GRAB_H_
+#define SEARCH_AND_GRAB_H_
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -13,10 +13,10 @@
 #include <chrono>
 #include <string>
 
-class BlockingGPIO : public BT::StatefulActionNode
+class SearchAndGrab : public BT::StatefulActionNode
 {
 public:
-    BlockingGPIO(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node);
+    SearchAndGrab(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node);
 
     static BT::PortsList providedPorts();
 
@@ -25,20 +25,15 @@ public:
     void onHalted() override;
 
 private:
-    void send_gpio_command(bool active);
     void gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg);
 
     std::shared_ptr<rclcpp::Node> node_;
     rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr gpio_pub_;
     rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr gpio_sub_;
 
-    std::string gpio_name_;
-    std::string interface_name_;
     double timeout_sec_;
-    double pulse_duration_;
     rclcpp::Time start_time_;
-    bool gpio_active_ = true;
-    bool already_pulsed = false;
+    int zone_;
 };
 
-#endif // BLOCKING_GPIO_H_
+#endif // SEARCH_AND_GRAB_H_

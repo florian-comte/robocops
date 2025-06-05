@@ -35,7 +35,7 @@ install(DIRECTORY
 set(AUTONOMY_SOURCES
     src/navigation_behaviors.cpp 
     src/blocking_gpio_behavior.cpp
-    #src/search_and_grab.cpp
+    src/search_and_grab_behavior.cpp
     src/set_pose_behavior.cpp
 )
 

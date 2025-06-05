@@ -13,8 +13,8 @@ from control_msgs.msg import InterfaceValue
 
 MAX_LIN_VEL = 1.0
 MAX_ANG_VEL = 1.0
-LIN_STEP = 0.01
-ANG_STEP = 0.1
+LIN_STEP = 0.05
+ANG_STEP = 0.05
 
 INSTRUCTIONS = """
 < Robocops teleop controller >

@@ -200,7 +200,7 @@ namespace robocops_control
     set_state("slope_up/active", slope_up_active_ ? 1.0 : 0.0);
     set_state("slope_down/active", slope_down_active_ ? 1.0 : 0.0);
 
-    set_state("captured_duplos/number", nb_captured_duplos_);
+    set_state("captured_duplos/number", (double) nb_captured_duplos_);
 
     return hardware_interface::return_type::OK;
   }

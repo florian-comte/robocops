@@ -12,7 +12,7 @@ class DuploControl(Node):
         # Create service clients
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
-        self.duplo_publisher = self.create_publisher(DuploArray, 'duplos/zone1', 10)
+        self.duplo_publisher = self.create_publisher(DuploArray, 'duplos', 10)
 
         # Wait for services to be available
         while not self.activate_client.wait_for_service(timeout_sec=1.0):

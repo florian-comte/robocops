@@ -41,12 +41,12 @@ CTRL-C to quit
 """
 
 KEY_BINDINGS = {
-    'z': (LIN_STEP, 0),
+    'w': (LIN_STEP, 0),
     's': (-LIN_STEP, 0),
-    'q': (0, ANG_STEP),
+    'a': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    'a': (0, 0),
+    'q': (0, 0),
 }
 
 gpio_order = ["capture", "unload", "button", "slope_up", "slope_down", "emergency"]

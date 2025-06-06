@@ -2,7 +2,9 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import SetBool, Empty
 from robocops_msgs.msg import DuploArray, Duplo
+from geometry_msgs.msg import Twist
 from rclpy.executors import MultiThreadedExecutor
+import math
 
 
 class DuploControl(Node):
@@ -21,9 +23,14 @@ class DuploControl(Node):
             10
         )
 
-        # Initialize an empty list for duplos
-        self.duplos_list = []
+        # Create a publisher to control robot movement (cmd_vel)
+        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel_smoothed', 10)
 
+        # Initialize variables
+        self.duplos_list = []
+        self.rotation_active = False
+        self.target_position = None
+        
         # Wait for services to be available
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('activate_detection service not available, waiting again...')
@@ -35,13 +42,13 @@ class DuploControl(Node):
 
     def activate_detection(self):
         request = SetBool.Request()
-        request.data = True  # Set to True to activate detection
+        request.data = True
         self.get_logger().info('Activating detection...')
         self.activate_client.call_async(request)
 
     def deactivate_detection(self):
         request = SetBool.Request()
-        request.data = False  # Set to False to deactivate detection
+        request.data = False
         self.get_logger().info('Deactivating detection...')
         self.activate_client.call_async(request)
 
@@ -50,11 +57,14 @@ class DuploControl(Node):
         self.clear_client.call_async(Empty.Request())
 
     def duplo_callback(self, msg: DuploArray):
-        """ Callback to process received duplos from the topic """
-        self.duplos_list = msg.duplos  # Access the list of Duplo messages from the DuploArray
+        if msg.duplos:
+            
+            self.target_position = msg.duplos[0].position
+            self.get_logger().info(f"Target Position received: {self.target_position}")
+            if self.rotation_active:
+                self.align_robot_with_target()
 
     def read_duplos(self):
-        """ Display the duplos read from the topic """
         if not self.duplos_list:
             self.get_logger().info("No duplos received yet.")
         else:
@@ -68,10 +78,53 @@ class DuploControl(Node):
         print("2. Stop detection")
         print("3. Clear duplos")
         print("4. Read duplos")
-        print("5. Exit")
-        choice = input("Enter your choice (1-5): ")
+        print("5. Toggle Rotation")
+        print("6. Exit")
+        choice = input("Enter your choice (1-6): ")
 
         return choice
+
+    def toggle_rotation(self):
+        """ Toggle rotation on/off """
+        self.rotation_active = not self.rotation_active
+        if self.rotation_active:
+            self.get_logger().info("Rotation started.")
+        else:
+            self.get_logger().info("Rotation stopped.")
+            self.stop_robot()
+
+    def stop_robot(self):
+        """ Stop the robot's motion (in case of manual stop) """
+        stop_msg = Twist()
+        self.cmd_vel_publisher.publish(stop_msg)
+
+    def align_robot_with_target(self):
+        """ Rotate robot to align with the target position """
+        if self.target_position is None:
+            self.get_logger().info("No target position to align with.")
+            return
+
+        # Calculate the angle to rotate
+        robot_x, robot_y = 0.0, 0.0  # Assuming base_link origin is (0, 0)
+        target_x, target_y = self.target_position.x, self.target_position.y
+
+        angle_to_target = math.atan2(target_y - robot_y, target_x - robot_x)
+
+        self.get_logger().info(f"Aligning robot to angle: {angle_to_target} radians")
+
+        # Rotate robot until it is aligned
+        self.rotate_robot(angle_to_target)
+
+    def rotate_robot(self, angle):
+        """ Rotate the robot to a specific angle """
+        # Assume the robot rotates at a fixed speed
+        rotation_speed = 0.5  # radians per second (you can adjust this)
+        
+        twist = Twist()
+        twist.angular.z = rotation_speed if angle > 0 else -rotation_speed
+        
+        # Publish the twist message to rotate
+        self.cmd_vel_publisher.publish(twist)
 
 
 def main(args=None):
@@ -96,10 +149,12 @@ def main(args=None):
         elif user_choice == '4':
             duplo_control_node.read_duplos()
         elif user_choice == '5':
+            duplo_control_node.toggle_rotation()
+        elif user_choice == '6':
             duplo_control_node.get_logger().info("Exiting...")
             break
         else:
-            print("Invalid option. Please choose between 1-5.")
+            print("Invalid option. Please choose between 1-6.")
 
         # Spin the executor and keep the node alive
         executor.spin_once()

@@ -232,9 +232,9 @@ int main(int argc, char **argv)
                 {
                     found = true;
 
-                    existing_duplo.position.point.x = (new_duplo.position.point.x + (existing_duplo.count) * existing_duplo.position.point.x) / (existing_duplo + 1);
-                    existing_duplo.position.point.y = (new_duplo.position.point.y + (existing_duplo.count) * existing_duplo.position.point.y) / (existing_duplo + 1);
-                    existing_duplo.position.point.z = (new_duplo.position.point.z + (existing_duplo.count) * existing_duplo.position.point.z) / (existing_duplo + 1);
+                    existing_duplo.position.point.x = (new_duplo.position.point.x + existing_duplo.count * existing_duplo.position.point.x) / (existing_duplo.count + 1);
+                    existing_duplo.position.point.y = (new_duplo.position.point.y + existing_duplo.count * existing_duplo.position.point.y) / (existing_duplo.count + 1);
+                    existing_duplo.position.point.z = (new_duplo.position.point.z + existing_duplo.count * existing_duplo.position.point.z) / (existing_duplo.count + 1);
 
                     if (++existing_duplo.count >= MIN_COUNT)
                     {

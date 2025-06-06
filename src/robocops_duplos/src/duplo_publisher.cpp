@@ -96,9 +96,12 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     spatial_detection_network->out.link(xout_nn->input);
 
     // If we want display, we also create out link for rgb and depth
-    auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
-    xout_rgb->setStreamName("preview");
-    spatial_detection_network->passthrough.link(xout_rgb->input);
+    if (with_display)
+    {
+        auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
+        xout_rgb->setStreamName("preview");
+        spatial_detection_network->passthrough.link(xout_rgb->input);
+    }
 
     return pipeline;
 }
@@ -159,12 +162,6 @@ int main(int argc, char **argv)
     // Set up detection queue
     auto detection_queue = device.getOutputQueue("detections", queue_size, false);
 
-    // Set up RGB camera output queue for publishing raw image
-    auto rgb_queue = device.getOutputQueue("preview", 8, false); // RGB camera preview stream
-
-    // Create a publisher for the raw image
-    auto image_pub = node->create_publisher<sensor_msgs::msg::Image>("/camera/image_raw", 10);
-
     tf2_ros::Buffer tf_buffer(node->get_clock());
     tf2_ros::TransformListener tf_listener(tf_buffer);
 
@@ -193,6 +190,9 @@ int main(int argc, char **argv)
 
         for (const auto &det : detections->detections)
         {
+            // RCLCPP_INFO(node->get_logger(), "Detection - Confidence: %.2f, Bounding Box: [%.2f, %.2f, %.2f, %.2f], Spatial Coordinates: [%.2f, %.2f, %.2f]",
+            //              det.confidence, det.xmin, det.ymin, det.xmax, det.ymax, det.spatialCoordinates.x, det.spatialCoordinates.y, det.spatialCoordinates.z);
+
             if (det.confidence < SCORE_THRESHOLD)
             {
                 continue;
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
             camera_point.point.y = det.spatialCoordinates.x / 1000;
             camera_point.point.z = det.spatialCoordinates.y / 1000;
 
-            if (camera_point.point.x > 0.7 && camera_point.point.x < 0.8)
+            if (camera_point.point.x < 0.7 && camera_point.point.x > 0.8)
             {
                 continue;
             }
@@ -214,6 +214,9 @@ int main(int argc, char **argv)
             try
             {
                 map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+                RCLCPP_INFO(node->get_logger(), "Transform Successful - Camera Point: [%.2f, %.2f, %.2f], Map Point: [%.2f, %.2f, %.2f]",
+                            camera_point.point.x, camera_point.point.y, camera_point.point.z,
+                            map_point.point.x, map_point.point.y, map_point.point.z);
             }
             catch (tf2::TransformException &ex)
             {
@@ -226,6 +229,7 @@ int main(int argc, char **argv)
             new_duplo.count = 1;
             new_duplo.id = -1;
 
+            // Add info on x, y, z in map frame
             bool found = false;
             for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer)
             {
@@ -234,7 +238,12 @@ int main(int argc, char **argv)
                     found = true;
                     if (existing_duplo.count >= MIN_COUNT)
                     {
-                        duplos_official.push_back(existing_duplo);
+                        if (std::find(already_official_.begin(), already_official_.end(), existing_duplo.id) == already_official_.end())
+                        {
+                            duplos_official.push_back(existing_duplo);
+                            already_official_.push_back(existing_duplo.id);
+                            RCLCPP_INFO(node->get_logger(), "Duplo %d became official in zone %d", existing_duplo.id, zone);
+                        }
                     }
                 }
             }
@@ -243,11 +252,13 @@ int main(int argc, char **argv)
             {
                 if (duplos_buffer.size() >= BUFFER_SIZE)
                 {
+                    RCLCPP_WARN(node->get_logger(), "Buffer full for zone %d, discarding duplo", zone);
                     continue;
                 }
 
                 new_duplo.id = current_duplo_id_++;
                 duplos_buffer.push_back(new_duplo);
+                RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer in zone %d", zone);
             }
         }
 
@@ -256,24 +267,8 @@ int main(int argc, char **argv)
             robocops_msgs::msg::DuploArray array_msg;
             array_msg.duplos = duplos_official;
             m_duploPubs[0]->publish(array_msg);
+            RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
         }
-
-        // Fetch an RGB frame and publish it as a raw image
-        auto frame = rgb_queue->get<dai::ImgFrame>();
-
-        sensor_msgs::msg::Image ros_image;
-        ros_image.header.stamp = node->get_clock()->now();
-        ros_image.header.frame_id = "camera";
-        ros_image.height = frame->getHeight();
-        ros_image.width = frame->getWidth();
-        ros_image.encoding = "bgr8";
-        ros_image.is_bigendian = false;
-        ros_image.step = frame->getWidth() * 3; // 3 channels for BGR
-        ros_image.data.resize(frame->getWidth() * frame->getHeight() * 3);
-        memcpy(ros_image.data.data(), frame->getData().data(), ros_image.data.size());
-
-        // Publish the image
-        image_pub->publish(ros_image);
 
         rclcpp::spin_some(node);
         rate.sleep();

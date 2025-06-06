@@ -38,6 +38,35 @@
 #include "depthai/pipeline/node/StereoDepth.hpp"
 #include "depthai/pipeline/node/XLinkOut.hpp"
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
+#include <robocops_msgs/msg/duplo.hpp>
+#include <robocops_msgs/msg/duplo_array.hpp>
+
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
+
+float calculateNnFps()
+{
+    static auto last_time = std::chrono::steady_clock::now();
+    static int count = 0;
+    static float fps = 0.0f;
+
+    count++;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time).count();
+
+    if (elapsed >= 1000)
+    {
+        fps = count * 1000.0f / elapsed;
+        count = 0;
+        last_time = now;
+    }
+    return fps;
+}
+
 /**
  * @brief Creates a DepthAI pipeline for object detection.
  * @param rgb_resolution_str Desired resolution of the RGB camera.
@@ -58,12 +87,15 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
 
     auto xout_nn = pipeline.create<dai::node::XLinkOut>();
     xout_nn->setStreamName("detections");
+    spatial_detection_network->setNumInferenceThreads(2);
+    spatial_detection_network->setNumNCEPerInferenceThread(1);
 
     // Configure RGB camera
     rgb_camera->setPreviewSize(416, 416);
     rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     rgb_camera->setInterleaved(false);
     rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
+    rgb_camera->setFps(25);
 
     // Configure mono cameras (480p resolution)
     mono_left->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);
@@ -105,13 +137,8 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     if (with_display)
     {
         auto xout_rgb = pipeline.create<dai::node::XLinkOut>();
-        // auto xout_depth = pipeline.create<dai::node::XLinkOut>();
-
         xout_rgb->setStreamName("preview");
-        // xout_depth->setStreamName("depth");
-
         spatial_detection_network->passthrough.link(xout_rgb->input);
-        // spatial_detection_network->passthroughDepth.link(xout_depth->input);
     }
 
     return pipeline;
@@ -145,20 +172,54 @@ int main(int argc, char **argv)
     // Set up detection queue
     auto detection_queue = device.getOutputQueue("detections", queue_size, false);
 
+    tf2_ros::Buffer tf_buffer(node->get_clock());
+    tf2_ros::TransformListener tf_listener(tf_buffer);
+
+    rclcpp::Rate rate(30);
+
     while (rclcpp::ok())
     {
         auto detections = detection_queue->get<dai::SpatialImgDetections>();
 
+        float nn_fps = calculateNnFps();
+        if (nn_fps > 0)
+        {
+            RCLCPP_INFO(node->get_logger(), "NN Hertz (FPS): %.2f", nn_fps);
+        }
+
         for (const auto &det : detections->detections)
         {
-            std::cout << "Label: " << det.label
-                      << ", Confidence: " << det.confidence
-                      << ", X: " << det.spatialCoordinates.x
-                      << ", Y: " << det.spatialCoordinates.y
-                      << ", Z: " << det.spatialCoordinates.z
-                      << std::endl;
+            robocops_msgs::msg::Duplo duplo_msg;
+            geometry_msgs::msg::PointStamped camera_point;
+            geometry_msgs::msg::PointStamped map_point;
+            
+            camera_point.header.frame_id = "camera";
+            camera_point.header.stamp = node->get_clock()->now();
+            camera_point.point.x = det.spatialCoordinates.z;
+            camera_point.point.y = det.spatialCoordinates.x;
+            camera_point.point.z = det.spatialCoordinates.y;
+
+            try
+            {
+                map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+            }
+            catch (tf2::TransformException &ex)
+            {
+                RCLCPP_WARN(node->get_logger(), "TF2 transform failed: %s", ex.what());
+                return -1;
+            }
+
+            duplo_msg.position = map_point;
+            duplo_msg.score = det.confidence;
+            duplo_msg.count = 1;
+
+            duplo_msg.id = -1;
         }
+
+        rclcpp::spin_some(node);
+        rate.sleep();
     }
 
+    rclcpp::shutdown();
     return 0;
 }

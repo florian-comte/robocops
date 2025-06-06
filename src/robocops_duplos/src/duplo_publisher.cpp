@@ -270,7 +270,7 @@ int main(int argc, char **argv)
         ros_image.is_bigendian = false;
         ros_image.step = frame->getWidth() * 3; // 3 channels for BGR
         ros_image.data.resize(frame->getWidth() * frame->getHeight() * 3);
-        memcpy(ros_image.data.data(), frame->getData(), ros_image.data.size());
+        memcpy(ros_image.data.data(), frame->getData().data(), ros_image.data.size());
 
         // Publish the image
         image_pub->publish(ros_image);

@@ -16,7 +16,7 @@ class DuploControl(Node):
         # Create a subscriber to read from the duplos topic
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
-            'duplos/zone1',  # Adjust topic as per your setup
+            'duplos', 
             self.duplo_callback,
             10
         )

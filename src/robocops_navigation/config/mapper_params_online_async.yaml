@@ -42,8 +42,8 @@ slam_toolbox:
     # General Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.2  # BEFORE PROCESSING A NEW SCAN (0.5)
-    minimum_travel_heading: 0.2 # BEFORE PROCESSING A NEW SCAN (0.5)
+    minimum_travel_distance: 0.1  # BEFORE PROCESSING A NEW SCAN (0.5)
+    minimum_travel_heading: 0.1 # BEFORE PROCESSING A NEW SCAN (0.5)
     scan_buffer_size: 10
     scan_buffer_maximum_scan_distance: 10.0
     link_match_minimum_response_fine: 0.1  
@@ -76,4 +76,4 @@ slam_toolbox:
     minimum_distance_penalty: 0.5
     use_response_expansion: true
     min_pass_through: 2 # NUMBER OF BEAMS BEFORE CONSIDERING CELL UN/OCCUPIED (2)
-    occupancy_threshold: 0.3  # MIN RATIO OF BEAMS HITTING TO MARK OCCUPIED (0.1)
+    occupancy_threshold: 0.2  # MIN RATIO OF BEAMS HITTING TO MARK OCCUPIED (0.1)

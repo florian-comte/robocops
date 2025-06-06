@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
             try
             {
-                map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+                map_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
             }
             catch (tf2::TransformException &ex)
             {

@@ -16,12 +16,12 @@ class DuploControl(Node):
         # Create a subscriber to read from the duplos topic
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
-            'duplos', 
+            '/duplos', 
             self.duplo_callback,
             10
         )
         
-        self.duplos_list = []  # This will hold the duplos read from the topic
+        self.duplos_list = []
 
         # Wait for services to be available
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
@@ -50,7 +50,7 @@ class DuploControl(Node):
 
     def duplo_callback(self, msg: DuploArray):
         """ Callback to process received duplos from the topic """
-        self.get_logger().info(f"Received {len(self.duplos_list)} duplos.")
+        self.duplos_list = msg
 
     def read_duplos(self):
         """ Display the duplos read from the topic """

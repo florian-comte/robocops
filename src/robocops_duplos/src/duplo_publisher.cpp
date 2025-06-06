@@ -190,8 +190,8 @@ int main(int argc, char **argv)
 
         for (const auto &det : detections->detections)
         {
-            RCLCPP_INFO(node->get_logger(), "Detection - Confidence: %.2f, Bounding Box: [%.2f, %.2f, %.2f, %.2f], Spatial Coordinates: [%.2f, %.2f, %.2f]",
-                         det.confidence, det.xmin, det.ymin, det.xmax, det.ymax, det.spatialCoordinates.x, det.spatialCoordinates.y, det.spatialCoordinates.z);
+            // RCLCPP_INFO(node->get_logger(), "Detection - Confidence: %.2f, Bounding Box: [%.2f, %.2f, %.2f, %.2f], Spatial Coordinates: [%.2f, %.2f, %.2f]",
+            //              det.confidence, det.xmin, det.ymin, det.xmax, det.ymax, det.spatialCoordinates.x, det.spatialCoordinates.y, det.spatialCoordinates.z);
 
             if (det.confidence < SCORE_THRESHOLD)
             {

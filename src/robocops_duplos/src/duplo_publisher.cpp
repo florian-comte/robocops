@@ -202,9 +202,9 @@ int main(int argc, char **argv)
 
             camera_point.header.frame_id = "camera";
             camera_point.header.stamp = node->get_clock()->now();
-            camera_point.point.x = det.spatialCoordinates.z;
-            camera_point.point.y = det.spatialCoordinates.x;
-            camera_point.point.z = det.spatialCoordinates.y;
+            camera_point.point.x = det.spatialCoordinates.z / 1000;
+            camera_point.point.y = det.spatialCoordinates.x / 1000;
+            camera_point.point.z = det.spatialCoordinates.y / 1000;
 
             try
             {

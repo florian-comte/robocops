@@ -1,19 +1,3 @@
-/*
- * duplo_detection_publisher.cpp
- *
- * node program sets up a DepthAI pipeline for detecting objects using a YOLO-based spatial detection network.
- * It initializes the DepthAI device, configures RGB and mono cameras, and processes detections for ROS 2 publication.
- *
- * The node is designed to interface with the DepthAI device to perform real-time object detection and spatial
- * detection using a YOLO model. The detected objects are then published as spatial detection messages in ROS 2,
- * with optional publishing of the raw RGB image and depth data.
- *
- * The primary outputs of node node are:
- *  - `/camera/detections`: Spatial detection data including detected objects' bounding boxes, confidence scores, and 3D coordinates.
- *  - `/camera/raw_rgb`: Raw RGB camera feed (if display is enabled).
- *  - `/camera/depth`: Depth data from stereo cameras (if display is enabled).
- *
- */
 #include <cstdio>
 #include <iostream>
 #include <unordered_map>
@@ -53,13 +37,6 @@
 #define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
 
-/**
- * @brief Creates a DepthAI pipeline for object detection.
- * @param rgb_resolution_str Desired resolution of the RGB camera.
- * @param nn_name Path to the neural network blob file.
- * @param with_display True if you want to have out links for depth and raw rgb
- * @return Configured DepthAI pipeline.
- */
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
 {
     dai::Pipeline pipeline;
@@ -115,7 +92,6 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     mono_right->out.link(stereo->right);
 
     rgb_camera->preview.link(spatial_detection_network->input);
-
     stereo->depth.link(spatial_detection_network->inputDepth);
     spatial_detection_network->out.link(xout_nn->input);
 
@@ -175,6 +151,10 @@ int main(int argc, char **argv)
     node->get_parameter("with_display", with_display);
     node->get_parameter("queue_size", queue_size);
 
+    // Debug log for parameters
+    RCLCPP_DEBUG(node->get_logger(), "Parameters Loaded - nn_name: %s, resource_base_folder: %s, with_display: %s, queue_size: %d",
+                 nn_name.c_str(), resource_base_folder.c_str(), with_display ? "True" : "False", queue_size);
+
     // Create the pipeline and device
     dai::Pipeline pipeline = create_pipeline(resource_base_folder + "/" + nn_name, with_display);
     dai::Device device(pipeline);
@@ -208,14 +188,11 @@ int main(int argc, char **argv)
     {
         auto detections = detection_queue->get<dai::SpatialImgDetections>();
 
-        // float nn_fps = calculateNnFps();
-        // if (nn_fps > 0)
-        // {
-        //     RCLCPP_INFO(node->get_logger(), "NN Hertz (FPS): %.2f", nn_fps);
-        // }
-
         for (const auto &det : detections->detections)
         {
+            RCLCPP_DEBUG(node->get_logger(), "Detection - Confidence: %.2f, Bounding Box: [%.2f, %.2f, %.2f, %.2f], Spatial Coordinates: [%.2f, %.2f, %.2f]",
+                         det.confidence, det.xmin, det.ymin, det.xmax, det.ymax, det.spatialCoordinates.x, det.spatialCoordinates.y, det.spatialCoordinates.z);
+
             if (det.confidence < SCORE_THRESHOLD)
             {
                 continue;
@@ -232,23 +209,28 @@ int main(int argc, char **argv)
             try
             {
                 map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+                RCLCPP_DEBUG(node->get_logger(), "Transform Successful - Camera Point: [%.2f, %.2f, %.2f], Map Point: [%.2f, %.2f, %.2f]",
+                             camera_point.point.x, camera_point.point.y, camera_point.point.z,
+                             map_point.point.x, map_point.point.y, map_point.point.z);
             }
             catch (tf2::TransformException &ex)
             {
                 RCLCPP_WARN(node->get_logger(), "TF2 transform failed: %s", ex.what());
-                return -1;
+                continue;
             }
 
             new_duplo.position = map_point;
             new_duplo.score = det.confidence;
             new_duplo.count = 1;
-
             new_duplo.id = -1;
 
-            for (robocops_msgs::msg::Duplo existing_duplo : duplos_buffer)
+            // Add info on x, y, z in map frame
+            bool found = false;
+            for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer)
             {
                 if (calculate_distance(existing_duplo.position.point, new_duplo.position.point) < TOLERANCE_CM / 100.0)
                 {
+                    found = true;
                     if (existing_duplo.count >= MIN_COUNT)
                     {
                         if (std::find(already_official_.begin(), already_official_.end(), existing_duplo.id) == already_official_.end())
@@ -258,18 +240,20 @@ int main(int argc, char **argv)
                             RCLCPP_INFO(node->get_logger(), "Duplo %d became official in zone %d", existing_duplo.id, zone);
                         }
                     }
-                } else {
-                    if (duplos_buffer.size() >= BUFFER_SIZE)
-                    {
-                        RCLCPP_WARN(node->get_logger(), "Buffer full for zone %d, discarding duplo", zone);
-                        return -2;
-                    }
-
-                    new_duplo.count = 1;
-                    new_duplo.id = current_duplo_id_++;
-                    duplos_buffer.push_back(new_duplo);
-                    RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer in zone %d", zone);
                 }
+            }
+
+            if (!found)
+            {
+                if (duplos_buffer.size() >= BUFFER_SIZE)
+                {
+                    RCLCPP_WARN(node->get_logger(), "Buffer full for zone %d, discarding duplo", zone);
+                    continue;
+                }
+
+                new_duplo.id = current_duplo_id_++;
+                duplos_buffer.push_back(new_duplo);
+                RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer in zone %d", zone);
             }
         }
 
@@ -278,6 +262,7 @@ int main(int argc, char **argv)
             robocops_msgs::msg::DuploArray array_msg;
             array_msg.duplos = duplos_official;
             m_duploPubs[0]->publish(array_msg);
+            RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
         }
 
         rclcpp::spin_some(node);

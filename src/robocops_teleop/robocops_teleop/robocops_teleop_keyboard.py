@@ -133,17 +133,17 @@ def main():
             key = get_key()
             if key == '\x03':  # Ctrl-C
                 break
-            if key == 'w':
+            if key == 'n':
                 node.toggle_gpio("capture")
-            elif key == 'x':
-                node.toggle_gpio("unload")
-            elif key == 'c':
-                node.toggle_gpio("button")
-            elif key == 'v':
-                node.toggle_gpio("slope_up")
             elif key == 'b':
+                node.toggle_gpio("unload")
+            elif key == 'h':
+                node.toggle_gpio("button")
+            elif key == 'j':
+                node.toggle_gpio("slope_up")
+            elif key == 'k':
                 node.toggle_gpio("slope_down")
-            elif key == 'e':
+            elif key == 'l':
                 node.toggle_gpio("emergency")
             node.update_velocity(key)
             node.publish_velocity()

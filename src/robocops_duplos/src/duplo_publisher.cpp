@@ -228,7 +228,8 @@ int main(int argc, char **argv)
             bool found = false;
             for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer)
             {
-                if (calculate_distance(existing_duplo.position.point, new_duplo.position.point) < TOLERANCE_CM / 100.0)
+                RCLCPP_INFO(node->get_logger(), "Distance between %d and %d: %d", existing_duplo.id, new_duplo.id, calculate_distance(existing_duplo.position.point, new_duplo.position.point));
+
                 {
                     found = true;
                     if (existing_duplo.count >= MIN_COUNT)

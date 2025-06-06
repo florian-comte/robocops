@@ -208,11 +208,11 @@ int main(int argc, char **argv)
     {
         auto detections = detection_queue->get<dai::SpatialImgDetections>();
 
-        float nn_fps = calculateNnFps();
-        if (nn_fps > 0)
-        {
-            RCLCPP_INFO(node->get_logger(), "NN Hertz (FPS): %.2f", nn_fps);
-        }
+        // float nn_fps = calculateNnFps();
+        // if (nn_fps > 0)
+        // {
+        //     RCLCPP_INFO(node->get_logger(), "NN Hertz (FPS): %.2f", nn_fps);
+        // }
 
         for (const auto &det : detections->detections)
         {
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 
             try
             {
-                map_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
+                map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
             }
             catch (tf2::TransformException &ex)
             {

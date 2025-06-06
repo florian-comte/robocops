@@ -273,6 +273,13 @@ int main(int argc, char **argv)
             }
         }
 
+        if (!duplos_official.empty())
+        {
+            robocops_msgs::msg::DuploArray array_msg;
+            array_msg.duplos = duplos_official;
+            m_duploPubs[0]->publish(array_msg);
+        }
+
         rclcpp::spin_some(node);
         rate.sleep();
     }

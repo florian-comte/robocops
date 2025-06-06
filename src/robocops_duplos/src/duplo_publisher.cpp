@@ -33,7 +33,7 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 10
+#define TOLERANCE_CM 20
 #define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
 
@@ -205,11 +205,6 @@ int main(int argc, char **argv)
             camera_point.point.x = det.spatialCoordinates.z / 1000;
             camera_point.point.y = det.spatialCoordinates.x / 1000;
             camera_point.point.z = det.spatialCoordinates.y / 1000;
-
-            if (camera_point.point.x < 0.7 && camera_point.point.x > 0.8)
-            {
-                continue;
-            }
 
             try
             {

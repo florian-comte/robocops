@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import SetBool, Empty
 from robocops_msgs.msg import DuploArray, Duplo
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 from rclpy.executors import MultiThreadedExecutor
 import math
 
@@ -24,7 +24,7 @@ class DuploControl(Node):
         )
 
         # Create a publisher to control robot movement (cmd_vel)
-        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel_smoothed', 10)
+        self.cmd_vel_publisher = self.create_publisher(TwistStamped, '/cmd_vel_smoothed', 10)
 
         # Initialize variables
         self.duplos_list = []
@@ -95,7 +95,7 @@ class DuploControl(Node):
 
     def stop_robot(self):
         """ Stop the robot's motion (in case of manual stop) """
-        stop_msg = Twist()
+        stop_msg = TwistStamped()
         self.cmd_vel_publisher.publish(stop_msg)
 
     def align_robot_with_target(self):
@@ -118,9 +118,9 @@ class DuploControl(Node):
     def rotate_robot(self, angle):
         """ Rotate the robot to a specific angle """
         # Assume the robot rotates at a fixed speed
-        rotation_speed = 0.5  # radians per second (you can adjust this)
+        rotation_speed = 0.5
         
-        twist = Twist()
+        twist = TwistStamped()
         twist.angular.z = rotation_speed if angle > 0 else -rotation_speed
         
         # Publish the twist message to rotate

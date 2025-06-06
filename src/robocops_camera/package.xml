@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>robocops_camera</name>
+  <version>0.0.1</version>
+  <description>yo</description>
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+
+  <license>MIT</license>
+
+  <!-- Dependencies -->
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>depthai</depend>
+
+  <!-- Build dependencies -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>ament_cmake_python</exec_depend>
+
+  <!-- Testing dependencies (optional) -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+</package>

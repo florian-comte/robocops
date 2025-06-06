@@ -209,9 +209,9 @@ int main(int argc, char **argv)
             try
             {
                 map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
-                RCLCPP_INFO(node->get_logger(), "Transform Successful - Camera Point: [%.2f, %.2f, %.2f], Map Point: [%.2f, %.2f, %.2f]",
-                            camera_point.point.x, camera_point.point.y, camera_point.point.z,
-                            map_point.point.x, map_point.point.y, map_point.point.z);
+                // RCLCPP_INFO(node->get_logger(), "Transform Successful - Camera Point: [%.2f, %.2f, %.2f], Map Point: [%.2f, %.2f, %.2f]",
+                //             camera_point.point.x, camera_point.point.y, camera_point.point.z,
+                //             map_point.point.x, map_point.point.y, map_point.point.z);
             }
             catch (tf2::TransformException &ex)
             {

@@ -15,7 +15,7 @@ class NavigateToPosition(Node):
         
         # Créer un timer pour vérifier régulièrement la distance
         self._goal_position = None
-        self._timer = self.create_timer(1.0, self.check_distance)  # Vérifier toutes les 1 seconde
+        self._timer = self.create_timer(0.2, self.check_distance)  # Vérifier toutes les 1 seconde
 
     def send_goal(self, x, y):
         # Créer un message Goal pour la navigation

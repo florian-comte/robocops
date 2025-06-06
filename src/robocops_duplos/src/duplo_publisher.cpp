@@ -122,19 +122,17 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("duplo_detection_publisher");
 
-    std::string rgb_resolution_str, resource_base_folder, nn_name;
+    std::string resource_base_folder, nn_name;
     bool with_display;
     int queue_size;
 
     // Declare parameters with default values
-    node->declare_parameter("rgb_resolution_str", "1080p");
     node->declare_parameter("nn_name", "");
     node->declare_parameter("resource_base_folder", "");
     node->declare_parameter("with_display", false);
     node->declare_parameter("queue_size", 30);
 
     // Get parameters from ROS2 parameter server
-    node->get_parameter("rgb_resolution_str", rgb_resolution_str);
     node->get_parameter("nn_name", nn_name);
     node->get_parameter("resource_base_folder", resource_base_folder);
     node->get_parameter("with_display", with_display);
@@ -147,65 +145,20 @@ int main(int argc, char **argv)
     // Set up detection queue
     auto detection_queue = device.getOutputQueue("detections", queue_size, false);
 
-    // Create publishers for rgb, depth and detections if we want display
-    if (with_display)
+    while (rclcpp::ok())
     {
-        auto rgb_queue = device.getOutputQueue("preview", queue_size, false);
-        // auto depth_queue = device.getOutputQueue("depth", queue_size, false);
-        auto calibration_handler = device.readCalibration();
+        auto detections = detection_queue->get<dai::SpatialImgDetections>();
 
-        dai::rosBridge::ImageConverter rgb_converter("camera", false);
-        auto rgb_camera_info = rgb_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_A, -1, -1);
-        dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> rgb_publish(rgb_queue,
-                                                                                            node,
-                                                                                            std::string("camera/raw_rgb"),
-                                                                                            std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &rgb_converter, std::placeholders::_1, std::placeholders::_2),
-                                                                                            queue_size,
-                                                                                            rgb_camera_info,
-                                                                                            "camera");
-
-        dai::rosBridge::SpatialDetectionConverter detection_converter("camera", 416, 416, false);
-        dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
-            detection_queue,
-            node,
-            std::string("camera/detections"),
-            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
-            queue_size);
-
-        // We don't need the depth stream but it's here commented in case.
-        //    dai::rosBridge::ImageConverter depth_converter("oak_right_camera_optical_frame", true);
-        //    // width and height based on 480p mono resolution
-        //    auto right_camera_info = depth_converter.calibrationToCameraInfo(calibration_handler, dai::CameraBoardSocket::CAM_C, 640, 480);
-        //    dai::rosBridge::BridgePublisher<sensor_msgs::msg::Image, dai::ImgFrame> depth_publish(
-        //        depth_queue,
-        //        node,
-        //        std::string("camera/depth"),
-        //        std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &depth_converter, std::placeholders::_1, std::placeholders::_2),
-        //        queue_size,
-        //        right_camera_info,
-        //        "camera");
-
-        detection_publish.addPublisherCallback();
-        // depth_publish.addPublisherCallback();
-        rgb_publish.addPublisherCallback();
-
-        rclcpp::spin(node);
-
-        // only create publisher for detections if we don't want display
+        for (const auto &det : detections->detections)
+        {
+            std::cout << "Label: " << det.label
+                      << ", Confidence: " << det.confidence
+                      << ", X: " << det.spatialCoordinates.x
+                      << ", Y: " << det.spatialCoordinates.y
+                      << ", Z: " << det.spatialCoordinates.z
+                      << std::endl;
+        }
     }
-    else
-    {
-        dai::rosBridge::SpatialDetectionConverter detection_converter("camera", 416, 416, false);
-        dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::SpatialDetectionArray, dai::SpatialImgDetections> detection_publish(
-            detection_queue,
-            node,
-            std::string("camera/detections"),
-            std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &detection_converter, std::placeholders::_1, std::placeholders::_2),
-            queue_size);
 
-        detection_publish.addPublisherCallback();
-
-        rclcpp::spin(node);
-    }
     return 0;
 }

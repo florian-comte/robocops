@@ -41,6 +41,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(stereo_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 set(dependencies
   cv_bridge
@@ -52,6 +53,7 @@ set(dependencies
   std_msgs
   vision_msgs
   robocops_msgs
+  std_srvs
 )
 
 include_directories(

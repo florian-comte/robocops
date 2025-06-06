@@ -95,7 +95,7 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     rgb_camera->setInterleaved(false);
     rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
-    rgb_camera->setFps(25);
+    rgb_camera->setFps(18);
 
     // Configure mono cameras (480p resolution)
     mono_left->setResolution(dai::node::MonoCamera::Properties::SensorResolution::THE_480_P);

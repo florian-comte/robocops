@@ -45,7 +45,7 @@ amcl:
       x: 0.0
       y: 0.0
       z: 0.0
-      yaw: -2.0
+      yaw: -2.1
 
 bt_navigator:
   ros__parameters:

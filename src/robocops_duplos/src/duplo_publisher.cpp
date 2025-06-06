@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     if (with_display)
     {
         auto rgb_queue = device.getOutputQueue("preview", queue_size, false);
-        auto depth_queue = device.getOutputQueue("depth", queue_size, false);
+        // auto depth_queue = device.getOutputQueue("depth", queue_size, false);
         auto calibration_handler = device.readCalibration();
 
         dai::rosBridge::ImageConverter rgb_converter("camera", false);

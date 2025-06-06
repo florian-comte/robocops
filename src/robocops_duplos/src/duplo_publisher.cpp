@@ -33,7 +33,7 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 20
+#define TOLERANCE_CM 10
 #define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
 
@@ -228,13 +228,11 @@ int main(int argc, char **argv)
             bool found = false;
             for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer)
             {
-
-                RCLCPP_INFO(node->get_logger(), "Distance between %d and %d: %lf", existing_duplo.id, new_duplo.id, calculate_distance(existing_duplo.position.point, new_duplo.position.point));
-
                 if (calculate_distance(existing_duplo.position.point, new_duplo.position.point) < TOLERANCE_CM / 100.0)
                 {
                     found = true;
-                    if (existing_duplo.count >= MIN_COUNT)
+                    
+                    if (++existing_duplo.count >= MIN_COUNT)
                     {
                         if (std::find(already_official_.begin(), already_official_.end(), existing_duplo.id) == already_official_.end())
                         {

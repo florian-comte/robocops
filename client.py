@@ -5,17 +5,16 @@ from robocops_msgs.msg import DuploArray, Duplo
 from geometry_msgs.msg import TwistStamped
 from rclpy.executors import MultiThreadedExecutor
 import math
+import threading
 
 
 class DuploControl(Node):
     def __init__(self):
         super().__init__('duplo_control')
 
-        # Create service clients
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
 
-        # Create a subscriber to read from the duplos topic
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
             '/duplos', 
@@ -23,13 +22,15 @@ class DuploControl(Node):
             10
         )
 
-        # Create a publisher to control robot movement (cmd_vel)
         self.cmd_vel_publisher = self.create_publisher(TwistStamped, '/cmd_vel_smoothed', 10)
 
-        # Initialize variables
         self.duplos_list = []
         self.rotation_active = False
         self.target_position = None
+        self.angle_to_target = None
+
+        # Timer for rotating at 10Hz
+        self.rotation_timer = None
         
         # Wait for services to be available
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
@@ -39,6 +40,10 @@ class DuploControl(Node):
             self.get_logger().info('clear_duplos service not available, waiting again...')
         
         self.get_logger().info('Services are now available.')
+        
+        # For handling user input in a non-blocking way
+        self.menu_thread = threading.Thread(target=self.run_menu, daemon=True)
+        self.menu_thread.start()
 
     def activate_detection(self):
         request = SetBool.Request()
@@ -58,11 +63,11 @@ class DuploControl(Node):
 
     def duplo_callback(self, msg: DuploArray):
         if msg.duplos:
-            
             self.target_position = msg.duplos[0].position
+            self.duplos_list = msg.duplos
             self.get_logger().info(f"Target Position received: {self.target_position}")
             if self.rotation_active:
-                self.align_robot_with_target()
+                self.calculate_angle_to_target()
 
     def read_duplos(self):
         if not self.duplos_list:
@@ -72,34 +77,57 @@ class DuploControl(Node):
             for duplo in self.duplos_list:
                 self.get_logger().info(f"Duplo ID: {duplo.id}, Position: {duplo.position}, Score: {duplo.score}")
 
-    def print_menu(self):
-        print("\nDuplo Control Menu:")
-        print("1. Start detection")
-        print("2. Stop detection")
-        print("3. Clear duplos")
-        print("4. Read duplos")
-        print("5. Toggle Rotation")
-        print("6. Exit")
-        choice = input("Enter your choice (1-6): ")
+    def run_menu(self):
+        """ This method handles user input in a separate thread """
+        while rclpy.ok():
+            print("\nDuplo Control Menu:")
+            print("1. Start detection")
+            print("2. Stop detection")
+            print("3. Clear duplos")
+            print("4. Read duplos")
+            print("5. Toggle Rotation")
+            print("6. Exit")
+            choice = input("Enter your choice (1-6): ")
 
-        return choice
+            if choice == '1':
+                self.activate_detection()
+            elif choice == '2':
+                self.deactivate_detection()
+            elif choice == '3':
+                self.clear_duplos()
+            elif choice == '4':
+                self.read_duplos()
+            elif choice == '5':
+                self.toggle_rotation()
+            elif choice == '6':
+                self.get_logger().info("Exiting...")
+                self.stop_robot()  # Stop robot before shutdown
+                break
+            else:
+                print("Invalid option. Please choose between 1-6.")
 
     def toggle_rotation(self):
         """ Toggle rotation on/off """
         self.rotation_active = not self.rotation_active
         if self.rotation_active:
             self.get_logger().info("Rotation started.")
+            # Recalculate the angle to the target and set up the timer
+            self.calculate_angle_to_target()
+            self.rotation_timer = self.create_timer(0.1, self.rotate_robot)  # Timer for 10 Hz (0.1s)
         else:
             self.get_logger().info("Rotation stopped.")
             self.stop_robot()
+            if self.rotation_timer:
+                self.rotation_timer.cancel()
+                self.rotation_timer = None
 
     def stop_robot(self):
         """ Stop the robot's motion (in case of manual stop) """
         stop_msg = TwistStamped()
         self.cmd_vel_publisher.publish(stop_msg)
 
-    def align_robot_with_target(self):
-        """ Rotate robot to align with the target position """
+    def calculate_angle_to_target(self):
+        """ Calculate the angle to the target and set it as the goal angle """
         if self.target_position is None:
             self.get_logger().info("No target position to align with.")
             return
@@ -108,20 +136,30 @@ class DuploControl(Node):
         robot_x, robot_y = 0.0, 0.0  # Assuming base_link origin is (0, 0)
         target_x, target_y = self.target_position.x, self.target_position.y
 
-        angle_to_target = math.atan2(target_y - robot_y, target_x - robot_x)
+        self.angle_to_target = math.atan2(target_y - robot_y, target_x - robot_x)
+        self.get_logger().info(f"Calculated angle to target: {self.angle_to_target} radians")
 
-        self.get_logger().info(f"Aligning robot to angle: {angle_to_target} radians")
-
-        # Rotate robot until it is aligned
-        self.rotate_robot(angle_to_target)
-
-    def rotate_robot(self, angle):
-        """ Rotate the robot to a specific angle """
-        # Assume the robot rotates at a fixed speed
-        rotation_speed = 0.5
+    def rotate_robot(self):
+        """ Rotate the robot to a specific angle at 10 Hz """
+        if self.angle_to_target is None:
+            self.get_logger().info("No target angle to rotate towards.")
+            return
         
+        # Introduce tolerance for stopping
+        tolerance = 0.1
+
+        if abs(self.angle_to_target) < tolerance:
+            self.get_logger().info("Target alignment achieved.")
+            self.stop_robot()
+            if self.rotation_timer:
+                self.rotation_timer.cancel()
+                self.rotation_timer = None
+            return
+
+        # Rotate at a fixed speed
+        rotation_speed = 0.5
         twist = TwistStamped()
-        twist.angular.z = rotation_speed if angle > 0 else -rotation_speed
+        twist.angular.z = rotation_speed if self.angle_to_target > 0 else -rotation_speed
         
         # Publish the twist message to rotate
         self.cmd_vel_publisher.publish(twist)
@@ -137,25 +175,6 @@ def main(args=None):
     executor.add_node(duplo_control_node)
 
     while rclpy.ok():
-        # Display menu
-        user_choice = duplo_control_node.print_menu()
-
-        if user_choice == '1':
-            duplo_control_node.activate_detection()
-        elif user_choice == '2':
-            duplo_control_node.deactivate_detection()
-        elif user_choice == '3':
-            duplo_control_node.clear_duplos()
-        elif user_choice == '4':
-            duplo_control_node.read_duplos()
-        elif user_choice == '5':
-            duplo_control_node.toggle_rotation()
-        elif user_choice == '6':
-            duplo_control_node.get_logger().info("Exiting...")
-            break
-        else:
-            print("Invalid option. Please choose between 1-6.")
-
         # Spin the executor and keep the node alive
         executor.spin_once()
 

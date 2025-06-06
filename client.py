@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_srvs.srv import SetBool, Empty
-from robocops_msgs.msg import DuploArray
+from robocops_msgs.msg import DuploArray, Duplo
 from rclpy.executors import MultiThreadedExecutor
 
 
@@ -12,7 +12,16 @@ class DuploControl(Node):
         # Create service clients
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
-        self.duplo_publisher = self.create_publisher(DuploArray, 'duplos', 10)
+
+        # Create a subscriber to read from the duplos topic
+        self.duplo_subscriber = self.create_subscription(
+            DuploArray,
+            'duplos/zone1',  # Adjust topic as per your setup
+            self.duplo_callback,
+            10
+        )
+        
+        self.duplos_list = []  # This will hold the duplos read from the topic
 
         # Wait for services to be available
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
@@ -39,12 +48,18 @@ class DuploControl(Node):
         self.get_logger().info('Clearing duplos...')
         self.clear_client.call_async(Empty.Request())
 
+    def duplo_callback(self, msg: DuploArray):
+        """ Callback to process received duplos from the topic """
+        self.get_logger().info(f"Received {len(self.duplos_list)} duplos.")
+
     def read_duplos(self):
-        # To read duplos, we simply publish the message on the topic
-        duplo_array = DuploArray()
-        duplo_array.duplos = []  # Simulate reading duplos, could fetch from topic in practice
-        self.duplo_publisher.publish(duplo_array)
-        self.get_logger().info(f'Read {len(duplo_array.duplos)} duplos')
+        """ Display the duplos read from the topic """
+        if not self.duplos_list:
+            self.get_logger().info("No duplos received yet.")
+        else:
+            self.get_logger().info(f"Current duplos: {len(self.duplos_list)}")
+            for duplo in self.duplos_list:
+                self.get_logger().info(f"Duplo ID: {duplo.id}, Position: {duplo.position}, Score: {duplo.score}")
 
     def print_menu(self):
         print("\nDuplo Control Menu:")

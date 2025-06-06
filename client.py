@@ -20,7 +20,8 @@ class DuploControl(Node):
             self.duplo_callback,
             10
         )
-        
+
+        # Initialize an empty list for duplos
         self.duplos_list = []
 
         # Wait for services to be available
@@ -50,7 +51,7 @@ class DuploControl(Node):
 
     def duplo_callback(self, msg: DuploArray):
         """ Callback to process received duplos from the topic """
-        self.duplos_list = msg
+        self.duplos_list = msg.duplos  # Access the list of Duplo messages from the DuploArray
 
     def read_duplos(self):
         """ Display the duplos read from the topic """
@@ -78,6 +79,10 @@ def main(args=None):
 
     duplo_control_node = DuploControl()
 
+    # Use a MultiThreadedExecutor for handling both menu input and subscription callbacks
+    executor = MultiThreadedExecutor()
+    executor.add_node(duplo_control_node)
+
     while rclpy.ok():
         # Display menu
         user_choice = duplo_control_node.print_menu()
@@ -96,8 +101,8 @@ def main(args=None):
         else:
             print("Invalid option. Please choose between 1-5.")
 
-        # Spin and keep the node alive
-        rclpy.spin_once(duplo_control_node)
+        # Spin the executor and keep the node alive
+        executor.spin_once()
 
     duplo_control_node.destroy_node()
     rclpy.shutdown()

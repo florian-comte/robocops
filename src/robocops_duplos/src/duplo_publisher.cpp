@@ -1,14 +1,14 @@
 /*
  * duplo_detection_publisher.cpp
  *
- * This program sets up a DepthAI pipeline for detecting objects using a YOLO-based spatial detection network.
+ * node program sets up a DepthAI pipeline for detecting objects using a YOLO-based spatial detection network.
  * It initializes the DepthAI device, configures RGB and mono cameras, and processes detections for ROS 2 publication.
  *
  * The node is designed to interface with the DepthAI device to perform real-time object detection and spatial
  * detection using a YOLO model. The detected objects are then published as spatial detection messages in ROS 2,
  * with optional publishing of the raw RGB image and depth data.
  *
- * The primary outputs of this node are:
+ * The primary outputs of node node are:
  *  - `/camera/detections`: Spatial detection data including detected objects' bounding boxes, confidence scores, and 3D coordinates.
  *  - `/camera/raw_rgb`: Raw RGB camera feed (if display is enabled).
  *  - `/camera/depth`: Depth data from stereo cameras (if display is enabled).
@@ -48,24 +48,10 @@
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 
-float calculateNnFps()
-{
-    static auto last_time = std::chrono::steady_clock::now();
-    static int count = 0;
-    static float fps = 0.0f;
-
-    count++;
-    auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time).count();
-
-    if (elapsed >= 1000)
-    {
-        fps = count * 1000.0f / elapsed;
-        count = 0;
-        last_time = now;
-    }
-    return fps;
-}
+#define BUFFER_SIZE 100
+#define TOLERANCE_CM 10
+#define MIN_COUNT 20
+#define SCORE_THRESHOLD 0.90
 
 /**
  * @brief Creates a DepthAI pipeline for object detection.
@@ -144,6 +130,30 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     return pipeline;
 }
 
+double calculate_distance(const geometry_msgs::msg::Point &a, const geometry_msgs::msg::Point &b)
+{
+    return std::sqrt(std::pow(a.x - b.x, 2) + std::pow(a.y - b.y, 2));
+}
+
+float calculateNnFps()
+{
+    static auto last_time = std::chrono::steady_clock::now();
+    static int count = 0;
+    static float fps = 0.0f;
+
+    count++;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time).count();
+
+    if (elapsed >= 1000)
+    {
+        fps = count * 1000.0f / elapsed;
+        count = 0;
+        last_time = now;
+    }
+    return fps;
+}
+
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
@@ -175,7 +185,24 @@ int main(int argc, char **argv)
     tf2_ros::Buffer tf_buffer(node->get_clock());
     tf2_ros::TransformListener tf_listener(tf_buffer);
 
-    rclcpp::Rate rate(30);
+    rclcpp::Rate rate(18);
+
+    std::vector<rclcpp::Publisher<robocops_msgs::msg::DuploArray>::SharedPtr> m_duploPubs;
+    int current_duplo_id_ = 0;
+
+    robocops_msgs::msg::Duplo new_duplo;
+    geometry_msgs::msg::PointStamped camera_point;
+    geometry_msgs::msg::PointStamped map_point;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        std::string topic = "/duplos/zone" + std::to_string(i + 1);
+        m_duploPubs.push_back(node->create_publisher<robocops_msgs::msg::DuploArray>(topic, 10));
+    }
+
+    std::vector<robocops_msgs::msg::Duplo> duplos_buffer;
+    std::vector<robocops_msgs::msg::Duplo> duplos_official;
+    std::vector<int> already_official_;
 
     while (rclcpp::ok())
     {
@@ -189,10 +216,13 @@ int main(int argc, char **argv)
 
         for (const auto &det : detections->detections)
         {
-            robocops_msgs::msg::Duplo duplo_msg;
-            geometry_msgs::msg::PointStamped camera_point;
-            geometry_msgs::msg::PointStamped map_point;
-            
+            if (det.confidence < SCORE_THRESHOLD)
+            {
+                continue;
+            }
+
+            int zone = 1;
+
             camera_point.header.frame_id = "camera";
             camera_point.header.stamp = node->get_clock()->now();
             camera_point.point.x = det.spatialCoordinates.z;
@@ -209,11 +239,38 @@ int main(int argc, char **argv)
                 return -1;
             }
 
-            duplo_msg.position = map_point;
-            duplo_msg.score = det.confidence;
-            duplo_msg.count = 1;
+            new_duplo.position = map_point;
+            new_duplo.score = det.confidence;
+            new_duplo.count = 1;
 
-            duplo_msg.id = -1;
+            new_duplo.id = -1;
+
+            for (robocops_msgs::msg::Duplo existing_duplo : duplos_buffer)
+            {
+                if (calculate_distance(existing_duplo.position.point, new_duplo.position.point) < TOLERANCE_CM / 100.0)
+                {
+                    if (existing_duplo.count >= MIN_COUNT)
+                    {
+                        if (std::find(already_official_.begin(), already_official_.end(), existing_duplo.id) == already_official_.end())
+                        {
+                            duplos_official.push_back(existing_duplo);
+                            already_official_.push_back(existing_duplo.id);
+                            RCLCPP_INFO(node->get_logger(), "Duplo %d became official in zone %d", existing_duplo.id, zone);
+                        }
+                    }
+                } else {
+                    if (duplos_buffer.size() >= BUFFER_SIZE)
+                    {
+                        RCLCPP_WARN(node->get_logger(), "Buffer full for zone %d, discarding duplo", zone);
+                        return -2;
+                    }
+
+                    new_duplo.count = 1;
+                    new_duplo.id = current_duplo_id_++;
+                    duplos_buffer.push_back(new_duplo);
+                    RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer in zone %d", zone);
+                }
+            }
         }
 
         rclcpp::spin_some(node);

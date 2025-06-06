@@ -33,8 +33,8 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 10
-#define MIN_COUNT 20
+#define TOLERANCE_CM 15
+#define MIN_COUNT 10
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)

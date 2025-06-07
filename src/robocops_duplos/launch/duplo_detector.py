@@ -79,27 +79,6 @@ def generate_launch_description():
                     {'queue_size': queue_size}]
     )
 
-    # Node for detections display publisher
-    duplo_detection_viewer = launch_ros.actions.Node(
-        package='robocops_duplos', executable='duplo_viewer',
-        output='screen',
-        condition=IfCondition(with_display)
-    )
-    
-    # Node for detections display publisher
-    duplo_processor = launch_ros.actions.Node(
-        package='robocops_duplos', executable='duplo_processor',
-        output='screen',
-        condition=IfCondition(with_processor)
-    )
-    
-    # Node for detections display publisher
-    fake_tf_zone_node = launch_ros.actions.Node(
-        package='robocops_duplos', executable='fake_tf_zone_publisher',
-        output='screen',
-        condition=IfCondition(fake_tf_zone)
-    )
-    
     # Launch description
     ld = LaunchDescription()
     
@@ -113,8 +92,5 @@ def generate_launch_description():
     ld.add_action(declare_fake_tf_zone_cmd)
     
     ld.add_action(duplo_detection_publisher)
-    ld.add_action(duplo_detection_viewer)
-    ld.add_action(duplo_processor)
-    ld.add_action(fake_tf_zone_node)
 
     return ld

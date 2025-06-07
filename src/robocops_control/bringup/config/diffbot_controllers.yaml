@@ -20,7 +20,7 @@ diffbot_base_controller:
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
 
-    publish_rate: 30
+    publish_rate: 30.0
     odom_frame_id: control/odom
     base_frame_id: base_link
     pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]

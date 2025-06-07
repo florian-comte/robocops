@@ -57,7 +57,7 @@ dai::Pipeline create_pipeline(const std::string nn_name)
     spatial_detection_network->setNumNCEPerInferenceThread(1);
 
     // Configure RGB camera
-    rgb_camera->setPreviewSize(640, 640);
+    rgb_camera->setPreviewSize(416, 416);
     rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     rgb_camera->setInterleaved(false);
     rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);

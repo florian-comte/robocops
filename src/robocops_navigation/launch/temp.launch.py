@@ -10,7 +10,6 @@ def generate_launch_description():
     control_pkg = get_package_share_directory('robocops_control')
     camera_pkg = get_package_share_directory('robocops_camera')
     nav_pkg = get_package_share_directory('robocops_navigation')
-    brain_pkg = get_package_share_directory('robocops_brain')
 
     # EKF Node (robot_localization)
     robot_localization_node = Node(
@@ -19,7 +18,7 @@ def generate_launch_description():
         name='ekf_node',
         output='screen',
         parameters=[
-            os.path.join(brain_pkg, 'config', 'ekf.yaml'),
+            os.path.join(nav_pkg, 'config', 'ekf.yaml'),
             {'use_sim_time': False}
         ]
     )

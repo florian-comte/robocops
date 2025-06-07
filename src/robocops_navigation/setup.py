@@ -16,6 +16,7 @@ setup(
         (os.path.join('share', package_name, 'config'), glob('config/*')),
         (os.path.join('share', package_name, 'maps'), glob('maps/*')),
         (os.path.join('share', package_name, 'robocops_navigation'), glob('robocops_navigation/*')),
+        (os.path.join('share', package_name, 'robocops_camera'), glob('robocops_camera/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

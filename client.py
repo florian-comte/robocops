@@ -59,9 +59,6 @@ class DuploControl(Node):
     def duplo_callback(self, msg: DuploArray):
         if msg.duplos:
             self.duplos_list = msg.duplos
-            self.get_logger().info(f"Target Position received: {self.target_position}")
-            if self.rotation_active:
-                self.calculate_angle_to_target()
 
     def read_duplos(self):
         if not self.duplos_list:

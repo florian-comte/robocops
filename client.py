@@ -185,6 +185,8 @@ class DuploControl(Node):
 
         self.send_navigation_goal(pos.x, pos.y)
         
+        self.sleep(5)
+        
         self.enable_capture(False)
         
         self.clear_duplos()

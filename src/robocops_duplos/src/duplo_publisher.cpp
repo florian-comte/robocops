@@ -242,7 +242,7 @@ int main(int argc, char **argv)
 
                 RCLCPP_INFO(node->get_logger(),
                             "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
-                            map_point.point, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
+                            det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
 
                 RCLCPP_INFO(node->get_logger(),
                             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",

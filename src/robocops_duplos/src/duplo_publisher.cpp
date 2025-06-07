@@ -36,8 +36,8 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 20
-#define MIN_COUNT 5
+#define TOLERANCE_CM 5
+#define MIN_COUNT 100
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
@@ -261,9 +261,9 @@ int main(int argc, char **argv)
                     {
                         found = true;
 
-                        // existing_duplo.position.point.x = (new_duplo.position.point.x + existing_duplo.count * existing_duplo.position.point.x) / (existing_duplo.count + 1);
-                        // existing_duplo.position.point.y = (new_duplo.position.point.y + existing_duplo.count * existing_duplo.position.point.y) / (existing_duplo.count + 1);
-                        // existing_duplo.position.point.z = (new_duplo.position.point.z + existing_duplo.count * existing_duplo.position.point.z) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.x = (new_duplo.position.point.x + existing_duplo.count * existing_duplo.position.point.x) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.y = (new_duplo.position.point.y + existing_duplo.count * existing_duplo.position.point.y) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.z = (new_duplo.position.point.z + existing_duplo.count * existing_duplo.position.point.z) / (existing_duplo.count + 1);
 
                         if (++existing_duplo.count >= MIN_COUNT)
                         {

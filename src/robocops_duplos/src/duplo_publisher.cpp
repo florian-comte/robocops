@@ -36,8 +36,8 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 5
-#define MIN_COUNT 100
+#define TOLERANCE_CM 4
+#define MIN_COUNT 200
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)

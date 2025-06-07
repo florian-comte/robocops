@@ -57,7 +57,7 @@ def generate_launch_description():
     return LaunchDescription([
         robot_localization_node,
         diffbot_launch,
-        # camera_launch,
+        camera_launch,
         lidar_launch,
         delayed_nav2
     ])

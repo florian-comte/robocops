@@ -17,10 +17,8 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_node',
         output='screen',
-        parameters=[
-            os.path.join(nav_pkg, 'config', 'ekf.yaml'),
-            {'use_sim_time': False}
-        ]
+        parameters=[os.path.join(nav_pkg, 'config', 'ekf.yaml')],
+
     )
 
     # Launch other subsystems

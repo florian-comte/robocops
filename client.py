@@ -183,10 +183,12 @@ class DuploControl(Node):
 
         self.send_navigation_goal(pos.x, pos.y)
         
-        self.enable_capture(True)
+        self.enable_capture(False)
         
         self.clear_duplos()
-
+        
+    def stop_capture(self):
+        self.enable_capture(False)
 
 def main(args=None):
     rclpy.init(args=args)

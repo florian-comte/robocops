@@ -3,16 +3,16 @@
 <package format="3">
   <name>robocops_camera</name>
   <version>1.0.0</version>
-  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the camera.</description>
+  <description>Package used by the team RoboCops (Robot Competition EPFL 2025) for the camera.</description>
 
   <license>Apache-2.0</license>
   <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>
 
+  <!-- Build system -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
   <!-- Dependencies -->
-  <depend>rclpy</depend>
-  <depend>sensor_msgs</depend>
-  <depend>cv_bridge</depend>
-  <depend>depthai</depend>
+  <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>depthai</depend>
@@ -23,15 +23,8 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>robocops_msgs</depend>
-  <depend>rclcpp</depend>
 
-
-  <!-- Build dependencies -->
-  <buildtool_depend>ament_cmake</buildtool_depend>
-  <exec_depend>ament_cmake_python</exec_depend>
-
-  <!-- Testing dependencies (optional) -->
+  <!-- Testing dependencies -->
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
 </package>

@@ -119,6 +119,9 @@ class DuploControl(Node):
                 self.search_and_grab()
             elif choice == '6':
                 self.stop_capture()
+            elif choice == '7':
+                self.get_logger().info("Exiting...")
+                break
             else:
                 print("Invalid option. Please choose between 1 and 6.")
 
@@ -130,24 +133,15 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, robot_x: float = 0.0, robot_y: float = 0.0):
-        # Calculate yaw (angle)
-        yaw = math.atan2(y - robot_y, x - robot_x)
-
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0):
         goal_msg = NavigateToPose.Goal()
 
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'base_link'
+        goal_pose.header.frame_id = 'camera'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
-
-        # Set the calculated yaw in the goal's orientation (rotation)
-        quaternion = self.euler_to_quaternion(0.0, 0.0, yaw)  # Z is yaw, roll and pitch are 0
-        goal_pose.pose.orientation.x = quaternion[0]
-        goal_pose.pose.orientation.y = quaternion[1]
-        goal_pose.pose.orientation.z = quaternion[2]
-        goal_pose.pose.orientation.w = quaternion[3]
+        goal_pose.pose.orientation.w = yaw
 
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
@@ -170,15 +164,6 @@ class DuploControl(Node):
         else:
             self.get_logger().warn(f"Goal failed with status code: {result.status}")
 
-    def euler_to_quaternion(self, roll: float, pitch: float, yaw: float):
-        """Convert Euler angles (roll, pitch, yaw) to quaternion."""
-        qx = math.sin(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) - math.cos(roll / 2) * math.sin(pitch / 2) * math.sin(yaw / 2)
-        qy = math.cos(roll / 2) * math.sin(pitch / 2) * math.cos(yaw / 2) + math.sin(roll / 2) * math.cos(pitch / 2) * math.sin(yaw / 2)
-        qz = math.cos(roll / 2) * math.cos(pitch / 2) * math.sin(yaw / 2) - math.sin(roll / 2) * math.sin(pitch / 2) * math.cos(yaw / 2)
-        qw = math.cos(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) + math.sin(roll / 2) * math.sin(pitch / 2) * math.sin(yaw / 2)
-
-        return [qx, qy, qz, qw]
-
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
 
@@ -198,11 +183,7 @@ class DuploControl(Node):
         
         self.enable_capture(True)
 
-        # Assuming robot's current position (robot_x, robot_y) is known
-        robot_x = 0.0
-        robot_y = 0.0
-        
-        self.send_navigation_goal(pos.x, pos.y, robot_x, robot_y)
+        self.send_navigation_goal(pos.x, pos.y)
         
         time.sleep(5)
         

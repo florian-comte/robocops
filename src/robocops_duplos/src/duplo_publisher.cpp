@@ -240,7 +240,7 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                new_duplo.position = map_point;
+                new_duplo.position = camera_point;
                 new_duplo.score = det.confidence;
                 new_duplo.count = 1;
                 new_duplo.id = -1;

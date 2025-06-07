@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseStamped, Point
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
-from std_msgs.msg import Float64
+from control_msgs.msg import DynamicInterfaceGroupValues, InterfaceValue
 
 import math
 import threading
@@ -33,7 +33,7 @@ class DuploControl(Node):
         self.nav_to_pose_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
 
         # GPIO command publisher for capture/active
-        self.capture_pub = self.create_publisher(Float64, '/gpio_command/capture/active', 10)
+        self.gpio_pub = self.create_publisher(DynamicInterfaceGroupValues, '/gpio_controller/commands', 10)
 
         # Internal state
         self.duplos_list = []
@@ -69,10 +69,17 @@ class DuploControl(Node):
         self.clear_client.call_async(Empty.Request())
 
     def enable_capture(self, enable: bool):
-        msg = Float64()
-        msg.data = 1.0 if enable else 0.0
-        self.capture_pub.publish(msg)
-        self.get_logger().info(f"{'Enabling' if enable else 'Disabling'} capture...")
+        msg = DynamicInterfaceGroupValues()
+        msg.interface_groups = ["capture"]
+
+        capture_msg = InterfaceValue()
+        capture_msg.interface_names = ["active"]
+        capture_msg.values = [1.0 if enable else 0.0]
+
+        msg.interface_values.append(capture_msg)
+        self.gpio_pub.publish(msg)
+
+        self.get_logger().info(f"{'Enabling' if enable else 'Disabling'} capture via DynamicInterfaceGroupValues.")
 
     def duplo_callback(self, msg: DuploArray):
         if msg.duplos:
@@ -158,14 +165,9 @@ class DuploControl(Node):
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
 
-        self.enable_capture(True)
-        time.sleep(0.5)
-
         self.activate_detection()
-        time.sleep(1.0)  # Allow time for detection
+        time.sleep(1.0)
         self.deactivate_detection()
-
-        self.enable_capture(False)
 
         closest_duplo = self.get_closest_duplo()
         if not closest_duplo:
@@ -176,11 +178,13 @@ class DuploControl(Node):
         self.get_logger().info(
             f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
         )
+        
+        self.enable_capture(True)
 
         self.send_navigation_goal(pos.x, pos.y)
-
-        # Simulated grab
-        self.get_logger().info(f"Simulated grab: Duplo ID {closest_duplo.id}")
+        
+        self.enable_capture(True)
+        
         self.clear_duplos()
 
 

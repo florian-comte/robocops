@@ -116,7 +116,7 @@ class DuploControl(Node):
         self.cmd_vel_publisher.publish(stop_msg)
 
     def rotate_robot(self):
-        rotation_speed = 0.5
+        rotation_speed = 0.3
         twist = TwistStamped()
         
         # Using the correct attribute path for TwistStamped

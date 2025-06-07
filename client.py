@@ -133,63 +133,91 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0):
-        goal_msg = NavigateToPose.Goal()
-
-        goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'base_link'
-        goal_pose.header.stamp = self.get_clock().now().to_msg()
-        goal_pose.pose.position.x = x
-        goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.w = 1.0
-
-        goal_msg.pose = goal_pose
-        self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
-
-        send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(self, send_goal_future)
-        goal_handle = send_goal_future.result()
-
-        if not goal_handle.accepted:
-            self.get_logger().error("Navigation goal rejected.")
-            return
-
-        self.get_logger().info("Navigation goal accepted, waiting for result...")
-        get_result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, get_result_future)
-        result = get_result_future.result()
-
-        if result.status == 4:  # STATUS_SUCCEEDED
-            self.get_logger().info("Goal succeeded!")
-        else:
-            self.get_logger().warn(f"Goal failed with status code: {result.status}")
-
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
-
+        
+        # Activate detection
         self.activate_detection()
         time.sleep(1.0)
         self.deactivate_detection()
-
+        
+        # Get the closest Duplo
         closest_duplo = self.get_closest_duplo()
         if not closest_duplo:
             self.get_logger().info("No Duplos found.")
             return
-
-        pos = closest_duplo.position.point
-        self.get_logger().info(
-            f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
-        )
         
+        pos = closest_duplo.position.point
+        self.get_logger().info(f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}")
+        
+        # Calculate the angle to face the Duplo (yaw angle)
+        angle_to_duplo = self.calculate_angle_to_target(pos.x, pos.y)
+        self.get_logger().info(f"Calculated angle to Duplo: {angle_to_duplo:.2f} radians")
+        
+        # Send orientation goal (rotate to the angle)
+        self.send_navigation_goal(0.0, 0.0, angle_to_duplo, is_rotation=True)
+        
+        # Wait a bit to ensure robot has rotated
+        time.sleep(2)
+        
+        # Now enable capture
         self.enable_capture(True)
-
+        
+        # Send goal to move to the Duplo's position
         self.send_navigation_goal(pos.x, pos.y)
         
+        # Wait for the robot to reach the target
         time.sleep(5)
         
+        # Disable capture after reaching
         self.enable_capture(False)
         
+        # Clear Duplos after grabbing
         self.clear_duplos()
+
+    def calculate_angle_to_target(self, target_x, target_y):
+        # Assuming robot's current position is (0,0) and orientation is along the x-axis.
+        dx = target_x
+        dy = target_y
+        angle = math.atan2(dy, dx)
+        return angle
+
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0, is_rotation=False):
+        goal_msg = NavigateToPose.Goal()
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'base_link'
+        goal_pose.header.stamp = self.get_clock().now().to_msg()
+
+        if is_rotation:
+            # Only set orientation for rotation goal
+            goal_pose.pose.orientation.z = math.sin(yaw / 2)
+            goal_pose.pose.orientation.w = math.cos(yaw / 2)
+            self.get_logger().info(f"Sending rotation goal: yaw={yaw:.2f}")
+        else:
+            # Set position for normal navigation
+            goal_pose.pose.position.x = x
+            goal_pose.pose.position.y = y
+            goal_pose.pose.orientation.w = 1.0
+            self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
+
+        goal_msg.pose = goal_pose
+        send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
+        rclpy.spin_until_future_complete(self, send_goal_future)
+        goal_handle = send_goal_future.result()
+        
+        if not goal_handle.accepted:
+            self.get_logger().error("Navigation goal rejected.")
+            return
+        
+        self.get_logger().info("Navigation goal accepted, waiting for result...")
+        get_result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, get_result_future)
+        result = get_result_future.result()
+        
+        if result.status == 4:  # STATUS_SUCCEEDED
+            self.get_logger().info("Goal succeeded!")
+        else:
+            self.get_logger().warn(f"Goal failed with status code: {result.status}")
         
     def stop_capture(self):
         self.enable_capture(False)

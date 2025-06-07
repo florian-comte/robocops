@@ -30,7 +30,7 @@ def generate_launch_description():
 
     gazebo_params_file = os.path.join(get_package_share_directory('robocops_gazebo'), 'config', 'gz_bridge.yaml')
     rviz_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'rviz2_nav2_params.rviz')
-    nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params.yaml')
+    nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params_DWB.yaml')
     map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'test2_arena.yaml')
     remappings_nav = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 

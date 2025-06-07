@@ -138,7 +138,7 @@ class DuploControl(Node):
         
         # Activate detection
         self.activate_detection()
-        time.sleep(1.0)
+        time.sleep(3.0)
         self.deactivate_detection()
         
         # Get the closest Duplo

@@ -27,7 +27,6 @@ dai::Pipeline createPipeline()
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
     imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
     imu->setBatchReportThreshold(5);
-    imu->startIMUFirmwareUpdate(true);
     imu->setMaxBatchReports(20);
 
     imu->out.link(xoutImu->input);

@@ -18,10 +18,7 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_node',
         output='screen',
-        parameters=[
-            os.path.join(brain_pkg, 'config', 'ekf.yaml'),
-            {'use_sim_time': False}
-        ]
+        parameters=[os.path.join(get_package_share_directory("robocops_brain"), 'config', 'ekf.yaml')],
     )
 
     # Launch other subsystems

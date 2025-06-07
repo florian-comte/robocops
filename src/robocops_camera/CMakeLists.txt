@@ -72,8 +72,8 @@ macro(dai_add_node_ros2 node_name node_src)
                         depthai::core)
 endmacro()
 
-dai_add_node_ros2(duplos src/duplos.cpp)
-dai_add_node_ros2(imu src/imu.cpp)
+dai_add_node_ros2(robocops_camera_duplos src/duplos.cpp)
+dai_add_node_ros2(robocops_camera_imu src/imu.cpp)
 
 install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
 #install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
@@ -81,8 +81,8 @@ install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
 FILES_MATCHING PATTERN "*.py")
 
 install(TARGETS
-        duplos
-        imu
+        robocops_camera_duplos
+        robocops_camera_imu
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

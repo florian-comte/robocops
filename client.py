@@ -9,8 +9,6 @@ from rclpy.executors import MultiThreadedExecutor
 import math
 import threading
 import time
-import tf_transformations
-
 
 class DuploControl(Node):
     def __init__(self):
@@ -116,18 +114,12 @@ class DuploControl(Node):
         goal_msg = NavigateToPose.Goal()
 
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'map'
+        goal_pose.header.frame_id = 'camera'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
 
-        goal_pose.pose.position.x = x
-        goal_pose.pose.position.y = y
-
-        # Convert yaw to quaternion
-        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
-        goal_pose.pose.orientation.x = q[0]
-        goal_pose.pose.orientation.y = q[1]
-        goal_pose.pose.orientation.z = q[2]
-        goal_pose.pose.orientation.w = q[3]
+        goal_pose.pose.pose.x = x
+        goal_pose.pose.pose.y = y
+        goal_pose.pose.orientation.w = yaw
 
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")

@@ -139,7 +139,7 @@ class DuploControl(Node):
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'base_link'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
-        goal_pose.pose.position.x = x + 0.05
+        goal_pose.pose.position.x = x + 0.20
         goal_pose.pose.position.y = y
         goal_pose.pose.orientation.w = yaw
 

@@ -141,7 +141,7 @@ class DuploControl(Node):
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.w = 1
+        goal_pose.pose.orientation.w = 1.0
 
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")

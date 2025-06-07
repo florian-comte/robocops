@@ -16,7 +16,7 @@ def generate_launch_description():
     # Declare shared arguments if needed (optional)
     nn_name_arg = DeclareLaunchArgument(
         'nn_name',
-        default_value='yolo6.blob',
+        default_value='yolo11n_3.blob',
         description='Neural network blob filename'
     )
 

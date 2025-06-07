@@ -137,7 +137,7 @@ class DuploControl(Node):
         goal_msg = NavigateToPose.Goal()
 
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'camera'
+        goal_pose.header.frame_id = 'base_link'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y

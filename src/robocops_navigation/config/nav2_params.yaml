@@ -268,7 +268,7 @@ global_costmap:
 
 map_server:
   ros__parameters:
-    yaml_filename: "/home/robocops/robocops/src/robocops_navigation/maps/mapv1.yaml"
+    yaml_filename: "/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml"
 
 map_saver:
   ros__parameters:

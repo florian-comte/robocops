@@ -2,41 +2,49 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import SetBool, Empty
 from robocops_msgs.msg import DuploArray, Duplo
-from geometry_msgs.msg import TwistStamped, Twist
+from geometry_msgs.msg import PoseStamped, Point
+from nav2_msgs.action import NavigateToPose
+from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
 import math
 import threading
+import time
+import tf_transformations
 
 
 class DuploControl(Node):
     def __init__(self):
         super().__init__('duplo_control')
 
+        # Service clients
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
 
+        # Subscriber
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
-            '/duplos', 
+            '/duplos',
             self.duplo_callback,
             10
         )
 
-        self.cmd_vel_publisher = self.create_publisher(TwistStamped, '/cmd_vel_smoothed', 10)
+        # Action client
+        self.nav_to_pose_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
 
+        # Internal state
         self.duplos_list = []
-        
-        self.rotation_active = False
-        self.rotation_timer = None
-        
+
+        # Wait for services
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('activate_detection service not available, waiting again...')
-        
+            self.get_logger().info('Waiting for activate_detection service...')
         while not self.clear_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('clear_duplos service not available, waiting again...')
-        
-        self.get_logger().info('Services are now available.')
-        
+            self.get_logger().info('Waiting for clear_duplos service...')
+        while not self.nav_to_pose_client.wait_for_server(timeout_sec=1.0):
+            self.get_logger().info('Waiting for navigate_to_pose action server...')
+
+        self.get_logger().info('All services and action servers available.')
+
+        # Launch CLI thread
         self.menu_thread = threading.Thread(target=self.run_menu, daemon=True)
         self.menu_thread.start()
 
@@ -62,21 +70,21 @@ class DuploControl(Node):
 
     def read_duplos(self):
         if not self.duplos_list:
-            self.get_logger().info("No duplos received yet.")
+            self.get_logger().info("No Duplos received yet.")
         else:
-            self.get_logger().info(f"Current duplos: {len(self.duplos_list)}")
+            self.get_logger().info(f"Current Duplos: {len(self.duplos_list)}")
             for duplo in self.duplos_list:
-                self.get_logger().info(f"Duplo ID: {duplo.id}, Position: {duplo.position}, Score: {duplo.score}")
+                pos = duplo.position
+                self.get_logger().info(f"Duplo ID: {duplo.id}, Position: x={pos.x:.2f}, y={pos.y:.2f}, Score: {duplo.score:.2f}")
 
     def run_menu(self):
-        """ This method handles user input in a separate thread """
         while rclpy.ok():
-            print("\nDuplo Control Menu:")
+            print("\n--- Duplo Control Menu ---")
             print("1. Start detection")
             print("2. Stop detection")
             print("3. Clear duplos")
             print("4. Read duplos")
-            print("5. Toggle Rotation")
+            print("5. Search and grab closest Duplo")
             print("6. Exit")
             choice = input("Enter your choice (1-6): ")
 
@@ -89,55 +97,96 @@ class DuploControl(Node):
             elif choice == '4':
                 self.read_duplos()
             elif choice == '5':
-                self.toggle_rotation()
+                self.search_and_grab()
             elif choice == '6':
                 self.get_logger().info("Exiting...")
-                self.stop_robot()  # Stop robot before shutdown
                 break
             else:
-                print("Invalid option. Please choose between 1-6.")
+                print("Invalid option. Please choose between 1 and 6.")
 
-    def toggle_rotation(self):
-        """ Toggle rotation on/off """
-        self.rotation_active = not self.rotation_active
-        if self.rotation_active:
-            self.get_logger().info("Rotation started.")
-            self.rotation_timer = self.create_timer(0.1, self.rotate_robot)
+    def get_closest_duplo(self):
+        if not self.duplos_list:
+            return None
+        return min(self.duplos_list, key=lambda d: self.distance_to_point(d.position))
+
+    def distance_to_point(self, point: Point):
+        return math.sqrt(point.x ** 2 + point.y ** 2)
+
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0):
+        goal_msg = NavigateToPose.Goal()
+
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
+        goal_pose.header.stamp = self.get_clock().now().to_msg()
+
+        goal_pose.pose.position.x = x
+        goal_pose.pose.position.y = y
+
+        # Convert yaw to quaternion
+        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
+        goal_pose.pose.orientation.x = q[0]
+        goal_pose.pose.orientation.y = q[1]
+        goal_pose.pose.orientation.z = q[2]
+        goal_pose.pose.orientation.w = q[3]
+
+        goal_msg.pose = goal_pose
+        self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
+
+        send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
+        rclpy.spin_until_future_complete(self, send_goal_future)
+
+        goal_handle = send_goal_future.result()
+        if not goal_handle.accepted:
+            self.get_logger().error("Navigation goal rejected.")
+            return
+
+        self.get_logger().info("Navigation goal accepted, waiting for result...")
+        get_result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, get_result_future)
+        result = get_result_future.result()
+
+        if result.status == 4:  # STATUS_SUCCEEDED
+            self.get_logger().info("Goal succeeded!")
         else:
-            self.get_logger().info("Rotation stopped.")
-            self.stop_robot()
-            if self.rotation_timer:
-                self.rotation_timer.cancel()
-                self.rotation_timer = None
+            self.get_logger().warn(f"Goal failed with status code: {result.status}")
 
-    def stop_robot(self):
-        """ Stop the robot's motion (in case of manual stop) """
-        stop_msg = TwistStamped()
-        self.cmd_vel_publisher.publish(stop_msg)
+    def search_and_grab(self):
+        self.get_logger().info("Starting search and grab sequence.")
 
-    def rotate_robot(self):
-        rotation_speed = 0.3
-        twist = TwistStamped()
-        
-        # Using the correct attribute path for TwistStamped
-        twist.twist.angular.z = rotation_speed
-        
-        # Publish the twist message to rotate
-        self.cmd_vel_publisher.publish(twist)
+        self.activate_detection()
+        time.sleep(1.0)  # Allow time for detection
+        self.deactivate_detection()
+
+        closest_duplo = self.get_closest_duplo()
+        if not closest_duplo:
+            self.get_logger().info("No Duplos found.")
+            return
+
+        pos = closest_duplo.position
+        self.get_logger().info(
+            f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
+        )
+
+        self.send_navigation_goal(pos.x, pos.y)
+
+        # Simulated grab
+        self.get_logger().info(f"Simulated grab: Duplo ID {closest_duplo.id}")
+        self.clear_duplos()
 
 
 def main(args=None):
     rclpy.init(args=args)
-
-    duplo_control_node = DuploControl()
-
+    node = DuploControl()
     executor = MultiThreadedExecutor()
-    executor.add_node(duplo_control_node)
+    executor.add_node(node)
 
-    while rclpy.ok():
-        executor.spin_once()
+    try:
+        while rclpy.ok():
+            executor.spin_once()
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutting down due to keyboard interrupt.")
 
-    duplo_control_node.destroy_node()
+    node.destroy_node()
     rclpy.shutdown()
 
 

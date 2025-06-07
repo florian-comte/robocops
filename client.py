@@ -138,7 +138,7 @@ class DuploControl(Node):
         
         # Activate detection
         self.activate_detection()
-        time.sleep(3.0)
+        time.sleep(1.0)
         self.deactivate_detection()
         
         # Get the closest Duplo
@@ -169,14 +169,14 @@ class DuploControl(Node):
         # Wait for the robot to reach the target
         time.sleep(5)
         
-        # Disable capture after reaching
+        # Disable capture after grabbing
         self.enable_capture(False)
         
         # Clear Duplos after grabbing
         self.clear_duplos()
 
     def calculate_angle_to_target(self, target_x, target_y):
-        # Assuming robot's current position is (0,0) and orientation is along the x-axis.
+        # Calculate the angle to the target (yaw)
         dx = target_x
         dy = target_y
         angle = math.atan2(dy, dx)
@@ -189,10 +189,10 @@ class DuploControl(Node):
         goal_pose.header.stamp = self.get_clock().now().to_msg()
 
         if is_rotation:
-            # Only set orientation for rotation goal
-            goal_pose.pose.orientation.z = math.sin(yaw / 2)
-            goal_pose.pose.orientation.w = math.cos(yaw / 2)
-            self.get_logger().info(f"Sending rotation goal: yaw={yaw:.2f}")
+            # Convert yaw to quaternion
+            quaternion = self.yaw_to_quaternion(yaw)
+            goal_pose.pose.orientation = quaternion
+            self.get_logger().info(f"Sending rotation goal: yaw={yaw:.2f} radians")
         else:
             # Set position for normal navigation
             goal_pose.pose.position.x = x
@@ -218,6 +218,18 @@ class DuploControl(Node):
             self.get_logger().info("Goal succeeded!")
         else:
             self.get_logger().warn(f"Goal failed with status code: {result.status}")
+
+    def yaw_to_quaternion(self, yaw):
+        # Convert yaw to quaternion (only for 2D rotation around the z-axis)
+        q = [0.0, 0.0, 0.0, 1.0]  # [x, y, z, w]
+        q[2] = math.sin(yaw / 2)  # sin(yaw/2)
+        q[3] = math.cos(yaw / 2)  # cos(yaw/2)
+        quaternion = PoseStamped().pose.orientation
+        quaternion.x = q[0]
+        quaternion.y = q[1]
+        quaternion.z = q[2]
+        quaternion.w = q[3]
+        return quaternion
         
     def stop_capture(self):
         self.enable_capture(False)

@@ -238,7 +238,7 @@ namespace robocops_control
         &slope_down_active_,
         &emergency_active_,
         &nb_captured_duplos_,
-        true);
+        false);
 
     return hardware_interface::return_type::OK;
   }

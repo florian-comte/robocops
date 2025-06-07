@@ -8,7 +8,7 @@ import os
 def generate_launch_description():
     # Get paths to each package
     control_pkg = get_package_share_directory('robocops_control')
-    camera_pkg = get_package_share_directory('robocops_camera')
+    #camera_pkg = get_package_share_directory('robocops_camera')
     nav_pkg = get_package_share_directory('robocops_navigation')
     brain_pkg = get_package_share_directory('robocops_brain')
 
@@ -31,11 +31,11 @@ def generate_launch_description():
         )
     )
 
-    camera_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(camera_pkg, 'launch', 'camera.launch.py')
-        )
-    )
+    # camera_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(camera_pkg, 'launch', 'camera.launch.py')
+    #     )
+    # )
 
     lidar_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -58,7 +58,7 @@ def generate_launch_description():
     return LaunchDescription([
         robot_localization_node,
         diffbot_launch,
-        camera_launch,
+        # camera_launch,
         lidar_launch,
         delayed_nav2
     ])

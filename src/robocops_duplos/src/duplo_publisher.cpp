@@ -37,7 +37,7 @@
 
 #define BUFFER_SIZE 2000
 #define TOLERANCE_CM 5
-#define MIN_COUNT 20
+#define MIN_COUNT 5
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)

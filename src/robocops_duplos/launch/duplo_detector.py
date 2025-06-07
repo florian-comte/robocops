@@ -10,7 +10,7 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    nn_name             = LaunchConfiguration('nn_name', default="yolo11n_3.blob")
+    nn_name             = LaunchConfiguration('nn_name', default="yolo6.blob")
     resource_base_folder = LaunchConfiguration('resource_base_folder', default=
                                                os.path.join(get_package_share_directory('robocops_duplos'), 'resources'))
     rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')

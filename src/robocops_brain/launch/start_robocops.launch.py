@@ -8,7 +8,7 @@ import os
 def generate_launch_description():
     # Get paths to each package
     control_pkg = get_package_share_directory('robocops_control')
-    #camera_pkg = get_package_share_directory('robocops_camera')
+    camera_pkg = get_package_share_directory('robocops_camera')
     nav_pkg = get_package_share_directory('robocops_navigation')
     brain_pkg = get_package_share_directory('robocops_brain')
 
@@ -18,7 +18,7 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_node',
         output='screen',
-        parameters=[os.path.join(get_package_share_directory("robocops_brain"), 'config', 'ekf.yaml')],
+        parameters=[os.path.join(brain_pkg, 'config', 'ekf.yaml')],
     )
 
     # Launch other subsystems

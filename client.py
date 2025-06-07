@@ -162,7 +162,7 @@ class DuploControl(Node):
             goal_pose.pose.orientation.w = yaw
         
         goal_msg.pose = goal_pose
-        self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
+        self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, w={goal_pose.pose.orientation.w:.2f}")
 
         send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self, send_goal_future)

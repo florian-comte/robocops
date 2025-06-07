@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 
                 try
                 {
-                    map_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
+                    map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
                 }
                 catch (tf2::TransformException &ex)
                 {
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                new_duplo.position = camera_point;
+                new_duplo.position = map_point;
                 new_duplo.score = det.confidence;
                 new_duplo.count = 1;
                 new_duplo.id = -1;

@@ -73,16 +73,18 @@ def generate_launch_description():
     # )
 
     robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "diffbot_base_controller",
-            "--param-file",
-            robot_controllers,
-            "--controller-ros-args",
-            "-r /diffbot_base_controller/cmd_vel:=/cmd_vel_smoothed",
-        ],
-    )
+    package="controller_manager",
+    executable="spawner",
+    arguments=[
+        "diffbot_base_controller",
+        "--param-file",
+        robot_controllers,
+        "--controller-ros-args",
+        "-r", "/diffbot_base_controller/cmd_vel:=/cmd_vel_smoothed",
+        "-r", "/diffbot_base_controller/odom:=/odom",
+    ],
+)
+
     
 
     gpio_controller_spawner = Node(

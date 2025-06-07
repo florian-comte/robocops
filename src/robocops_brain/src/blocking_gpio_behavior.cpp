@@ -1,6 +1,9 @@
 #include "blocking_gpio_behavior.h"
+#include "rclcpp/rclcpp.hpp"
 
-BlockingGPIO::BlockingGPIO(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node)
+BlockingGPIO::BlockingGPIO(const std::string &name,
+                           const BT::NodeConfiguration &config,
+                           rclcpp::Node::SharedPtr node)
     : BT::StatefulActionNode(name, config), node_(node)
 {
     gpio_pub_ = node_->create_publisher<control_msgs::msg::DynamicInterfaceGroupValues>(
@@ -27,8 +30,14 @@ BT::NodeStatus BlockingGPIO::onStart()
     getInput("timeout", timeout_sec_);
     getInput("pulse_duration", pulse_duration_);
 
+    RCLCPP_INFO(node_->get_logger(), "Starting BlockingGPIO for [%s] interface [%s]",
+                gpio_name_.c_str(), interface_name_.c_str());
+    RCLCPP_INFO(node_->get_logger(), "Pulse duration: %.2f s, Timeout: %.2f s",
+                pulse_duration_, timeout_sec_);
+
     if (pulse_duration_ > timeout_sec_)
     {
+        RCLCPP_ERROR(node_->get_logger(), "Pulse duration exceeds timeout. Aborting.");
         return BT::NodeStatus::FAILURE;
     }
 
@@ -42,22 +51,24 @@ BT::NodeStatus BlockingGPIO::onStart()
 
 BT::NodeStatus BlockingGPIO::onRunning()
 {
-
     auto now = node_->get_clock()->now();
 
     if ((now - start_time_).seconds() > pulse_duration_ && !already_pulsed)
     {
+        RCLCPP_INFO(node_->get_logger(), "Pulse duration exceeded. Sending OFF command.");
         send_gpio_command(false);
         already_pulsed = true;
     }
 
     if ((now - start_time_).seconds() > timeout_sec_)
     {
+        RCLCPP_WARN(node_->get_logger(), "Timeout exceeded waiting for GPIO to deactivate.");
         return BT::NodeStatus::FAILURE;
     }
 
     if (!gpio_active_)
     {
+        RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Returning SUCCESS.", gpio_name_.c_str());
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -66,6 +77,7 @@ BT::NodeStatus BlockingGPIO::onRunning()
 
 void BlockingGPIO::onHalted()
 {
+    RCLCPP_WARN(node_->get_logger(), "BlockingGPIO halted.");
 }
 
 void BlockingGPIO::send_gpio_command(bool active)
@@ -78,6 +90,9 @@ void BlockingGPIO::send_gpio_command(bool active)
     iface.values.push_back(active ? 1.0 : 0.0);
 
     msg.interface_values.push_back(iface);
+
+    RCLCPP_INFO(node_->get_logger(), "Sending GPIO command: %s", active ? "ON" : "OFF");
+
     gpio_pub_->publish(msg);
 }
 
@@ -93,6 +108,9 @@ void BlockingGPIO::gpio_state_callback(const control_msgs::msg::DynamicInterface
                 {
                     double val = msg->interface_values[i].values[j];
                     gpio_active_ = (val > 0.5);
+
+                    RCLCPP_DEBUG(node_->get_logger(), "GPIO state received: [%s] -> [%s] = %.2f",
+                                 gpio_name_.c_str(), interface_name_.c_str(), val);
                     return;
                 }
             }

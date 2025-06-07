@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import SetBool, Empty
 from robocops_msgs.msg import DuploArray, Duplo
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped, Twist
 from rclpy.executors import MultiThreadedExecutor
 import math
 import threading
@@ -118,8 +118,11 @@ class DuploControl(Node):
     def rotate_robot(self):
         rotation_speed = 0.5
         twist = TwistStamped()
-        twist.angular.z = rotation_speed
         
+        # Using the correct attribute path for TwistStamped
+        twist.twist.angular.z = rotation_speed
+        
+        # Publish the twist message to rotate
         self.cmd_vel_publisher.publish(twist)
 
 

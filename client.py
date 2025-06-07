@@ -145,6 +145,7 @@ class DuploControl(Node):
             x = q[1]
             y = q[2]
             z = q[3]
+            print(q)
             goal_pose = PoseStamped()
             goal_pose.header.frame_id = 'base_link'
             goal_pose.header.stamp = self.get_clock().now().to_msg()

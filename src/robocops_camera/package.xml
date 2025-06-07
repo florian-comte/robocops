@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>robocops_camera</name>
-  <version>0.0.1</version>
-  <description>yo</description>
-  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <version>1.0.0</version>
+  <description>Package used by the team RocoCops (Robot Competition EPFL 2025) for the camera.</description>
 
-  <license>MIT</license>
+  <license>Apache-2.0</license>
+  <maintainer email="florian.comte@epfl.ch">Florian Comte</maintainer>
 
   <!-- Dependencies -->
   <depend>rclpy</depend>

@@ -1,15 +1,19 @@
-import os
-import launch
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, LogInfo, Node
-from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
 
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='robocops_duplos',   
-            executable='robocops_imu', 
-            name='robocops_imu', 
-            output='screen',           
-                   )
+            package='robocops_camera',
+            executable='robocops_camera_imu',
+            name='robocops_camera_imu',
+            parameters=[
+                {'imu_mode': 1},
+                {'linear_accel_covariance': 0.02},
+                {'angular_vel_covariance': 0.0},
+                {'enable_ros_base_time_update': True}
+            ],
+            output='screen'
+        )
     ])

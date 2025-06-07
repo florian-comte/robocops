@@ -7,7 +7,6 @@ from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
 from control_msgs.msg import DynamicInterfaceGroupValues, InterfaceValue
-from tf.transformations import quaternion_from_euler
 
 import math
 import threading
@@ -178,6 +177,27 @@ class DuploControl(Node):
             self.get_logger().info("Goal succeeded!")
         else:
             self.get_logger().warn(f"Goal failed with status code: {result.status}")
+            
+    def quaternion_from_euler(roll, pitch, yaw):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        quat = [w, x, y, z]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+        q[0] = cy * cp * cr + sy * sp * sr
+        q[1] = cy * cp * sr - sy * sp * cr
+        q[2] = sy * cp * sr + cy * sp * cr
+        q[3] = sy * cp * cr - cy * sp * sr
+
+        return q
 
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")

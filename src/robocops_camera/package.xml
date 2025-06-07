@@ -13,6 +13,18 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>depthai</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>depthai</depend>
+  <depend>depthai_ros_msgs</depend>
+  <depend>depthai_bridge</depend>
+  <depend>stereo_msgs</depend>
+  <depend>vision_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>robocops_msgs</depend>
+  <depend>rclcpp</depend>
+
 
   <!-- Build dependencies -->
   <buildtool_depend>ament_cmake</buildtool_depend>

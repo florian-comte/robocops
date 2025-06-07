@@ -1,0 +1,416 @@
+amcl:
+  ros__parameters:
+    alpha1: 0.2 # odom process rotation noise from rotation
+    alpha2: 0.2 # odom process rotation noise from translation 
+    alpha3: 0.2 # odom process translation noise from translation
+    alpha4: 0.2 # odom process translation noise from rotation
+    alpha5: 0.2 # for Omni models only [NO NEED]
+    base_frame_id: "base_link"
+    beam_skip_distance: 0.5 # ignore beams that are further than value from closest occupied cell 
+    beam_skip_error_threshold: 0.9 # percentage of beams to force map update when 90% bad convergence
+    beam_skip_threshold: 0.3 # percentage of beams required to match map, if not skip
+    do_beamskip: false # apply beam skipping or not
+    global_frame_id: "map"
+    lambda_short: 0.1 # exponential decay for z_short
+    laser_likelihood_max_dist: 2.0 # max distance to do obstacle inflation on map
+    laser_max_range: 100.0 # max scan range lidar (-1 -> sets the reported range)
+    laser_min_range: -1.0 # min scan range lidar
+    laser_model_type: "likelihood_field"
+    max_beams: 60 # number of beams in each scan to be used to update filter
+    max_particles: 2000 # max allowed number of particles
+    min_particles: 500 # min allowed number of particles
+    odom_frame_id: "odom"
+    pf_err: 0.05 # particle filter population error
+    pf_z: 0.99 # particle filter population density (keep as is...)
+    recovery_alpha_fast: 0.0 # fast: used in deciding when to recover by adding random poses [use 0.1 ?]
+    recovery_alpha_slow: 0.0 # slow: used in deciding when to recover by adding random poses [use 0.001 ?]
+    resample_interval: 1 # number of filter updates required before resampling
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5 # max rate (Hz) at which to store the last estimated pose to the parameter server
+    sigma_hit: 0.2 # stand dev for Gaussian model used in z_hit
+    tf_broadcast: true # whether to publish TF between global_frame and odom
+    transform_tolerance: 0.5 # timing tolerance to keep transform valid in future [use 1.0 ?]
+    update_min_a: 0.2 # rotational movement required to update filter in radians
+    update_min_d: 0.25 # translational movement required to update filter in meters
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: /scan_filtered
+    map_topic: map
+    set_initial_pose: true # set the initial pose to be used by nav2
+    always_reset_initial_pose: false # set to False to always get latest pose estimate
+    first_map_only: false # allows AMCL to accept new map on the topic more than once
+    initial_pose: # initial pose X, Y, Z, Yaw in meters and radians of base_frame in global_frame
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: -2.1
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    transform_tolerance: 0.5 # timing tolerance for TF in seconds
+    filter_duration: 0.3 # duration over which velocity should be smoothed
+    default_nav_to_pose_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
+    default_nav_through_poses_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    always_reload_bt_xml: false # load requested BT xml, regardless of actual BT
+    goal_blackboard_id: goal # default for BT xml
+    goals_blackboard_id: goals # default for BT xml
+    path_blackboard_id: path # default for BT xml
+    navigators: ['navigate_to_pose', 'navigate_through_poses'] # plugins for navigation
+    navigate_to_pose: # navigate to position plugin
+      plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
+      enable_groot_monitoring: false
+      groot_server_port: 1667
+    navigate_through_poses: # Navigate through poses plugin
+      plugin: "nav2_bt_navigator::NavigateThroughPosesNavigator"
+      enable_groot_monitoring: false
+      groot_server_port: 1669
+    error_code_name_prefixes: # error code names used for debug purposes
+      - assisted_teleop
+      - backup
+      - compute_path
+      - dock_robot
+      - drive_on_heading
+      - follow_path
+      - nav_thru_poses
+      - nav_to_pose
+      - spin
+      - route
+      - undock_robot
+      - wait
+
+docking_server:
+  ros__parameters:
+    dock_plugins: ['nova_carter_dock']
+    nova_carter_dock:
+      plugin: 'opennav_docking::SimpleChargingDock'
+    docks: ['home_dock','flex_dock1', 'flex_dock2']
+    home_dock:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [0.0, 0.0, 0.0]
+    flex_dock1:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [10.0, 10.0, 0.0]
+    flex_dock2:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [30.0, 30.0, 0.0]
+    enable_stamped_cmd_vel: true
+
+controller_server:
+  ros__parameters:
+    controller_frequency: 10.0 # frequency to run controller and call required plugins for navigation [20 ?]
+    costmap_update_timeout: 0.3 # timeout value (in seconds) for full costmap update before computing control
+    publish_zero_velocity: true # publish zero velocity when goal is reached
+    min_x_velocity_threshold: 0.0001 # filter velocities (= 0) that are below min value ignored
+    min_y_velocity_threshold: 0.0001 # filter velocities (= 0) that are below min value ignored
+    min_theta_velocity_threshold: 0.001 # filter velocities (= 0) that are below min value 
+    failure_tolerance: 0.3 # max duration (seconds) controller plugin can fail [-1: inf, 0: disable]
+    # speed_limit_topic: "speed_limit" # to subscribe topic that publishes speed limits (like speed filters)
+    odom_topic: "odom"
+    enable_stamped_cmd_vel: false # true: uses TwistStamped, false: uses Twist
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["goal_checker"] # could use StoppedGoalChecker for goal reached and stopped
+    controller_plugins: ["FollowPath"]
+    progress_checker: # plugin to check progress made by the robot
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.1 # min movement to consider progress being done
+      movement_time_allowance: 10.0 # max amount time to move required_movement_radius
+    goal_checker: # plugin to check if goal is reached by robot
+      plugin: "nav2_controller::SimpleGoalChecker"
+      stateful: true # after rotating goal orientation, whether to check for XY position tolerance [false ?]
+      xy_goal_tolerance: 0.15 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.15 # tolerance to meet goal completion (in radians)
+    FollowPath: # controller plugin
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: false # publish debug info (on what topic?!)
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.3
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.3
+      min_speed_theta: 0.0
+      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
+      acc_lim_x: 3.0
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 0
+      vtheta_samples: 30
+      sim_time: 1.5
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2 # timing tolerance to keep TF valid
+      xy_goal_tolerance: 0.05 # goal tolerance XY ? (no documentation)
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: true # stop evaluating score when best score is found
+      stateful: true
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"] # give trajectory a score/grade to decide command velocities
+      BaseObstacle.scale: 0.02 # where path passes over costmap
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1 # how alligned trajectory is compared to the one provided by global planner
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1 # how well alligned with goal pose
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0 # how close is to goal pose
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0 # allow robot to rotate to goal orientation when sufficiently close to goal position
+      RotateToGoal.lookahead_time: -1.0
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 5.0 # costmap update frequency [3.0 ?]
+      publish_frequency: 2.0 # rate of publishing costmap to topic
+      global_frame: odom
+      robot_base_frame: base_link
+      rolling_window: true # whether costmap should roll with base_frame
+      width: 3 # local costmap width
+      height: 3 # local costmap height
+      resolution: 0.05 # resolution of 1 pixel in meters
+      robot_radius: 0.3 # radius of circular robot. if SET -> collision checking will be circular
+      # footprint_padding: 0.01 # inflation layer around footprint
+      plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.6 # inflation radius
+        cost_scaling_factor: 4.0 # exponential decay factor through infaltion radius
+        inflate_unknown: false # inflate unknown cells
+        inflate_around_unknown: false
+      denoise_layer: # denoise layer for lidar in costmap
+        plugin: "nav2_costmap_2d::DenoiseLayer"
+        enabled: true
+        minimal_group_size: 2 # number of neighbours that get deleted
+        group_connectivity_type: 8 # 4 or 8 depending on desired distance measurement
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan_filtered
+          max_obstacle_height: 2.0
+          clearing: true # source ray trace clear in costmap
+          marking: true # whether source marks in the costmap
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0 # max range raytrace clear obstacles from costmap 
+          raytrace_min_range: 0.0
+          obstacle_max_range: 3.0 # max range to mark obstacles in costmap
+          obstacle_min_range: 0.0
+          inf_is_valid: true # whether infinite value is valid [false ?]
+      always_send_full_costmap: true # whether to send full cost map every update, rather than updates
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0 # costmap update frequency
+      publish_frequency: 1.0 # rate of publishing costmap to topic
+      global_frame: map
+      robot_base_frame: base_link
+      transform_tolerance: 1.0 # timing tolerance for TF future
+      robot_radius: 0.3 # radius of circular robot. if SET -> collision checking will be circular
+      resolution: 0.05 # resolution of 1 pixel in meters
+      track_unknown_space: true # false: consider unknown cell as free space
+      footprint_padding: 0.02 # inflation layer around footprint
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan_filtered
+          max_obstacle_height: 2.0
+          clearing: true # source ray trace clear in costmap
+          marking: true # whether source marks in the costmap
+          data_type: "LaserScan"
+          raytrace_max_range: 8.0 # max range raytrace clear obstacles from costmap 
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5 # max range to mark obstacles in costmap
+          obstacle_min_range: 0.0
+          inf_is_valid: true # whether infinite value is valid [false ?]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+        transform_tolerance: 0.0 # timing tolerance for TF 
+        subscribe_to_updates: true # subscribe to map udpates
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.6 # inflation radius
+        cost_scaling_factor: 4.0 # exponential decay factor through infaltion radius
+        inflate_unknown: false # inflate unknown cells
+        inflate_around_unknown: false
+      always_send_full_costmap: true # whether to send full cost map every update, rather than updates
+
+map_server:
+  ros__parameters:
+    yaml_filename: "/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml"
+
+map_saver:
+  ros__parameters:
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 10.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner::NavfnPlanner"
+      tolerance: 1.0
+      use_astar: false
+      allow_unknown: true
+
+behavior_server:
+  ros__parameters:
+    local_costmap_topic: local_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
+    spin:
+      plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
+    backup:
+      plugin: "nav2_behaviors::BackUp" # In Iron and older versions, "/" was used instead of "::"
+    drive_on_heading:
+      plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
+    wait:
+      plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
+    assisted_teleop:
+      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_link
+    transform_timeout: 0.1
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+    enable_stamped_cmd_vel: true
+
+waypoint_follower:
+  ros__parameters:
+    loop_rate: 20
+    stop_on_failure: false
+    waypoint_task_executor_plugin: "wait_at_waypoint"
+    wait_at_waypoint:
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+      enabled: true
+      waypoint_pause_duration: 0
+
+collision_monitor:
+  ros__parameters:
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    cmd_vel_in_topic: "cmd_vel_smoothed"
+    cmd_vel_out_topic: "cmd_vel"
+    state_topic: "collision_monitor_state"
+    transform_tolerance: 0.5
+    source_timeout: 5.0
+    base_shift_correction: true
+    stop_pub_timeout: 2.0
+    enable_stamped_cmd_vel: true
+    use_realtime_priority: false
+    polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
+    PolygonStop:
+      type: "circle"
+      radius: 0.1
+      action_type: "stop"
+      min_points: 4
+      visualize: true
+      polygon_pub_topic: "polygon_stop"
+      enabled: true
+    PolygonSlow:
+      type: "polygon"
+      points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
+      action_type: "slowdown"
+      min_points: 4
+      slowdown_ratio: 0.3
+      visualize: true
+      polygon_pub_topic: "polygon_slowdown"
+      enabled: true
+    PolygonLimit:
+      type: "polygon"
+      points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
+      action_type: "limit"
+      min_points: 4
+      linear_limit: 0.4
+      angular_limit: 0.5
+      visualize: true
+      polygon_pub_topic: "polygon_limit"
+      enabled: true
+    FootprintApproach:
+      type: "polygon"
+      action_type: "approach"
+      footprint_topic: "/local_costmap/published_footprint"
+      time_before_collision: 2.0
+      simulation_time_step: 0.02
+      min_points: 6
+      visualize: False
+      enabled: true
+    VelocityPolygonStop:
+      type: "velocity_polygon"
+      action_type: "stop"
+      min_points: 6
+      visualize: true
+      enabled: False
+      polygon_pub_topic: "velocity_polygon_stop"
+      velocity_polygons: ["rotation", "translation_forward", "translation_backward", "stopped"]
+      holonomic: false
+      rotation:
+        points: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
+        linear_min: 0.0
+        linear_max: 0.05
+        theta_min: -1.0
+        theta_max: 1.0
+      translation_forward:
+        points: "[[0.35, 0.3], [0.35, -0.3], [-0.2, -0.3], [-0.2, 0.3]]"
+        linear_min: 0.0
+        linear_max: 1.0
+        theta_min: -1.0
+        theta_max: 1.0
+      translation_backward:
+        points: "[[0.2, 0.3], [0.2, -0.3], [-0.35, -0.3], [-0.35, 0.3]]"
+        linear_min: -1.0
+        linear_max: 0.0
+        theta_min: -1.0
+        theta_max: 1.0
+      stopped:
+        points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
+        linear_min: -1.0
+        linear_max: 1.0
+        theta_min: -1.0
+        theta_max: 1.0
+    observation_sources: ["scan"]
+    scan:
+      source_timeout: 0.2
+      type: "scan"
+      topic: "/scan_filtered"
+      enabled: true
+
+velocity_smoother:
+  ros__parameters:
+    smoothing_frequency: 20.0
+    scale_velocities: false
+    feedback: "OPEN_LOOP"
+    max_velocity: [0.5, 0.0, 2.5]
+    min_velocity: [-0.5, 0.0, -2.5]
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+    max_accel: [2.5, 0.0, 3.2]
+    max_decel: [-2.5, 0.0, -3.2]
+    odom_topic: "odom"
+    odom_duration: 0.1
+    use_realtime_priority: false
+    enable_stamped_cmd_vel: true

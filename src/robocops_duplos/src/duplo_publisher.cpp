@@ -240,7 +240,12 @@ int main(int argc, char **argv)
                     continue;
                 }
 
+                RCLCPP_INFO(node->get_logger(),
+                            "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                            map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
+
                 new_duplo.position = map_point;
+                // Print map point here
                 new_duplo.score = det.confidence;
                 new_duplo.count = 1;
                 new_duplo.id = -1;

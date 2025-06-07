@@ -133,11 +133,11 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0):
+    def send_navigation_goal(self, x: float, y: float, yaw: float = .0):
         goal_msg = NavigateToPose.Goal()
 
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'base_link'
+        goal_pose.header.frame_id = 'brushes'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
@@ -168,7 +168,7 @@ class DuploControl(Node):
         self.get_logger().info("Starting search and grab sequence.")
 
         self.activate_detection()
-        time.sleep(1.0)
+        time.sleep(2.0)
         self.deactivate_detection()
 
         closest_duplo = self.get_closest_duplo()

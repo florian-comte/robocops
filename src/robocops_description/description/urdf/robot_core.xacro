@@ -62,6 +62,14 @@
 
     <link name="base_footprint" />
 
+    <!-- Burshes -->
+    <joint name="brushes_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="brushes"/>
+        <origin xyz="0.20 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="brushes" />
     <!-- CHASSIS LINK -->
 
     <joint name="chassis_joint" type="fixed">

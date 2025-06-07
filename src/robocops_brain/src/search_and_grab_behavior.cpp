@@ -9,6 +9,10 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
     gpio_sub_ = node_->create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
         "/gpio_controller/state", 10,
         std::bind(&SearchAndGrab::gpio_state_callback, this, std::placeholders::_1));
+
+    detections_sub_ = node_->create_subscription<robocops_msgs::msg::DuploArray>(
+        "/", 10,
+        std::bind(&SearchAndGrab::detections_state_callback, this, std::placeholders::_1));
 }
 
 BT::PortsList SearchAndGrab::providedPorts()
@@ -61,5 +65,12 @@ void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfac
                 }
             }
         }
+    }
+}
+
+void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArray msg)
+{
+    for (size_t i = 0; i < msg.duplos.size(); ++i)
+    {
     }
 }

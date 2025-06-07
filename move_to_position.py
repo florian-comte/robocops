@@ -1,106 +1,65 @@
+#!/usr/bin/env python3
 
-from geometry_msgs.msg import PoseStamped
-from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
-import rclpy
-from rclpy.duration import Duration
+import cv2
+import depthai as dai
+import time
+import math
 
-"""
-Basic navigation demo to go to pose.
-"""
+# Create pipeline
+pipeline = dai.Pipeline()
 
+# Define sources and outputs
+imu = pipeline.create(dai.node.IMU)
+xlinkOut = pipeline.create(dai.node.XLinkOut)
 
-def main() -> None:
-    rclpy.init()
+xlinkOut.setStreamName("imu")
 
-    navigator = BasicNavigator()
+# enable ACCELEROMETER_RAW at 500 hz rate
+imu.enableIMUSensor(dai.IMUSensor.ACCELEROMETER_RAW, 500)
+# enable GYROSCOPE_RAW at 400 hz rate
+imu.enableIMUSensor(dai.IMUSensor.GYROSCOPE_RAW, 400)
+# it's recommended to set both setBatchReportThreshold and setMaxBatchReports to 20 when integrating in a pipeline with a lot of input/output connections
+# above this threshold packets will be sent in batch of X, if the host is not blocked and USB bandwidth is available
+imu.setBatchReportThreshold(1)
+# maximum number of IMU packets in a batch, if it's reached device will block sending until host can receive it
+# if lower or equal to batchReportThreshold then the sending is always blocking on device
+# useful to reduce device's CPU load  and number of lost packets, if CPU load is high on device side due to multiple nodes
+imu.setMaxBatchReports(10)
 
-    # Set our demo's initial pose
-    initial_pose = PoseStamped()
-    initial_pose.header.frame_id = 'map'
-    initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    initial_pose.pose.position.x = 0.0
-    initial_pose.pose.position.y = 0.0
-    initial_pose.pose.orientation.z = 0.0
-    initial_pose.pose.orientation.w = 1.0
-    navigator.setInitialPose(initial_pose)
+# Link plugins IMU -> XLINK
+imu.out.link(xlinkOut.input)
 
-    # Activate navigation, if not autostarted. This should be called after setInitialPose()
-    # or this will initialize at the origin of the map and update the costmap with bogus readings.
-    # If autostart, you should `waitUntilNav2Active()` instead.
-    # navigator.lifecycleStartup()
+# Pipeline is defined, now we can connect to the device
+with dai.Device(pipeline) as device:
 
-    # Wait for navigation to fully activate, since autostarting nav2
-    navigator.waitUntilNav2Active()
+    def timeDeltaToMilliS(delta) -> float:
+        return delta.total_seconds()*1000
 
-    # If desired, you can change or load the map as well
-    navigator.changeMap('/path/to/map.yaml')
+    # Output queue for imu bulk packets
+    imuQueue = device.getOutputQueue(name="imu", maxSize=50, blocking=False)
+    baseTs = None
+    while True:
+        imuData = imuQueue.get()  # blocking call, will wait until a new data has arrived
 
-    # You may use the navigator to clear or obtain costmaps
-    # navigator.clearAllCostmaps()  # also have clearLocalCostmap() and clearGlobalCostmap()
-    # global_costmap = navigator.getGlobalCostmap()
-    # local_costmap = navigator.getLocalCostmap()
+        imuPackets = imuData.packets
+        for imuPacket in imuPackets:
+            acceleroValues = imuPacket.acceleroMeter
+            gyroValues = imuPacket.gyroscope
 
-    # Go to our demos first goal pose
-    goal_pose = PoseStamped()
-    goal_pose.header.frame_id = 'map'
-    goal_pose.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose.pose.position.x = 17.86
-    goal_pose.pose.position.y = -0.77
-    goal_pose.pose.orientation.w = 1.0
-    goal_pose.pose.orientation.z = 0.0
+            acceleroTs = acceleroValues.getTimestampDevice()
+            gyroTs = gyroValues.getTimestampDevice()
+            if baseTs is None:
+                baseTs = acceleroTs if acceleroTs < gyroTs else gyroTs
+            acceleroTs = timeDeltaToMilliS(acceleroTs - baseTs)
+            gyroTs = timeDeltaToMilliS(gyroTs - baseTs)
 
-    # sanity check a valid path exists
-    # path = navigator.getPath(initial_pose, goal_pose)
+            imuF = "{:.06f}"
+            tsF  = "{:.03f}"
 
-    go_to_pose_task = navigator.goToPose(goal_pose)
+            print(f"Accelerometer timestamp: {tsF.format(acceleroTs)} ms")
+            print(f"Accelerometer [m/s^2]: x: {imuF.format(acceleroValues.x)} y: {imuF.format(acceleroValues.y)} z: {imuF.format(acceleroValues.z)}")
+            print(f"Gyroscope timestamp: {tsF.format(gyroTs)} ms")
+            print(f"Gyroscope [rad/s]: x: {imuF.format(gyroValues.x)} y: {imuF.format(gyroValues.y)} z: {imuF.format(gyroValues.z)} ")
 
-    i = 0
-    while not navigator.isTaskComplete(task=go_to_pose_task):
-        ################################################
-        #
-        # Implement some code here for your application!
-        #
-        ################################################
-
-        # Do something with the feedback
-        i = i + 1
-        feedback = navigator.getFeedback(task=go_to_pose_task)
-        if feedback and i % 5 == 0:
-            print(
-                'Estimated time of arrival: '
-                + '{:.0f}'.format(
-                    Duration.from_msg(feedback.estimated_time_remaining).nanoseconds
-                    / 1e9
-                )
-                + ' seconds.'
-            )
-
-            # Some navigation timeout to demo cancellation
-            if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
-                navigator.cancelTask()
-
-            # Some navigation request change to demo preemption
-            if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
-                goal_pose.pose.position.x = 0.0
-                goal_pose.pose.position.y = 0.0
-                go_to_pose_task = navigator.goToPose(goal_pose)
-
-    # Do something depending on the return code
-    result = navigator.getResult()
-    if result == TaskResult.SUCCEEDED:
-        print('Goal succeeded!')
-    elif result == TaskResult.CANCELED:
-        print('Goal was canceled!')
-    elif result == TaskResult.FAILED:
-        (error_code, error_msg) = navigator.getTaskError()
-        print('Goal failed!{error_code}:{error_msg}')
-    else:
-        print('Goal has an invalid return status!')
-
-    navigator.lifecycleShutdown()
-
-    exit(0)
-
-
-if __name__ == '__main__':
-    main()
+        if cv2.waitKey(1) == ord('q'):
+            break

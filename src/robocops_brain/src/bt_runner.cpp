@@ -1,5 +1,5 @@
 /*
- * Main behavior node for TurtleBot. 
+ * Main behavior node for TurtleBot.
  */
 
 #include <chrono>
@@ -10,6 +10,8 @@
 #include "behaviortree_cpp/bt_factory.h"
 #include "behaviortree_cpp/xml_parsing.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include <robocops_msgs/msg/duplo.hpp>
+#include <robocops_msgs/msg/duplo_array.hpp>
 
 #include "navigation_behaviors.h"
 #include "blocking_gpio_behavior.h"
@@ -62,24 +64,13 @@ public:
         blackboard->set<std::string>("locations_file", locations_file_);
 
         blackboard->set<int>("MAX_INVENTORY", 10);
-        blackboard->set<int>("MIN_TO_GO_ZONE_1", 1);
-        blackboard->set<int>("MIN_TO_GO_ZONE_2", 1);
-        blackboard->set<int>("MIN_TO_GO_ZONE_3", 2);
-        blackboard->set<int>("MIN_TO_GO_ZONE_4", 2);
-        blackboard->set<int>("TOTAL_ZONE_1", 15);
-        blackboard->set<int>("TOTAL_ZONE_2", 6);
-        blackboard->set<int>("TOTAL_ZONE_3", 6);
-        blackboard->set<int>("TOTAL_ZONE_4", 6);
+        blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{ 6, 6, 6, 6 });
+        blackboard->set<std::vector<int>>("TOTAL_ZONES", std::vector<int>{15, 6, 6, 6});
+
+        blackboard->set<std::vector<int>>("current_grapped_zones", std::vector<int>{ 0, 0, 0, 0 });
+        blackboard->set<std::vector<bool>>("never_timed_out_zones", std::vector<bool>{ true, true, true, true});
 
         blackboard->set<int>("current_inventory", 0);
-        blackboard->set<int>("current_grabbed_zone_1", 0);
-        blackboard->set<int>("current_grabbed_zone_2", 0);
-        blackboard->set<int>("current_grabbed_zone_3", 0);
-        blackboard->set<int>("current_grabbed_zone_4", 0);
-        blackboard->set<bool>("never_timed_out_zone_1", true);
-        blackboard->set<bool>("never_timed_out_zone_2", true);
-        blackboard->set<bool>("never_timed_out_zone_3", true);
-        blackboard->set<bool>("never_timed_out_zone_4", true);
         blackboard->set<bool>("never_timed_out_opening_door", true);
 
         blackboard->set<bool>("is_door_open", false);

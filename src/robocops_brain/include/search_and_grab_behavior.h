@@ -10,6 +10,9 @@
 #include <behaviortree_cpp/action_node.h>
 #include <behaviortree_cpp/behavior_tree.h>
 
+#include <robocops_msgs/msg/duplo_array.hpp>
+#include <robocops_msgs/msg/duplo.hpp>
+
 #include <chrono>
 #include <string>
 
@@ -26,10 +29,12 @@ public:
 
 private:
     void gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg);
+    void detections_state_callback(const robocops_msgs::msg::DuploArray msg);
 
     std::shared_ptr<rclcpp::Node> node_;
     rclcpp::Publisher<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr gpio_pub_;
     rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr gpio_sub_;
+    rclcpp::Subscription<robocops_msgs::msg::DuploArray>::SharedPtr detections_sub_;
 
     double timeout_sec_;
     rclcpp::Time start_time_;

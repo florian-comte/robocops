@@ -30,7 +30,7 @@ def generate_launch_description():
 
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(camera_pkg, 'launch', 'camera.launch.py')
+            os.path.join(camera_pkg, 'launch', 'duplos.launch.py')
         )
     )
 
@@ -53,7 +53,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        robot_localization_node,
+        # robot_localization_node,
         diffbot_launch,
         camera_launch,
         lidar_launch,

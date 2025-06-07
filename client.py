@@ -137,6 +137,9 @@ class DuploControl(Node):
         goal_msg = NavigateToPose.Goal()
         
         if(rotate):
+            print(x)
+            print(y)
+            print(math.atan2(y,x))
             q = self.quaternion_from_euler(0,0,math.atan2(y,x))
             w = q[0]
             x = q[1]

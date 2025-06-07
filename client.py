@@ -7,7 +7,10 @@ from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
 from control_msgs.msg import DynamicInterfaceGroupValues, InterfaceValue
-
+from geometry_msgs.msg import PoseStamped
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+import rclpy
+from rclpy.duration import Duration
 import math
 import threading
 import time
@@ -20,6 +23,11 @@ class DuploControl(Node):
         # Service clients
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
+        
+        self.navigator = BasicNavigator()
+        self.navigator.waitUntilNav2Active()
+        self.navigator.changeMap('/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml')
+
 
         # Duplo detection subscriber
         self.duplo_subscriber = self.create_subscription(
@@ -134,35 +142,57 @@ class DuploControl(Node):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
     def send_navigation_goal(self, x: float, y: float, yaw: float = .0):
-        goal_msg = NavigateToPose.Goal()
-
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'brushes'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
         goal_pose.pose.orientation.w = yaw
+        
+        go_to_pose_task = self.navigator.goToPose(goal_pose)
+        
+        i = 0
+        while not self.navigator.isTaskComplete(task=go_to_pose_task):
+            ################################################
+            #
+            # Implement some code here for your application!
+            #
+            ################################################
 
-        goal_msg.pose = goal_pose
-        self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
+            # Do something with the feedback
+            i = i + 1
+            feedback = self.navigator.getFeedback(task=go_to_pose_task)
+            if feedback and i % 5 == 0:
+                print(
+                    'Estimated time of arrival: '
+                    + '{:.0f}'.format(
+                        Duration.from_msg(feedback.estimated_time_remaining).nanoseconds
+                        / 1e9
+                    )
+                    + ' seconds.'
+                )
 
-        send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(self, send_goal_future)
-        goal_handle = send_goal_future.result()
+                # Some navigation timeout to demo cancellation
+                if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
+                    self.navigator.cancelTask()
 
-        if not goal_handle.accepted:
-            self.get_logger().error("Navigation goal rejected.")
-            return
+                # Some navigation request change to demo preemption
+                if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
+                    goal_pose.pose.position.x = 0.0
+                    goal_pose.pose.position.y = 0.0
+                    go_to_pose_task = self.navigator.goToPose(goal_pose)
 
-        self.get_logger().info("Navigation goal accepted, waiting for result...")
-        get_result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, get_result_future)
-        result = get_result_future.result()
-
-        if result.status == 4:  # STATUS_SUCCEEDED
-            self.get_logger().info("Goal succeeded!")
+        # Do something depending on the return code
+        result = self.navigator.getResult()
+        if result == TaskResult.SUCCEEDED:
+            print('Goal succeeded!')
+        elif result == TaskResult.CANCELED:
+            print('Goal was canceled!')
+        elif result == TaskResult.FAILED:
+            (error_code, error_msg) = self.navigator.getTaskError()
+            print('Goal failed!{error_code}:{error_msg}')
         else:
-            self.get_logger().warn(f"Goal failed with status code: {result.status}")
+            print('Goal has an invalid return status!')
 
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")

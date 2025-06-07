@@ -119,7 +119,7 @@ class DuploControl(Node):
                 self.search_and_grab()
             elif choice == '6':
                 self.stop_capture()
-            elif choice == '6':
+            elif choice == '7':
                 self.get_logger().info("Exiting...")
                 break
             else:

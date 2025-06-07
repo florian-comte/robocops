@@ -10,12 +10,21 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    nn_name             = LaunchConfiguration('nn_name', default="yolo11n_3.blob")
+    nn_name             = LaunchConfiguration('nn_name', default="yolo6.blob")
     resource_base_folder = LaunchConfiguration('resource_base_folder', default=
                                                os.path.join(get_package_share_directory('robocops_duplos'), 'resources'))
+    rgb_resolution_str   = LaunchConfiguration('rgb_resolution_str', default='720p')
     with_display         = LaunchConfiguration('with_display', default='false')
     with_processor         = LaunchConfiguration('with_processor', default='true')
+    fake_tf_zone = LaunchConfiguration('fake_tf_zone', default='true')
     queue_size = LaunchConfiguration('queue_size', default=30)
+    
+    robot_state_publisher_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(os.path.join(get_package_share_directory('robocops_description'), 'launch'), 'robot_state_publisher.launch.py')
+        ),
+         launch_arguments={'simulation': "false"}.items()
+    )
 
     declare_nn_name_cmd = DeclareLaunchArgument(
         'nn_name',
@@ -27,6 +36,12 @@ def generate_launch_description():
         'resource_base_folder',
         default_value=resource_base_folder,
         description='Path to the resources folder which contains the default blobs for the network'
+    )
+
+    declare_mono_resolution_cmd = DeclareLaunchArgument(
+        'rgb_resolution_str',
+        default_value=rgb_resolution_str,
+        description='Contains the resolution of the Color Camera'
     )
 
     declare_with_display_cmd = DeclareLaunchArgument(
@@ -41,6 +56,12 @@ def generate_launch_description():
         description='Enable or disable processor node of duplos'
     )
     
+    declare_fake_tf_zone_cmd = DeclareLaunchArgument(
+        'fake_tf_zone',
+        default_value=fake_tf_zone,
+        description='Enable or disable processor node of duplos'
+    )
+
     declare_queue_size_cmd = DeclareLaunchArgument(
         'queue_size',
         default_value=queue_size,
@@ -53,36 +74,23 @@ def generate_launch_description():
         output='screen',
         parameters=[{'nn_name': nn_name},
                     {'resource_base_folder': resource_base_folder},
+                    {'rgb_resolution_str': rgb_resolution_str},
                     {'with_display': with_display},
                     {'queue_size': queue_size}]
     )
 
-    # Node for detections display publisher
-    duplo_detection_viewer = launch_ros.actions.Node(
-        package='robocops_duplos', executable='duplo_viewer',
-        output='screen',
-        condition=IfCondition(with_display)
-    )
-    
-    # Node for detections display publisher
-    duplo_processor = launch_ros.actions.Node(
-        package='robocops_duplos', executable='duplo_processor',
-        output='screen',
-        condition=IfCondition(with_processor)
-    )
-    
     # Launch description
     ld = LaunchDescription()
     
     # Add actions
     ld.add_action(declare_nn_name_cmd)
     ld.add_action(declare_resource_base_folder_cmd)
+    ld.add_action(declare_mono_resolution_cmd)
     ld.add_action(declare_with_display_cmd)
     ld.add_action(declare_queue_size_cmd)
     ld.add_action(declare_with_processor_cmd)
+    ld.add_action(declare_fake_tf_zone_cmd)
     
     ld.add_action(duplo_detection_publisher)
-    ld.add_action(duplo_detection_viewer)
-    ld.add_action(duplo_processor)
 
     return ld

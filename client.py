@@ -133,16 +133,34 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0):
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0, rotate: bool = False):
         goal_msg = NavigateToPose.Goal()
-
-        goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'map'
-        goal_pose.header.stamp = self.get_clock().now().to_msg()
-        goal_pose.pose.position.x = x
-        goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.w = yaw
-
+        
+        if(rotate):
+            print(x)
+            print(y)
+            print(math.atan2(y,x))
+            q = self.quaternion_from_euler(0,0,3.14)
+            w = q[0]
+            x = q[1]
+            y = q[2]
+            z = q[3]
+            print(q)
+            goal_pose = PoseStamped()
+            goal_pose.header.frame_id = 'base_link'
+            goal_pose.header.stamp = self.get_clock().now().to_msg()
+            goal_pose.pose.position.x = x
+            goal_pose.pose.position.y = y
+            goal_pose.pose.position.z = z
+            goal_pose.pose.orientation.w = w
+        else:
+            goal_pose = PoseStamped()
+            goal_pose.header.frame_id = 'base_link'
+            goal_pose.header.stamp = self.get_clock().now().to_msg()
+            goal_pose.pose.position.x = x
+            goal_pose.pose.position.y = y
+            goal_pose.pose.orientation.w = yaw
+        
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
 
@@ -163,6 +181,27 @@ class DuploControl(Node):
             self.get_logger().info("Goal succeeded!")
         else:
             self.get_logger().warn(f"Goal failed with status code: {result.status}")
+            
+    def quaternion_from_euler(self, roll, pitch, yaw):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        quat = [w, x, y, z]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+        q[0] = cy * cp * cr + sy * sp * sr
+        q[1] = cy * cp * sr - sy * sp * cr
+        q[2] = sy * cp * sr + cy * sp * cr
+        q[3] = sy * cp * cr - cy * sp * sr
+
+        return q
 
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
@@ -183,9 +222,25 @@ class DuploControl(Node):
         
         self.enable_capture(True)
 
-        self.send_navigation_goal(pos.x, pos.y)
+        self.send_navigation_goal(pos.x, pos.y, 0, True)
         
         time.sleep(5)
+        
+        self.activate_detection()
+        time.sleep(1.0)
+        self.deactivate_detection()
+
+        closest_duplo = self.get_closest_duplo()
+        if not closest_duplo:
+            self.get_logger().info("No Duplos found.")
+            return
+
+        pos = closest_duplo.position.point
+        self.get_logger().info(
+            f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
+        )
+        
+        self.send_navigation_goal(pos.x, pos.y, 1, False)
         
         self.enable_capture(False)
         

@@ -36,8 +36,8 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 20
-#define MIN_COUNT 5
+#define TOLERANCE_CM 8
+#define MIN_COUNT 50
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
@@ -57,7 +57,7 @@ dai::Pipeline create_pipeline(const std::string nn_name, bool with_display)
     spatial_detection_network->setNumNCEPerInferenceThread(1);
 
     // Configure RGB camera
-    rgb_camera->setPreviewSize(416, 416);
+    rgb_camera->setPreviewSize(640, 640);
     rgb_camera->setResolution(dai::ColorCameraProperties::SensorResolution::THE_1080_P);
     rgb_camera->setInterleaved(false);
     rgb_camera->setColorOrder(dai::ColorCameraProperties::ColorOrder::BGR);
@@ -241,6 +241,10 @@ int main(int argc, char **argv)
                 }
 
                 RCLCPP_INFO(node->get_logger(),
+                            "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                            det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
+
+                RCLCPP_INFO(node->get_logger(),
                             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
                             map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
 
@@ -257,9 +261,9 @@ int main(int argc, char **argv)
                     {
                         found = true;
 
-                        // existing_duplo.position.point.x = (new_duplo.position.point.x + existing_duplo.count * existing_duplo.position.point.x) / (existing_duplo.count + 1);
-                        // existing_duplo.position.point.y = (new_duplo.position.point.y + existing_duplo.count * existing_duplo.position.point.y) / (existing_duplo.count + 1);
-                        // existing_duplo.position.point.z = (new_duplo.position.point.z + existing_duplo.count * existing_duplo.position.point.z) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.x = (new_duplo.position.point.x + existing_duplo.count * existing_duplo.position.point.x) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.y = (new_duplo.position.point.y + existing_duplo.count * existing_duplo.position.point.y) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.z = (new_duplo.position.point.z + existing_duplo.count * existing_duplo.position.point.z) / (existing_duplo.count + 1);
 
                         if (++existing_duplo.count >= MIN_COUNT)
                         {

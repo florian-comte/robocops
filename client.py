@@ -6,9 +6,12 @@ from geometry_msgs.msg import PoseStamped, Point
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
+from std_msgs.msg import Float64
+
 import math
 import threading
 import time
+
 
 class DuploControl(Node):
     def __init__(self):
@@ -18,7 +21,7 @@ class DuploControl(Node):
         self.activate_client = self.create_client(SetBool, 'activate_detection')
         self.clear_client = self.create_client(Empty, 'clear_duplos')
 
-        # Subscriber
+        # Duplo detection subscriber
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
             '/duplos',
@@ -26,13 +29,16 @@ class DuploControl(Node):
             10
         )
 
-        # Action client
+        # Navigation action client
         self.nav_to_pose_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+
+        # GPIO command publisher for capture/active
+        self.capture_pub = self.create_publisher(Float64, '/gpio_command/capture/active', 10)
 
         # Internal state
         self.duplos_list = []
 
-        # Wait for services
+        # Wait for required services and action servers
         while not self.activate_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Waiting for activate_detection service...')
         while not self.clear_client.wait_for_service(timeout_sec=1.0):
@@ -42,7 +48,7 @@ class DuploControl(Node):
 
         self.get_logger().info('All services and action servers available.')
 
-        # Launch CLI thread
+        # Launch CLI menu
         self.menu_thread = threading.Thread(target=self.run_menu, daemon=True)
         self.menu_thread.start()
 
@@ -62,6 +68,12 @@ class DuploControl(Node):
         self.get_logger().info('Clearing duplos...')
         self.clear_client.call_async(Empty.Request())
 
+    def enable_capture(self, enable: bool):
+        msg = Float64()
+        msg.data = 1.0 if enable else 0.0
+        self.capture_pub.publish(msg)
+        self.get_logger().info(f"{'Enabling' if enable else 'Disabling'} capture...")
+
     def duplo_callback(self, msg: DuploArray):
         if msg.duplos:
             self.duplos_list = msg.duplos
@@ -73,7 +85,9 @@ class DuploControl(Node):
             self.get_logger().info(f"Current Duplos: {len(self.duplos_list)}")
             for duplo in self.duplos_list:
                 pos = duplo.position.point
-                self.get_logger().info(f"Duplo ID: {duplo.id}, Position: x={pos.x:.2f}, y={pos.y:.2f}, Score: {duplo.score:.2f}")
+                self.get_logger().info(
+                    f"Duplo ID: {duplo.id}, Position: x={pos.x:.2f}, y={pos.y:.2f}, Score: {duplo.score:.2f}"
+                )
 
     def run_menu(self):
         while rclpy.ok():
@@ -116,18 +130,17 @@ class DuploControl(Node):
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'camera'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
-
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.w = yaw  # Assuming yaw is simple quaternion
+        goal_pose.pose.orientation.w = yaw
 
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
 
         send_goal_future = self.nav_to_pose_client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self, send_goal_future)
-
         goal_handle = send_goal_future.result()
+
         if not goal_handle.accepted:
             self.get_logger().error("Navigation goal rejected.")
             return
@@ -145,9 +158,14 @@ class DuploControl(Node):
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
 
+        self.enable_capture(True)
+        time.sleep(0.5)
+
         self.activate_detection()
         time.sleep(1.0)  # Allow time for detection
         self.deactivate_detection()
+
+        self.enable_capture(False)
 
         closest_duplo = self.get_closest_duplo()
         if not closest_duplo:

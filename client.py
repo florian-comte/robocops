@@ -72,7 +72,7 @@ class DuploControl(Node):
         else:
             self.get_logger().info(f"Current Duplos: {len(self.duplos_list)}")
             for duplo in self.duplos_list:
-                pos = duplo.position
+                pos = duplo.position.point
                 self.get_logger().info(f"Duplo ID: {duplo.id}, Position: x={pos.x:.2f}, y={pos.y:.2f}, Score: {duplo.score:.2f}")
 
     def run_menu(self):
@@ -105,7 +105,7 @@ class DuploControl(Node):
     def get_closest_duplo(self):
         if not self.duplos_list:
             return None
-        return min(self.duplos_list, key=lambda d: self.distance_to_point(d.position))
+        return min(self.duplos_list, key=lambda d: self.distance_to_point(d.position.point))
 
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
@@ -117,9 +117,9 @@ class DuploControl(Node):
         goal_pose.header.frame_id = 'camera'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
 
-        goal_pose.pose.pose.x = x
-        goal_pose.pose.pose.y = y
-        goal_pose.pose.orientation.w = yaw
+        goal_pose.pose.position.x = x
+        goal_pose.pose.position.y = y
+        goal_pose.pose.orientation.w = yaw  # Assuming yaw is simple quaternion
 
         goal_msg.pose = goal_pose
         self.get_logger().info(f"Sending navigation goal: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}")
@@ -154,7 +154,7 @@ class DuploControl(Node):
             self.get_logger().info("No Duplos found.")
             return
 
-        pos = closest_duplo.position
+        pos = closest_duplo.position.point
         self.get_logger().info(
             f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
         )

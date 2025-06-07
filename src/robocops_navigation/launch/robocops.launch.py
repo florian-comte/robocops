@@ -12,7 +12,7 @@ def generate_launch_description():
     launch_robocops_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('robocops_control'),
-                         'bringup/launch/diffbot.launch.py')
+                         'launch/diffbot.launch.py')
         ),
     )
 

@@ -27,6 +27,7 @@ dai::Pipeline createPipeline()
     imu->enableIMUSensor(dai::IMUSensor::ACCELEROMETER_RAW, 500);
     imu->enableIMUSensor(dai::IMUSensor::GYROSCOPE_RAW, 400);
     imu->setBatchReportThreshold(5);
+    imu->enableFirmwareUpdate(True)
     imu->setMaxBatchReports(20);
 
     imu->out.link(xoutImu->input);
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
     bool enableRosBaseTimeUpdate = node->get_parameter("enable_ros_base_time_update").as_bool();
 
     dai::ros::ImuSyncMethod imuMode = static_cast<dai::ros::ImuSyncMethod>(imuModeParam);
-    
+
     // Setup pipeline and device
     dai::Pipeline pipeline = createPipeline();
     dai::Device device(pipeline);

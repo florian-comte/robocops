@@ -178,7 +178,7 @@ class DuploControl(Node):
         else:
             self.get_logger().warn(f"Goal failed with status code: {result.status}")
             
-    def quaternion_from_euler(roll, pitch, yaw):
+    def quaternion_from_euler(self, roll, pitch, yaw):
         """
         Converts euler roll, pitch, yaw to quaternion (w in last place)
         quat = [w, x, y, z]

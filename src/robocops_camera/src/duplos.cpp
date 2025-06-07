@@ -171,8 +171,8 @@ int main(int argc, char **argv)
     node->get_parameter("queue_size", queue_size);
 
     // Debug log for parameters
-    RCLCPP_DEBUG(node->get_logger(), "Parameters Loaded - nn_name: %s, resource_base_folder: %s, queue_size: %d",
-                 nn_name.c_str(), resource_base_folder.c_str(), queue_size);
+    // RCLCPP_DEBUG(node->get_logger(), "Parameters Loaded - nn_name: %s, resource_base_folder: %s, queue_size: %d",
+    //              nn_name.c_str(), resource_base_folder.c_str(), queue_size);
 
     // Create the pipeline and device
     dai::Pipeline pipeline = create_pipeline(resource_base_folder + "/" + nn_name);
@@ -229,13 +229,13 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                RCLCPP_INFO(node->get_logger(),
-                            "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
-                            det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
+                // RCLCPP_INFO(node->get_logger(),
+                //             "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                //             det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
 
-                RCLCPP_INFO(node->get_logger(),
-                            "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
-                            map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
+                // RCLCPP_INFO(node->get_logger(),
+                //             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                //             map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
 
                 new_duplo.position = map_point;
                 // Print map point here
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 
                     new_duplo.id = current_duplo_id_++;
                     duplos_buffer.push_back(new_duplo);
-                    RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer");
+                    // RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer");
                 }
             }
         }
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
             robocops_msgs::msg::DuploArray array_msg;
             array_msg.duplos = duplos_official;
             duplos_pub->publish(array_msg);
-            RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
+            // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
         }
 
         rclcpp::spin_some(node);

@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import RegisterEventHandler, DeclareLaunchArgument
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+from ament_index_python.packages import get_package_share_directory
 
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
@@ -20,9 +21,10 @@ def generate_launch_description():
             ),
         ]
     )
+    
+    
     robot_description = {"robot_description": robot_description_content}
     
-
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("robocops_control"),
@@ -30,11 +32,7 @@ def generate_launch_description():
             "diffbot_controllers.yaml",
         ]
     )
-
-    # rviz_config_file = PathJoinSubstitution(
-    #     [FindPackageShare("robocops_control"), "rviz", "diffbot.rviz"]
-    # )
-
+    
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -56,24 +54,13 @@ def generate_launch_description():
         parameters=[robot_description],
     )
     
-    twist_mux_params = os.path.join(FindPackageShare("robocops_control"), 'config', 'twist_mux.yaml')
+    twist_mux_params = os.path.join(get_package_share_directory('robocops_control'), 'config', 'twist_mux.yaml')
     twist_mux = Node(
         package="twist_mux",
         executable="twist_mux",
         parameters=[twist_mux_params],
         remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel')]
     )
-
-    # rviz = LaunchConfiguration("rviz")
-
-    # rviz_node = Node(
-    #     package="rviz2",
-    #     executable="rviz2",
-    #     name="rviz2",
-    #     output="log",
-    #     arguments=["-d", rviz_config_file],
-    #     condition=IfCondition(rviz)
-    # )
 
     # joint_state_broadcaster_spawner = Node(
     #     package="controller_manager",

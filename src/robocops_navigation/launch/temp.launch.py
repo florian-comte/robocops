@@ -19,6 +19,14 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(nav_pkg, 'config', 'ekf.yaml')],
 
+
+    twist_mux_params = os.path.join(nav_pkg,'config','twist_mux.yaml')
+    twist_mux = Node(
+            package="twist_mux",
+            executable="twist_mux",
+            parameters=[twist_mux_params],
+            remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel')]
+        )
     )
 
     # Launch other subsystems
@@ -48,7 +56,7 @@ def generate_launch_description():
 
     # Delay Nav2 to ensure other systems are initialized
     delayed_nav2 = TimerAction(
-        period=5.0,
+        period=10.0,
         actions=[nav2_launch]
     )
 

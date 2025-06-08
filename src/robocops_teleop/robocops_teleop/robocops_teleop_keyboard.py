@@ -76,7 +76,7 @@ class TeleopNode(Node):
     def __init__(self):
         super().__init__('teleop_keyboard')
 
-        self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.publisher = self.create_publisher(TwistStamped, 'cmd_vel_teleop', 10)
         self.gpio_pub = self.create_publisher(DynamicInterfaceGroupValues, '/gpio_controller/commands', 10)
 
         self.linear = 0.0

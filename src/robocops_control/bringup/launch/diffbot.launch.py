@@ -74,7 +74,7 @@ def generate_launch_description():
         arguments=[
             "diffbot_base_controller",
             "--param-file", robot_controllers,
-            "--controller-ros-args", "--ros-args --remap /diffbot_base_controller/odom:=/odom"
+            "--controller-ros-args"
         ],
     )
     

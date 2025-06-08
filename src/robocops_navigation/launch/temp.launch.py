@@ -23,12 +23,12 @@ def generate_launch_description():
     )
     
     imu_filter_node = Node(
-                package='imu_filter_madgwick',
-                executable='imu_filter_madgwick_node',
-                name='imu_filter',
-                output='screen',
-                parameters=[os.path.join(nav_pkg, 'config', 'imu_filter.yaml')],
-            )
+        package='imu_filter_madgwick',
+        executable='imu_filter_madgwick_node',
+        name='imu_filter',
+        output='screen',
+        parameters=[os.path.join(nav_pkg, 'config', 'imu_filter.yaml')],
+    )
 
     # EKF Node (robot_localization)
     robot_localization_node = Node(
@@ -77,6 +77,5 @@ def generate_launch_description():
         diffbot_launch,
         camera_launch,
         lidar_launch,
-        # twist_mux,
         delayed_nav2
     ])

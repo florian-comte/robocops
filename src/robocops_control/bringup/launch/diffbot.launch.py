@@ -6,6 +6,7 @@ from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
+import os
 
 from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
@@ -54,6 +55,14 @@ def generate_launch_description():
         name="joint_state_publisher",
         parameters=[robot_description],
     )
+    
+    twist_mux_params = os.path.join(FindPackageShare("robocops_control"), 'config', 'twist_mux.yaml')
+    twist_mux = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        parameters=[twist_mux_params],
+        remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel')]
+    )
 
     # rviz = LaunchConfiguration("rviz")
 
@@ -81,6 +90,7 @@ def generate_launch_description():
             "--controller-ros-args", "--ros-args --remap /diffbot_base_controller/odom:=/odom"
         ],
     )
+    
 
     gpio_controller_spawner = Node(
         package="controller_manager",
@@ -116,6 +126,7 @@ def generate_launch_description():
         robot_state_pub_node,
         joint_state_publiser_node,
         robot_controller_spawner,
+        twist_mux,
         delay_gpio_after_robot_controller_spawner,
         # joint_state_broadcaster_spawner,
         #delay_rviz_after_joint_state_broadcaster_spawner,

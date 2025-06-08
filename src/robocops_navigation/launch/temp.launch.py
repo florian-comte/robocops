@@ -20,15 +20,6 @@ def generate_launch_description():
         parameters=[os.path.join(nav_pkg, 'config', 'ekf.yaml')],
     )
 
-
-    twist_mux_params = os.path.join(nav_pkg, 'config', 'twist_mux.yaml')
-    twist_mux = Node(
-        package="twist_mux",
-        executable="twist_mux",
-        parameters=[twist_mux_params],
-        remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel')]
-    )
-
     # Launch other subsystems
     diffbot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -65,6 +56,6 @@ def generate_launch_description():
         diffbot_launch,
         camera_launch,
         lidar_launch,
-        twist_mux,
+        # twist_mux,
         delayed_nav2
     ])

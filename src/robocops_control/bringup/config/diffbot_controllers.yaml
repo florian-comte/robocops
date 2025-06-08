@@ -1,9 +1,9 @@
 controller_manager:
   ros__parameters:
-    update_rate: 10  # Hz
+    update_rate: 30  # Hz
 
-    joint_state_broadcaster:
-      type: joint_state_broadcaster/JointStateBroadcaster
+    # joint_state_broadcaster:
+    #   type: joint_state_broadcaster/JointStateBroadcaster
 
 diffbot_base_controller:
   ros__parameters:

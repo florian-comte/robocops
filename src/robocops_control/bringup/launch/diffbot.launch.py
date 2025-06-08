@@ -74,7 +74,6 @@ def generate_launch_description():
         arguments=[
             "diffbot_base_controller",
             "--param-file", robot_controllers,
-            "--controller-ros-args"
         ],
     )
     

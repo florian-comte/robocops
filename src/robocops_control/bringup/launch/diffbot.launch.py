@@ -66,11 +66,11 @@ def generate_launch_description():
     #     condition=IfCondition(rviz)
     # )
 
-    # joint_state_broadcaster_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    # )
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
 
     robot_controller_spawner = Node(
         package="controller_manager",
@@ -120,6 +120,7 @@ def generate_launch_description():
         joint_state_publiser_node,
         robot_controller_spawner,
         delay_gpio_after_robot_controller_spawner,
+        joint_state_broadcaster_spawner,
         #delay_rviz_after_joint_state_broadcaster_spawner,
         #delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
     ]

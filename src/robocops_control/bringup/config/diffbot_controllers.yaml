@@ -15,6 +15,7 @@ diffbot_base_controller:
     # Values of prototype
     wheel_separation: 0.37
     wheel_radius: 0.06
+    wheels_per_side: 1
 
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0

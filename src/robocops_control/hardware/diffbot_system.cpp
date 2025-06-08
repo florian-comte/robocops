@@ -192,7 +192,7 @@ namespace robocops_control
     }
     else
     {
-      RCLCPP_INFO(get_logger(), get_command(left_wheel_name_ + "/velocity"));
+      RCLCPP_INFO(get_logger(), "yo: " + get_command(left_wheel_name_ + "/velocity"));
 
       set_state(left_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
       set_state(right_wheel_name_ + "/velocity", get_command(right_wheel_name_ + "/velocity"));

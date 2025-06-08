@@ -10,7 +10,7 @@ import os
 def generate_launch_description():
     ld = LaunchDescription()
 
-    nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params_DWB.yaml')
+    nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params_MPPI.yaml')
     map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'final_arena_blank.yaml')
 
     nav2_launch_file = IncludeLaunchDescription(

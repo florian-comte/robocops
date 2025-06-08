@@ -7,7 +7,7 @@ imu_filter:
     fixed_frame: "odom"
     constant_dt: 0.0
     publish_debug_topics: false
-    world_frame: "map"
+    world_frame: "enu"
     gain: 0.1
     zeta: 0.0
     mag_bias_x: 0.0

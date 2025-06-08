@@ -208,7 +208,7 @@ class DuploControl(Node):
         
         self.enable_capture(True)
 
-        self.send_navigation_goal(pos.x, pos.y)
+        self.send_navigation_goal(pos.x + 0.1, pos.y)
         
         time.sleep(5)
         

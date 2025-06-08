@@ -17,7 +17,7 @@ def generate_launch_description():
         name="icm20948_node",
         parameters=[
             {"i2c_address": 0x69},
-            {"frame_id": "base_link"},
+            {"frame_id": "imu"},
             {"pub_rate": 50},
         ],
     )

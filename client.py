@@ -141,7 +141,7 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, yaw: float = .0):
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0):
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'brushes'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
@@ -152,7 +152,7 @@ class DuploControl(Node):
         go_to_pose_task = self.navigator.goToPose(goal_pose)
         
         i = 0
-        while not self.navigator.isTaskComplete(task=go_to_pose_task):
+        while not self.navigator.isTaskComplete():
             ################################################
             #
             # Implement some code here for your application!
@@ -176,11 +176,6 @@ class DuploControl(Node):
                 if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
                     self.navigator.cancelTask()
 
-                # Some navigation request change to demo preemption
-                if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
-                    goal_pose.pose.position.x = 0.0
-                    goal_pose.pose.position.y = 0.0
-                    go_to_pose_task = self.navigator.goToPose(goal_pose)
 
         # Do something depending on the return code
         result = self.navigator.getResult()

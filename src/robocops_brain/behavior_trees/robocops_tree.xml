@@ -1,14 +1,94 @@
 <root BTCPP_format="4" main_tree_to_execute="Main">
-    <BehaviorTree ID="Main">
-        <Sequence>
-            <SetLocations name="set_locations" num_locs="{num_locs}" loc_names="{loc_names}" loc_poses="{loc_poses}"/>
-            <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position"/>
-            <Fallback>
-                <BlockingGPIO gpio_name="button" interface_name="active" timeout="15.0" pulse_duration="1.0"/>
+  <BehaviorTree ID="Main">
+    <Sequence>
+      <SetLocations name="set_locations" num_locs="{num_locs}" loc_names="{loc_names}" loc_poses="{loc_poses}" />
+
+      <KeepRunningUntilFailure>
+        <Fallback name="ZoneSelector">
+          <!-- Zone 3 -->
+          <Fallback>
+            <Inverter>
+              <CanGoToZone 
+                zone_index="2" 
+                MAX_INVENTORY="{MAX_INVENTORY}"
+                current_inventory="{current_inventory}"
+                MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
+                TOTAL_ZONES="{TOTAL_ZONES}"
+                current_grabbed_zones="{current_grabbed_zones}"
+                never_timed_out_zones="{never_timed_out_zones}"
+                never_timed_out_opening_door="{never_timed_out_opening_door}"
+                />
+            </Inverter>
+            
+            <!-- If door not open, go and have back next to button and open it -->
+            <Precondition if="!is_door_open" else="SUCCESS">
                 <Sequence>
-                    <Script code="never_timed_out_opening_door := false"/>
+                    <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
+
+                    <Fallback>
+                    <BlockingGPIO gpio_name="button" interface_name="active" timeout="15.0" pulse_duration="1.5" />
+                    <Script code="never_timed_out_opening_door := false" />
+                    </Fallback>
                 </Sequence>
-            </Fallback>
-        </Sequence>
-    </BehaviorTree>
+            </Precondition>
+
+            <!-- If door is open, enter zone 3 -->
+            <Precondition if="never_timed_out_opening_door" else="FAILURE">
+            <Sequence>
+                <Script code="is_door_open := true" />
+                <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
+                <!-- <SearchAndGrab zone="3"/> -->
+            </Sequence>
+            </Precondition>
+          </Fallback>
+
+          <!-- Zone 4 -->
+          <Fallback>
+            <Inverter>
+              <CanGoToZone 
+                zone_index="3" 
+                MAX_INVENTORY="{MAX_INVENTORY}"
+                current_inventory="{current_inventory}"
+                MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
+                TOTAL_ZONES="{TOTAL_ZONES}"
+                current_grabbed_zones="{current_grabbed_zones}"
+                never_timed_out_zones="{never_timed_out_zones}"
+                never_timed_out_opening_door="{never_timed_out_opening_door}"
+                />
+            </Inverter>
+          
+            <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry" />
+            <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout="15.0" pulse_duration="1.5" />
+            <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}" />
+            <!-- <SearchAndGrab zone="4" /> -->
+            <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry" />
+            <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout="15.0" pulse_duration="1.5" />
+            <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_entry}" />
+          </Fallback>
+
+          <!-- Zone 1 -->
+          <Fallback>
+            <Inverter>
+              <CanGoToZone 
+                zone_index="0" 
+                MAX_INVENTORY="{MAX_INVENTORY}"
+                current_inventory="{current_inventory}"
+                MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
+                TOTAL_ZONES="{TOTAL_ZONES}"
+                current_grabbed_zones="{current_grabbed_zones}"
+                never_timed_out_zones="{never_timed_out_zones}"
+                never_timed_out_opening_door="{never_timed_out_opening_door}"/>
+            </Inverter>
+            <!-- <SearchAndGrab zone="1" /> -->
+          </Fallback>
+
+          <!-- Default Fallback: Drop point -->
+          <Sequence>
+            <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="drop_point" />
+            <BlockingGPIO gpio_name="unload" interface_name="active" timeout="15.0" pulse_duration="1.5" />
+          </Sequence>
+        </Fallback>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
 </root>

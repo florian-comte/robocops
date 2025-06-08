@@ -17,6 +17,7 @@
 #include "blocking_gpio_behavior.h"
 #include "search_and_grab_behavior.h"
 #include "set_pose_behavior.h"
+#include "can_go_to_zone_behavior.h"
 
 using namespace std::chrono_literals;
 
@@ -58,16 +59,17 @@ public:
         factory.registerNodeType<BlockingGPIO>("BlockingGPIO", shared_from_this());
         factory.registerNodeType<SetPose>("SetPose", shared_from_this());
         factory.registerNodeType<SearchAndGrab>("SearchAndGrab", shared_from_this());
+        factory.registerNodeType<CanGoToZone>("CanGoToZone");
 
         auto blackboard = BT::Blackboard::create();
 
         blackboard->set<std::string>("locations_file", locations_file_);
 
-        blackboard->set<int>("MAX_INVENTORY", 10);
-        blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{ 6, 6, 6, 6 });
+        blackboard->set<int>("MAX_INVENTORY", 15);
+        blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{ 0, 0, 1, 1 });
         blackboard->set<std::vector<int>>("TOTAL_ZONES", std::vector<int>{15, 6, 6, 6});
 
-        blackboard->set<std::vector<int>>("current_grapped_zones", std::vector<int>{ 0, 0, 0, 0 });
+        blackboard->set<std::vector<int>>("current_grabbed_zones", std::vector<int>{0, 0, 0, 0});
         blackboard->set<std::vector<bool>>("never_timed_out_zones", std::vector<bool>{ true, true, true, true});
 
         blackboard->set<int>("current_inventory", 0);

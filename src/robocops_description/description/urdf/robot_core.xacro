@@ -59,7 +59,7 @@
     <joint name="base_footprint_joint" type="fixed">
         <parent link="base_footprint"/>
         <child link="base_link"/>
-        <origin xyz="-{wheel_offset_x} 0 0" rpy="0 0 0"/>
+        <origin xyz="-${wheel_offset_x} 0 0" rpy="0 0 0"/>
     </joint>
 
 

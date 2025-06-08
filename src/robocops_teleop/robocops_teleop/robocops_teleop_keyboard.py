@@ -46,7 +46,7 @@ KEY_BINDINGS = {
     'q': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    'q': (0, 0),
+    'a': (0, 0),
 }
 
 gpio_order = ["capture", "unload", "button", "slope_up", "slope_down", "emergency"]

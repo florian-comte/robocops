@@ -101,7 +101,7 @@ docking_server:
       type: 'nova_carter_dock'
       frame: map
       pose: [30.0, 30.0, 0.0]
-    enable_stamped_cmd_vel: false
+    enable_stamped_cmd_vel: true
 
 controller_server:
   ros__parameters:
@@ -114,7 +114,7 @@ controller_server:
     failure_tolerance: 0.3 # max duration (seconds) controller plugin can fail [-1: inf, 0: disable]
     # speed_limit_topic: "speed_limit" # to subscribe topic that publishes speed limits (like speed filters)
     odom_topic: "odom"
-    enable_stamped_cmd_vel: false # true: uses TwistStamped, false: uses Twist
+    enable_stamped_cmd_vel: true # true: uses TwistStamped, false: uses Twist
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["goal_checker"] # could use StoppedGoalChecker for goal reached and stopped
     controller_plugins: ["FollowPath"]
@@ -344,7 +344,7 @@ behavior_server:
     max_rotational_vel: 0.5
     min_rotational_vel: 0.1
     rotational_acc_lim: 3.2
-    enable_stamped_cmd_vel: false # [true ?]
+    enable_stamped_cmd_vel: true # [true ?]
 
 waypoint_follower:
   ros__parameters:
@@ -367,7 +367,7 @@ collision_monitor:
     source_timeout: 1.0 # max time interval at which source data is still valid (0.0: disable blocking mechanism)
     base_shift_correction: true # true: correct source data compared to robot base_link
     stop_pub_timeout: 1.0
-    enable_stamped_cmd_vel: false # true ?
+    enable_stamped_cmd_vel: true # true ?
     use_realtime_priority: false
     polygons: ["FootprintApproach"]
     # PolygonStop: # polygon that makes the robot stop, if a certain number of obstacles entered
@@ -408,4 +408,4 @@ velocity_smoother:
     odom_topic: "odom"
     odom_duration: 0.1 # time to buffer odometry commands if CLOSED_LOOP
     use_realtime_priority: false # To optimise loop time (but could mess up others)
-    enable_stamped_cmd_vel: false # true ?
+    enable_stamped_cmd_vel: true # true ?

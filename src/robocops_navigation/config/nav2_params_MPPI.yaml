@@ -9,7 +9,7 @@ amcl:
     beam_skip_distance: 0.5 # ignore beams that are further than value from closest occupied cell 
     beam_skip_error_threshold: 0.9 # percentage of beams to force map update when 90% bad convergence
     beam_skip_threshold: 0.3 # percentage of beams required to match map, if not skip
-    do_beamskip: true # apply beam skipping or not
+    do_beamskip: false # apply beam skipping or not
     global_frame_id: "map"
     lambda_short: 0.1 # exponential decay for z_short
     laser_likelihood_max_dist: 2.0 # max distance to do obstacle inflation on map
@@ -29,7 +29,7 @@ amcl:
     save_pose_rate: 0.5 # max rate (Hz) at which to store the last estimated pose to the parameter server
     sigma_hit: 0.2 # stand dev for Gaussian model used in z_hit
     tf_broadcast: true # whether to publish TF between global_frame and odom
-    transform_tolerance: 1.0 # timing tolerance to keep transform valid in future [use 1.0 ?]
+    transform_tolerance: 0.5 # timing tolerance to keep transform valid in future [use 1.0 ?]
     update_min_a: 0.05 # rotational movement required to update filter in radians
     update_min_d: 0.05 # translational movement required to update filter in meters
     z_hit: 0.5

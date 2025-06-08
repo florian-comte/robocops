@@ -48,8 +48,6 @@
         <color rgba="0 1 0 1"/>
     </material>
     
-    <link name="base_footprint" />
-
     <!-- BASE LINK -->
 
     <link name="base_link" />
@@ -57,17 +55,18 @@
     <!-- BASE_FOOTPRINT LINK -->
 
     <joint name="base_footprint_joint" type="fixed">
-        <parent link="base_footprint"/>
-        <child link="base_link"/>
-        <origin xyz="-${wheel_offset_x} 0 0" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
+    <link name="base_footprint" />
 
     <!-- Burshes -->
     <joint name="brushes_joint" type="fixed">
         <parent link="base_link"/>
         <child link="brushes"/>
-        <origin xyz="0.20 0 0" rpy="0 0 0"/>
+        <origin xyz="0.20 + ${wheel_offset_x}  0 0" rpy="0 0 0"/>
     </joint>
 
     <link name="brushes" />
@@ -76,7 +75,7 @@
     <joint name="chassis_joint" type="fixed">
         <parent link="base_link"/>
         <child link="chassis"/>
-        <origin xyz="0 0 ${chassis_height/2}"/>
+        <origin xyz="${wheel_offset_x} 0 ${chassis_height/2}"/>
     </joint>
 
     <link name="chassis">

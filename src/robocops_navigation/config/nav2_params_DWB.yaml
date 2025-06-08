@@ -52,7 +52,7 @@ bt_navigator:
     use_sim_time: false
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.5 # timing tolerance for TF in seconds
+    transform_tolerance: 1.0 # timing tolerance for TF in seconds
     filter_duration: 0.3 # duration over which velocity should be smoothed
     default_nav_to_pose_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
     default_nav_through_poses_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
@@ -216,7 +216,7 @@ global_costmap:
       publish_frequency: 1.0 # rate of publishing costmap to topic
       global_frame: map
       robot_base_frame: base_link
-      transform_tolerance: 0.5 # timing tolerance for TF future
+      transform_tolerance: 1.0 # timing tolerance for TF future
       robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
       resolution: 0.05 # resolution of 1 pixel in meters
       track_unknown_space: true # false: consider unknown cell as free space

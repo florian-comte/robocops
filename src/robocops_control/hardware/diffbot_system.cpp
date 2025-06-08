@@ -187,13 +187,13 @@ namespace robocops_control
     // Set state left/right encoder value
     if (use_encoders_)
     {
+
+      
       set_state(left_wheel_name_ + "/velocity", left_wheel_encoder_ / gearbox_ratio_);
       set_state(right_wheel_name_ + "/velocity", right_wheel_encoder_ / gearbox_ratio_);
     }
     else
     {
-      std::cout << "yo: " << get_command(left_wheel_name_ + "/velocity") << std::endl;
-
       set_state(left_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
       set_state(right_wheel_name_ + "/velocity", get_command(right_wheel_name_ + "/velocity"));
     }
@@ -223,6 +223,8 @@ namespace robocops_control
     {
       return hardware_interface::return_type::ERROR;
     }
+    
+    std::cout << "yo: " << get_command(left_wheel_name_ + "/velocity") << std::endl;
 
     comms_.send_command(
         static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(left_wheel_name_ + "/velocity"))),

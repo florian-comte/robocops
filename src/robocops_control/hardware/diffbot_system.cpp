@@ -45,6 +45,8 @@ namespace robocops_control
 
     use_encoders_ = (info_.hardware_parameters["use_encoders"] == "true");
 
+    use_encoders_ = true;
+
     left_wheel_encoder_ = 0;
     right_wheel_encoder_ = 0;
 
@@ -191,7 +193,7 @@ namespace robocops_control
     else
     {
       set_state(left_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
-      set_state(right_wheel_name_ + "/velocity", get_command(left_wheel_name_ + "/velocity"));
+      set_state(right_wheel_name_ + "/velocity", get_command(right_wheel_name_ + "/velocity"));
     }
 
     set_state("capture/active", capture_active_ ? 1.0 : 0.0);

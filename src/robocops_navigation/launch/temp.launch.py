@@ -10,6 +10,25 @@ def generate_launch_description():
     control_pkg = get_package_share_directory('robocops_control')
     camera_pkg = get_package_share_directory('robocops_camera')
     nav_pkg = get_package_share_directory('robocops_navigation')
+    
+    imu_node = Node(
+        package="ros2_icm20948",
+        executable="icm20948_node",
+        name="icm20948_node",
+        parameters=[
+            {"i2c_address": 0x69},
+            {"frame_id": "base_link"},
+            {"pub_rate": 50},
+        ],
+    )
+    
+    imu_filter_node = Node(
+                package='imu_filter_madgwick',
+                executable='imu_filter_madgwick_node',
+                name='imu_filter',
+                output='screen',
+                parameters=[os.path.join(nav_pkg, 'config', 'imu_filter.yaml')],
+            )
 
     # EKF Node (robot_localization)
     robot_localization_node = Node(
@@ -52,7 +71,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # robot_localization_node,
+        imu_node,
+        imu_filter_node,
+        robot_localization_node,
         diffbot_launch,
         camera_launch,
         lidar_launch,

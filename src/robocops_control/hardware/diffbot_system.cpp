@@ -223,8 +223,6 @@ namespace robocops_control
     {
       return hardware_interface::return_type::ERROR;
     }
-    
-    std::cout << "yo: " << get_command(left_wheel_name_ + "/velocity") << std::endl;
 
     comms_.send_command(
         static_cast<int>(rad_per_sec_to_rpm(gearbox_ratio_ * get_command(left_wheel_name_ + "/velocity"))),
@@ -244,7 +242,7 @@ namespace robocops_control
         &slope_down_active_,
         &emergency_active_,
         &nb_captured_duplos_,
-        true);
+        false);
 
     return hardware_interface::return_type::OK;
   }

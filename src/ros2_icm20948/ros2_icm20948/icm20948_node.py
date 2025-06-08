@@ -18,7 +18,7 @@ class ICM20948Node(Node):
         i2c_addr = self.get_parameter("i2c_address").get_parameter_value().integer_value
         self.i2c_addr = i2c_addr
 
-        self.declare_parameter("frame_id", "imu_icm20948")
+        self.declare_parameter("frame_id", "baselink")
         frame_id = self.get_parameter("frame_id").get_parameter_value().string_value
         self.frame_id = frame_id
 
@@ -37,9 +37,9 @@ class ICM20948Node(Node):
         self.imu.setFullScaleRangeAccel(qwiic_icm20948.gpm16)
 
         # Publishers
-        self.imu_pub_ = self.create_publisher(sensor_msgs.msg.Imu, "/imu/data_raw", 10)
+        self.imu_pub_ = self.create_publisher(sensor_msgs.msg.Imu, "imu/data_raw", 10)
         self.mag_pub_ = self.create_publisher(
-            sensor_msgs.msg.MagneticField, "/imu/mag_raw", 10
+            sensor_msgs.msg.MagneticField, "imu/mag", 10
         )
         self.pub_clk_ = self.create_timer(1 / self.pub_rate, self.publish_cback)
 

@@ -161,7 +161,7 @@ class DuploControl(Node):
 
             # Do something with the feedback
             i = i + 1
-            feedback = self.navigator.getFeedback(task=go_to_pose_task)
+            feedback = self.navigator.getFeedback()
             if feedback and i % 5 == 0:
                 print(
                     'Estimated time of arrival: '

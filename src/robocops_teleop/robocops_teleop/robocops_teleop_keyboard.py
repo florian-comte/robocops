@@ -90,7 +90,7 @@ class TeleopNode(Node):
     def update_velocity(self, key):
         if key in KEY_BINDINGS:
             lin_delta, ang_delta = KEY_BINDINGS[key]
-            if key in [' ', 'q']:
+            if key in [' ', 'a']:
                 self.linear = 0.0
                 self.angular = 0.0
             else:

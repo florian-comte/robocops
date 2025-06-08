@@ -9,11 +9,11 @@ amcl:
     beam_skip_distance: 0.5 # ignore beams that are further than value from closest occupied cell 
     beam_skip_error_threshold: 0.9 # percentage of beams to force map update when 90% bad convergence
     beam_skip_threshold: 0.3 # percentage of beams required to match map, if not skip
-    do_beamskip: false # apply beam skipping or not
+    do_beamskip: true # apply beam skipping or not
     global_frame_id: "map"
     lambda_short: 0.1 # exponential decay for z_short
     laser_likelihood_max_dist: 2.0 # max distance to do obstacle inflation on map
-    laser_max_range: 100.0 # max scan range lidar (-1 -> sets the reported range)
+    laser_max_range: 12.0 # max scan range lidar (-1 -> sets the reported range)
     laser_min_range: -1.0 # min scan range lidar
     laser_model_type: "likelihood_field"
     max_beams: 60 # number of beams in each scan to be used to update filter
@@ -29,9 +29,9 @@ amcl:
     save_pose_rate: 0.5 # max rate (Hz) at which to store the last estimated pose to the parameter server
     sigma_hit: 0.2 # stand dev for Gaussian model used in z_hit
     tf_broadcast: true # whether to publish TF between global_frame and odom
-    transform_tolerance: 0.5 # timing tolerance to keep transform valid in future [use 1.0 ?]
-    update_min_a: 0.2 # rotational movement required to update filter in radians
-    update_min_d: 0.25 # translational movement required to update filter in meters
+    transform_tolerance: 1.0 # timing tolerance to keep transform valid in future [use 1.0 ?]
+    update_min_a: 0.05 # rotational movement required to update filter in radians
+    update_min_d: 0.05 # translational movement required to update filter in meters
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
@@ -52,7 +52,7 @@ bt_navigator:
     use_sim_time: false
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.5 # timing tolerance for TF in seconds
+    transform_tolerance: 0.1 # timing tolerance for TF in seconds
     filter_duration: 0.3 # duration over which velocity should be smoothed
     default_nav_to_pose_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
     default_nav_through_poses_bt_xml: "/opt/ros/jazzy/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
@@ -83,33 +83,33 @@ bt_navigator:
       - undock_robot
       - wait
 
-# docking_server:
-#   ros__parameters:
-#     dock_plugins: ['nova_carter_dock']
-#     nova_carter_dock:
-#       plugin: 'opennav_docking::SimpleChargingDock'
-#     docks: ['home_dock','flex_dock1', 'flex_dock2']
-#     home_dock:
-#       type: 'nova_carter_dock'
-#       frame: map
-#       pose: [0.0, 0.0, 0.0]
-#     flex_dock1:
-#       type: 'nova_carter_dock'
-#       frame: map
-#       pose: [10.0, 10.0, 0.0]
-#     flex_dock2:
-#       type: 'nova_carter_dock'
-#       frame: map
-#       pose: [30.0, 30.0, 0.0]
-#     enable_stamped_cmd_vel: true
+docking_server:
+  ros__parameters:
+    dock_plugins: ['nova_carter_dock']
+    nova_carter_dock:
+      plugin: 'opennav_docking::SimpleChargingDock'
+    docks: ['home_dock','flex_dock1', 'flex_dock2']
+    home_dock:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [0.0, 0.0, 0.0]
+    flex_dock1:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [10.0, 10.0, 0.0]
+    flex_dock2:
+      type: 'nova_carter_dock'
+      frame: map
+      pose: [30.0, 30.0, 0.0]
+    enable_stamped_cmd_vel: false
 
 controller_server:
   ros__parameters:
-    controller_frequency: 10.0 # frequency to run controller and call required plugins for navigation [20 ?]
+    controller_frequency: 5.0 # frequency to run controller and call required plugins for navigation [20 ?]
     costmap_update_timeout: 0.3 # timeout value (in seconds) for full costmap update before computing control
     publish_zero_velocity: true # publish zero velocity when goal is reached
-    min_x_velocity_threshold: 0.0001 # filter velocities (= 0) that are below min value ignored
-    min_y_velocity_threshold: 0.0001 # filter velocities (= 0) that are below min value ignored
+    min_x_velocity_threshold: 0.001 # filter velocities (= 0) that are below min value ignored
+    min_y_velocity_threshold: 0.001 # filter velocities (= 0) that are below min value ignored
     min_theta_velocity_threshold: 0.001 # filter velocities (= 0) that are below min value 
     failure_tolerance: 0.3 # max duration (seconds) controller plugin can fail [-1: inf, 0: disable]
     # speed_limit_topic: "speed_limit" # to subscribe topic that publishes speed limits (like speed filters)
@@ -120,71 +120,118 @@ controller_server:
     controller_plugins: ["FollowPath"]
     progress_checker: # plugin to check progress made by the robot
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.1 # min movement to consider progress being done
+      required_movement_radius: 0.5 # min movement to consider progress being done
       movement_time_allowance: 10.0 # max amount time to move required_movement_radius
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
-      stateful: true # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.15 # tolerance to meet goal completion (in meters)
-      yaw_goal_tolerance: 0.15 # tolerance to meet goal completion (in radians)
+      stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
+      xy_goal_tolerance: 0.35 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: false # publish debug info (on what topic?!)
-      min_vel_x: 0.0
-      min_vel_y: 0.0
-      max_vel_x: 0.3
-      max_vel_y: 0.0
-      max_vel_theta: 1.0
-      min_speed_xy: 0.0
-      max_speed_xy: 0.3
-      min_speed_theta: 0.0
-      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
-      acc_lim_x: 3.0
-      acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -3.2
-      vx_samples: 20
-      vy_samples: 0
-      vtheta_samples: 30
-      sim_time: 1.5
-      linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 0.2 # timing tolerance to keep TF valid
-      xy_goal_tolerance: 0.05 # goal tolerance XY ? (no documentation)
-      trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: true # stop evaluating score when best score is found
-      stateful: true
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"] # give trajectory a score/grade to decide command velocities
-      BaseObstacle.scale: 0.02 # where path passes over costmap
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1 # how alligned trajectory is compared to the one provided by global planner
-      GoalAlign.scale: 24.0
-      GoalAlign.forward_point_distance: 0.1 # how well alligned with goal pose
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0 # how close is to goal pose
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0 # allow robot to rotate to goal orientation when sufficiently close to goal position
-      RotateToGoal.lookahead_time: -1.0
+      plugin: "nav2_mppi_controller::MPPIController"
+      time_steps: 15
+      model_dt: 0.2 # Set to the duration of the control frequency
+      batch_size: 4000
+      ax_max: 3.0
+      ax_min: -3.0
+      ay_max: 3.0
+      az_max: 3.5
+      vx_std: 0.2
+      vy_std: 0.2
+      wz_std: 0.4
+      vx_max: 0.5 # These acceleration and velocity parameters are where you should start tuning
+      vx_min: 0.0 # -0.35 is default
+      vy_max: 0.5
+      wz_max: 1.9
+      iteration_count: 1
+      prune_distance: 1.7
+      transform_tolerance: 0.1
+      temperature: 0.3
+      gamma: 0.015
+      motion_model: "DiffDrive"
+      visualize: false
+      regenerate_noises: false
+      TrajectoryVisualizer:
+        trajectory_step: 5
+        time_step: 3
+      critics: [
+        "ConstraintCritic", "CostCritic", "GoalCritic",
+        "GoalAngleCritic", "PathAlignCritic", "PathAngleCritic",
+        "PathFollowCritic", "PreferForwardCritic", "TwirlingCritic"]
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.81
+        near_collision_cost: 253
+        critical_cost: 300.0
+        consider_footprint: false
+        collision_cost: 1000000.0
+        near_goal_distance: 1.0
+        trajectory_point_step: 2
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 1.4
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0
+        threshold_to_consider: 0.5
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 14.0
+        max_path_occupancy_ratio: 0.05
+        trajectory_point_step: 4
+        threshold_to_consider: 0.5
+        offset_from_furthest: 20
+        use_path_orientations: false
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.0
+        offset_from_furthest: 4
+        threshold_to_consider: 0.5
+        max_angle_to_furthest: 1.0
+        mode: 0
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        offset_from_furthest: 5
+        threshold_to_consider: 1.4
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 0.5
+      TwirlingCritic:
+        enabled: true
+        twirling_cost_power: 1
+        twirling_cost_weight: 10.0
 
 local_costmap:
   local_costmap:
     ros__parameters:
       update_frequency: 5.0 # costmap update frequency [3.0 ?]
-      publish_frequency: 2.0 # rate of publishing costmap to topic
+      publish_frequency: 5.0 # rate of publishing costmap to topic
       global_frame: odom
       robot_base_frame: base_link
       rolling_window: true # whether costmap should roll with base_frame
-      width: 3 # local costmap width
-      height: 3 # local costmap height
+      width: 2 # local costmap width
+      height: 2 # local costmap height
       resolution: 0.05 # resolution of 1 pixel in meters
-      robot_radius: 0.3 # radius of circular robot. if SET -> collision checking will be circular
+      robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
       # footprint_padding: 0.01 # inflation layer around footprint
       plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.6 # inflation radius
+        inflation_radius: 0.4 # inflation radius
         cost_scaling_factor: 4.0 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
@@ -203,25 +250,25 @@ local_costmap:
           clearing: true # source ray trace clear in costmap
           marking: true # whether source marks in the costmap
           data_type: "LaserScan"
-          raytrace_max_range: 3.0 # max range raytrace clear obstacles from costmap 
-          raytrace_min_range: 0.0
+          raytrace_max_range: 3.3 # max range raytrace clear obstacles from costmap 
+          raytrace_min_range: 0.2
           obstacle_max_range: 3.0 # max range to mark obstacles in costmap
-          obstacle_min_range: 0.0
-          inf_is_valid: true # whether infinite value is valid [false ?]
+          obstacle_min_range: 0.2
+          inf_is_valid: false # whether infinite value is valid [false ?]
       always_send_full_costmap: true # whether to send full cost map every update, rather than updates
 
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0 # costmap update frequency
-      publish_frequency: 1.0 # rate of publishing costmap to topic
+      update_frequency: 5.0 # costmap update frequency
+      publish_frequency: 5.0 # rate of publishing costmap to topic
       global_frame: map
       robot_base_frame: base_link
       transform_tolerance: 1.0 # timing tolerance for TF future
-      robot_radius: 0.3 # radius of circular robot. if SET -> collision checking will be circular
+      robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
       resolution: 0.05 # resolution of 1 pixel in meters
       track_unknown_space: true # false: consider unknown cell as free space
-      footprint_padding: 0.02 # inflation layer around footprint
+      footprint_padding: 0.03 # inflation layer around footprint
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -234,14 +281,14 @@ global_costmap:
           marking: true # whether source marks in the costmap
           data_type: "LaserScan"
           raytrace_max_range: 8.0 # max range raytrace clear obstacles from costmap 
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.2
           obstacle_max_range: 2.5 # max range to mark obstacles in costmap
-          obstacle_min_range: 0.0
-          inf_is_valid: true # whether infinite value is valid [false ?]
+          obstacle_min_range: 0.2
+          inf_is_valid: false # whether infinite value is valid [false ?]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: true
-        transform_tolerance: 0.0 # timing tolerance for TF 
+        transform_tolerance: 0.1 # timing tolerance for TF 
         subscribe_to_updates: true # subscribe to map udpates
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
@@ -268,7 +315,7 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.05 # tolerance between requested goal pose and end of path (meters) [0.5 ?]
+      tolerance: 0.10 # tolerance between requested goal pose and end of path (meters) [0.5 ?]
       use_astar: false # true: A* algorithm, false: Dijkstra
       allow_unknown: false # whether to allow plannig through unknown cells
       use_final_approach_orientation: false # true: make orientation at goal pose the same as the vector connecting last two points
@@ -294,14 +341,14 @@ behavior_server:
     robot_base_frame: base_link
     transform_timeout: 0.1
     simulate_ahead_time: 2.0 # time to look ahead for collision (seconds)
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.1
     rotational_acc_lim: 3.2
     enable_stamped_cmd_vel: false # [true ?]
 
 waypoint_follower:
   ros__parameters:
-    loop_rate: 20
+    loop_rate: 2
     stop_on_failure: false # false: if 1st waypoint failed, continue to the next one. true: stop
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint: # another useful plugin could be "InputAtWaypoint" to tell it to go to the next waypoint 
@@ -316,82 +363,30 @@ collision_monitor:
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.1 # timing tolerance for TF future
-    source_timeout: 5.0 # max time interval at which source data is still valid (0.0: disable blocking mechanism)
+    transform_tolerance: 0.2 # timing tolerance for TF future
+    source_timeout: 1.0 # max time interval at which source data is still valid (0.0: disable blocking mechanism)
     base_shift_correction: true # true: correct source data compared to robot base_link
     stop_pub_timeout: 1.0
     enable_stamped_cmd_vel: false # true ?
     use_realtime_priority: false
-    polygons: ["PolygonStop", "PolygonSlow"]
-    PolygonStop: # polygon that makes the robot stop, if a certain number of obstacles entered
-      type: "polygon" 
-      points: "[[0.35, 0.35], [0.35, -0.35], [-0.35, -0.35], [-0.35, 0.35]]"
-      action_type: "stop"
-      min_points: 4
-      visualize: true
-      polygon_pub_topic: "polygon_stop"
-      enabled: true
-    PolygonSlow: # polygon that makes the robot slow down (reduce max speed by slow_down ratio)
-      type: "polygon"
-      points: "[[0.40, 0.40], [0.40, -0.40], [-0.40, -0.40], [-0.40, 0.40]]"
-      action_type: "slowdown"
-      min_points: 4
-      slowdown_ratio: 0.3
-      visualize: true
-      polygon_pub_topic: "polygon_slowdown"
-      enabled: true
-    # PolygonLimit: # polygon that limits the max linear and angular velocity
-    #   type: "polygon"
-    #   points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
-    #   action_type: "limit"
-    #   min_points: 4
-    #   linear_limit: 0.4
-    #   angular_limit: 0.5
-    #   visualize: true
-    #   polygon_pub_topic: "polygon_limit"
-    #   enabled: true
-    # FootprintApproach:
-    #   type: "polygon"
-    #   action_type: "approach"
-    #   footprint_topic: "/local_costmap/published_footprint"
-    #   time_before_collision: 2.0
-    #   simulation_time_step: 0.02
-    #   min_points: 6
-    #   visualize: False
-    #   enabled: true
-    # VelocityPolygonStop:
-    #   type: "velocity_polygon"
+    polygons: ["FootprintApproach"]
+    # PolygonStop: # polygon that makes the robot stop, if a certain number of obstacles entered
+    #   type: "polygon" 
+    #   points: "[[0.35, 0.35], [0.35, -0.35], [-0.35, -0.35], [-0.35, 0.35]]"
     #   action_type: "stop"
-    #   min_points: 6
+    #   min_points: 4
     #   visualize: true
-    #   enabled: False
-    #   polygon_pub_topic: "velocity_polygon_stop"
-    #   velocity_polygons: ["rotation", "translation_forward", "translation_backward", "stopped"]
-    #   holonomic: false
-    #   rotation:
-    #     points: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
-    #     linear_min: 0.0
-    #     linear_max: 0.05
-    #     theta_min: -1.0
-    #     theta_max: 1.0
-    #   translation_forward:
-    #     points: "[[0.35, 0.3], [0.35, -0.3], [-0.2, -0.3], [-0.2, 0.3]]"
-    #     linear_min: 0.0
-    #     linear_max: 1.0
-    #     theta_min: -1.0
-    #     theta_max: 1.0
-    #   translation_backward:
-    #     points: "[[0.2, 0.3], [0.2, -0.3], [-0.35, -0.3], [-0.35, 0.3]]"
-    #     linear_min: -1.0
-    #     linear_max: 0.0
-    #     theta_min: -1.0
-    #     theta_max: 1.0
-    #   stopped:
-    #     points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
-    #     linear_min: -1.0
-    #     linear_max: 1.0
-    #     theta_min: -1.0
-    #     theta_max: 1.0
+    #   polygon_pub_topic: "polygon_stop"
+    #   enabled: true
+    FootprintApproach:
+      type: "polygon"
+      action_type: "approach"
+      footprint_topic: "/local_costmap/published_footprint"
+      time_before_collision: 1.2
+      simulation_time_step: 0.1
+      min_points: 6
+      visualize: False
+      enabled: true
     observation_sources: ["scan"]
     scan:
       source_timeout: 0.2

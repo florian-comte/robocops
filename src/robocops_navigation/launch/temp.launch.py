@@ -37,6 +37,8 @@ def generate_launch_description():
         name='ekf_filter_node',
         output='screen',
         parameters=[os.path.join(nav_pkg, 'config', 'ekf.yaml')],
+        remappings=[('/odometry/filtered','/odom')]
+
     )
 
     # Launch other subsystems

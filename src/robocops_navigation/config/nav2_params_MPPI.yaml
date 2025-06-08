@@ -238,7 +238,7 @@ local_costmap:
       denoise_layer: # denoise layer for lidar in costmap
         plugin: "nav2_costmap_2d::DenoiseLayer"
         enabled: true
-        minimal_group_size: 10 # number of neighbours that get deleted
+        minimal_group_size: 50 # number of neighbours that get deleted
         group_connectivity_type: 8 # 4 or 8 depending on desired distance measurement
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"

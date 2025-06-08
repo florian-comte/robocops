@@ -83,25 +83,25 @@ bt_navigator:
       - undock_robot
       - wait
 
-docking_server:
-  ros__parameters:
-    dock_plugins: ['nova_carter_dock']
-    nova_carter_dock:
-      plugin: 'opennav_docking::SimpleChargingDock'
-    docks: ['home_dock','flex_dock1', 'flex_dock2']
-    home_dock:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [0.0, 0.0, 0.0]
-    flex_dock1:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [10.0, 10.0, 0.0]
-    flex_dock2:
-      type: 'nova_carter_dock'
-      frame: map
-      pose: [30.0, 30.0, 0.0]
-    enable_stamped_cmd_vel: true
+# docking_server:
+#   ros__parameters:
+#     dock_plugins: ['nova_carter_dock']
+#     nova_carter_dock:
+#       plugin: 'opennav_docking::SimpleChargingDock'
+#     docks: ['home_dock','flex_dock1', 'flex_dock2']
+#     home_dock:
+#       type: 'nova_carter_dock'
+#       frame: map
+#       pose: [0.0, 0.0, 0.0]
+#     flex_dock1:
+#       type: 'nova_carter_dock'
+#       frame: map
+#       pose: [10.0, 10.0, 0.0]
+#     flex_dock2:
+#       type: 'nova_carter_dock'
+#       frame: map
+#       pose: [30.0, 30.0, 0.0]
+#     enable_stamped_cmd_vel: true
 
 controller_server:
   ros__parameters:
@@ -263,22 +263,24 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 10.0
+    expected_planner_frequency: 20.0 # rate of planner
+    costmap_update_timeout: 1.0 # timeout value (seconds) for map to update before planning request
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 1.0
-      use_astar: false
-      allow_unknown: true
+      tolerance: 0.05 # tolerance between requested goal pose and end of path (meters) [0.5 ?]
+      use_astar: false # true: A* algorithm, false: Dijkstra
+      allow_unknown: false # whether to allow plannig through unknown cells
+      use_final_approach_orientation: false # true: make orientation at goal pose the same as the vector connecting last two points
 
 behavior_server:
   ros__parameters:
-    local_costmap_topic: local_costmap/costmap_raw
+    local_costmap_topic: local_costmap/costmap_raw # local for collision
     local_footprint_topic: local_costmap/published_footprint
-    global_costmap_topic: global_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw # global for collision
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
     spin:
       plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
     backup:
@@ -287,111 +289,109 @@ behavior_server:
       plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
     wait:
       plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
-    assisted_teleop:
-      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
     local_frame: odom
     global_frame: map
     robot_base_frame: base_link
     transform_timeout: 0.1
-    simulate_ahead_time: 2.0
+    simulate_ahead_time: 2.0 # time to look ahead for collision (seconds)
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-    enable_stamped_cmd_vel: true
+    enable_stamped_cmd_vel: false # [true ?]
 
 waypoint_follower:
   ros__parameters:
     loop_rate: 20
-    stop_on_failure: false
+    stop_on_failure: false # false: if 1st waypoint failed, continue to the next one. true: stop
     waypoint_task_executor_plugin: "wait_at_waypoint"
-    wait_at_waypoint:
-      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
+    wait_at_waypoint: # another useful plugin could be "InputAtWaypoint" to tell it to go to the next waypoint 
+      plugin: "nav2_waypoint_follower::WaitAtWaypoint" # plugin to tell what to do when arrived to a waypoint
       enabled: true
-      waypoint_pause_duration: 0
+      waypoint_pause_duration: 0 # pause duration (seconds) when arrived at waypoint
 
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_footprint"
+    base_frame_id: "base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.5
-    source_timeout: 5.0
-    base_shift_correction: true
-    stop_pub_timeout: 2.0
-    enable_stamped_cmd_vel: true
+    transform_tolerance: 0.1 # timing tolerance for TF future
+    source_timeout: 5.0 # max time interval at which source data is still valid (0.0: disable blocking mechanism)
+    base_shift_correction: true # true: correct source data compared to robot base_link
+    stop_pub_timeout: 1.0
+    enable_stamped_cmd_vel: false # true ?
     use_realtime_priority: false
-    polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
-    PolygonStop:
-      type: "circle"
-      radius: 0.1
+    polygons: ["PolygonStop", "PolygonSlow"]
+    PolygonStop: # polygon that makes the robot stop, if a certain number of obstacles entered
+      type: "polygon" 
+      points: "[[0.35, 0.35], [0.35, -0.35], [-0.35, -0.35], [-0.35, 0.35]]"
       action_type: "stop"
       min_points: 4
       visualize: true
       polygon_pub_topic: "polygon_stop"
       enabled: true
-    PolygonSlow:
+    PolygonSlow: # polygon that makes the robot slow down (reduce max speed by slow_down ratio)
       type: "polygon"
-      points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
+      points: "[[0.40, 0.40], [0.40, -0.40], [-0.40, -0.40], [-0.40, 0.40]]"
       action_type: "slowdown"
       min_points: 4
       slowdown_ratio: 0.3
       visualize: true
       polygon_pub_topic: "polygon_slowdown"
       enabled: true
-    PolygonLimit:
-      type: "polygon"
-      points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
-      action_type: "limit"
-      min_points: 4
-      linear_limit: 0.4
-      angular_limit: 0.5
-      visualize: true
-      polygon_pub_topic: "polygon_limit"
-      enabled: true
-    FootprintApproach:
-      type: "polygon"
-      action_type: "approach"
-      footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 2.0
-      simulation_time_step: 0.02
-      min_points: 6
-      visualize: False
-      enabled: true
-    VelocityPolygonStop:
-      type: "velocity_polygon"
-      action_type: "stop"
-      min_points: 6
-      visualize: true
-      enabled: False
-      polygon_pub_topic: "velocity_polygon_stop"
-      velocity_polygons: ["rotation", "translation_forward", "translation_backward", "stopped"]
-      holonomic: false
-      rotation:
-        points: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
-        linear_min: 0.0
-        linear_max: 0.05
-        theta_min: -1.0
-        theta_max: 1.0
-      translation_forward:
-        points: "[[0.35, 0.3], [0.35, -0.3], [-0.2, -0.3], [-0.2, 0.3]]"
-        linear_min: 0.0
-        linear_max: 1.0
-        theta_min: -1.0
-        theta_max: 1.0
-      translation_backward:
-        points: "[[0.2, 0.3], [0.2, -0.3], [-0.35, -0.3], [-0.35, 0.3]]"
-        linear_min: -1.0
-        linear_max: 0.0
-        theta_min: -1.0
-        theta_max: 1.0
-      stopped:
-        points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
-        linear_min: -1.0
-        linear_max: 1.0
-        theta_min: -1.0
-        theta_max: 1.0
+    # PolygonLimit: # polygon that limits the max linear and angular velocity
+    #   type: "polygon"
+    #   points: "[[0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1]]"
+    #   action_type: "limit"
+    #   min_points: 4
+    #   linear_limit: 0.4
+    #   angular_limit: 0.5
+    #   visualize: true
+    #   polygon_pub_topic: "polygon_limit"
+    #   enabled: true
+    # FootprintApproach:
+    #   type: "polygon"
+    #   action_type: "approach"
+    #   footprint_topic: "/local_costmap/published_footprint"
+    #   time_before_collision: 2.0
+    #   simulation_time_step: 0.02
+    #   min_points: 6
+    #   visualize: False
+    #   enabled: true
+    # VelocityPolygonStop:
+    #   type: "velocity_polygon"
+    #   action_type: "stop"
+    #   min_points: 6
+    #   visualize: true
+    #   enabled: False
+    #   polygon_pub_topic: "velocity_polygon_stop"
+    #   velocity_polygons: ["rotation", "translation_forward", "translation_backward", "stopped"]
+    #   holonomic: false
+    #   rotation:
+    #     points: "[[0.3, 0.3], [0.3, -0.3], [-0.3, -0.3], [-0.3, 0.3]]"
+    #     linear_min: 0.0
+    #     linear_max: 0.05
+    #     theta_min: -1.0
+    #     theta_max: 1.0
+    #   translation_forward:
+    #     points: "[[0.35, 0.3], [0.35, -0.3], [-0.2, -0.3], [-0.2, 0.3]]"
+    #     linear_min: 0.0
+    #     linear_max: 1.0
+    #     theta_min: -1.0
+    #     theta_max: 1.0
+    #   translation_backward:
+    #     points: "[[0.2, 0.3], [0.2, -0.3], [-0.35, -0.3], [-0.35, 0.3]]"
+    #     linear_min: -1.0
+    #     linear_max: 0.0
+    #     theta_min: -1.0
+    #     theta_max: 1.0
+    #   stopped:
+    #     points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
+    #     linear_min: -1.0
+    #     linear_max: 1.0
+    #     theta_min: -1.0
+    #     theta_max: 1.0
     observation_sources: ["scan"]
     scan:
       source_timeout: 0.2
@@ -401,16 +401,16 @@ collision_monitor:
 
 velocity_smoother:
   ros__parameters:
-    smoothing_frequency: 20.0
-    scale_velocities: false
-    feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.5]
-    min_velocity: [-0.5, 0.0, -2.5]
-    deadband_velocity: [0.0, 0.0, 0.0]
-    velocity_timeout: 1.0
+    smoothing_frequency: 20.0 # rate of smoothing
+    scale_velocities: false # true: could deviate slightly from desired tajectory
+    feedback: "OPEN_LOOP" # CLOSED_LOOP: reads data from odom topic
+    max_velocity: [0.5, 0.0, 2.5] # max velocities X, Y, theta (m/s)
+    min_velocity: [-0.5, 0.0, -2.5] # min velocities X, Y, theta (m/s)
+    deadband_velocity: [0.0, 0.0, 0.0] # to prevent damaging motor controllers
+    velocity_timeout: 1.0 # timeout when smoother will publish zero Twit message to stop
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
-    odom_duration: 0.1
-    use_realtime_priority: false
-    enable_stamped_cmd_vel: true
+    odom_duration: 0.1 # time to buffer odometry commands if CLOSED_LOOP
+    use_realtime_priority: false # To optimise loop time (but could mess up others)
+    enable_stamped_cmd_vel: false # true ?

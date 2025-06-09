@@ -70,7 +70,7 @@ BT::NodeStatus BlockingGPIO::onRunning()
 
     if (!gpio_active_)
     {
-        if (is_waiting_ && now - wait_time_ > wait_after_duration_)
+        if (is_waiting_ && ((now - wait_time_).seconds() > wait_after_duration_))
         {
             RCLCPP_INFO(node_->get_logger(), "GPIO [%s] Returned success.", gpio_name_.c_str());
             return BT::NodeStatus::SUCCESS;
@@ -79,7 +79,7 @@ BT::NodeStatus BlockingGPIO::onRunning()
         {
             RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Returning SUCCESS.", gpio_name_.c_str());
             is_waiting_ = true;
-            wait_time_ = node_->get_clock()->now();
+            wait_time_ = now;
         }
     }
 

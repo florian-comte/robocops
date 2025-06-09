@@ -91,7 +91,7 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
 
     for (int i = start_angle_; i < end_angle_; i++)
     {
-        if (!(std::isnan(msg->ranges[i]) || std::isinf(msg->ranges[i]) || msg->ranges[i] > msg.range_max || msg->ranges[i] < msg.range_min))
+        if (!(std::isnan(msg->ranges[i]) || std::isinf(msg->ranges[i]) || msg->ranges[i] > msg->range_max || msg->ranges[i] < msg->range_min))
         {
             distance_sum += msg->ranges[i];
             distance_count++;

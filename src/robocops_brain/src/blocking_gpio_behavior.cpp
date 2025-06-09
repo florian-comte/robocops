@@ -20,7 +20,9 @@ BT::PortsList BlockingGPIO::providedPorts()
         BT::InputPort<std::string>("gpio_name"),
         BT::InputPort<std::string>("interface_name"),
         BT::InputPort<double>("timeout"),
-        BT::InputPort<double>("pulse_duration")};
+        BT::InputPort<double>("pulse_duration"),
+        BT::InputPort<double>("wait_duration")};
+};
 }
 
 BT::NodeStatus BlockingGPIO::onStart()

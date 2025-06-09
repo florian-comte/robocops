@@ -1,10 +1,17 @@
 scan_to_scan_filter_chain:
   ros__parameters:
-    filter1:
-      name: angle
+    front:
+      name: front
       type: laser_filters/LaserScanAngularBoundsFilter
       params:
-        lower_angle: 0.0 # -20
-        upper_angle: 3.14 # 160
+        lower_angle: 0.0 #
+        upper_angle: 3.14 #
+
+    back:
+      name: back
+      type: laser_filters/LaserScanAngularBoundsFilter
+      params:
+        lower_angle: 4.53626 
+        upper_angle: 4.88532585
         
         

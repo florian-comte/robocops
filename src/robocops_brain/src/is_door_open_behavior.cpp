@@ -68,14 +68,6 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
     float angle_increment = msg->angle_increment;
     size_t num_readings = msg->ranges.size();
 
-    // Validate the requested angle
-    if (angle_ < angle_min || angle_ > angle_max)
-    {
-        RCLCPP_WARN(node_->get_logger(), "Requested angle %.2f is out of bounds [%.2f, %.2f]",
-                    angle_, angle_min, angle_max);
-        return;
-    }
-
     // Compute the index of the scan that corresponds to the desired angle
     size_t index = static_cast<size_t>((angle_ - angle_min) / angle_increment);
 

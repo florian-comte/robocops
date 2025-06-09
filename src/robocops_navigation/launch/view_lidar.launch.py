@@ -20,7 +20,7 @@ def generate_launch_description():
             'serial_port': '/dev/LIDAR',
             'frame_id': 'laser_frame',
             'angle_compensate': True,
-            'scan_mode': 'Standard'
+            'scan_mode': 'Standard',
             'scan_frequency': 20.0
         }]
     )

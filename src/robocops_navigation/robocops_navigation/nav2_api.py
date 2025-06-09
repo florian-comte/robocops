@@ -44,10 +44,10 @@ def main():
     goal_pose = PoseStamped()
     goal_pose.header.frame_id = 'map'
     goal_pose.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose.pose.position.x = 4.891
-    goal_pose.pose.position.y = 7.274
-    goal_pose.pose.orientation.z = -1.591
-    goal_pose.pose.orientation.w = 0.71
+    goal_pose.pose.position.x = 4.891 # 4.891 | 0.5
+    goal_pose.pose.position.y = 7.274 # 7.274 | 0.5
+    goal_pose.pose.orientation.z = -1.591 # -1.591 | 0.0
+    goal_pose.pose.orientation.w = 0.71 # 0.71 | 1.0
 
     # sanity check a valid path exists
     # path = navigator.getPath(initial_pose, goal_pose)
@@ -75,7 +75,7 @@ def main():
                 navigator.cancelTask()
 
             # Some navigation request change to demo preemption
-            if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
+            if Duration.from_msg(feedback.navigation_time) > Duration(seconds=200.0):
                 goal_pose.pose.position.x = 0.5
                 goal_pose.pose.position.y = 0.5
                 navigator.goToPose(goal_pose)
@@ -91,7 +91,7 @@ def main():
     else:
         print('Goal has an invalid return status!')
 
-    navigator.lifecycleShutdown()
+    # navigator.lifecycleShutdown() # SHUTDOWN NAV2 STACK
 
     exit(0)
 

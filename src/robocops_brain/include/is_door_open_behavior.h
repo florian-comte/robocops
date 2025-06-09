@@ -8,11 +8,7 @@
 #include <control_msgs/msg/dynamic_interface_group_values.hpp>
 #include <control_msgs/msg/interface_value.hpp>
 
-#define ANGLE_DOOR 3.10
-#define START_ANGLE_DOOR 170
-#define END_ANGLE_DOOR 180
-
-#define MIN_DISTANCE_DOOR 500
+#define MIN_DISTANCE_DOOR 150
 
 class IsDoorOpen : public BT::StatefulActionNode
 {

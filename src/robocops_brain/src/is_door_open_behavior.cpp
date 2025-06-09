@@ -31,9 +31,6 @@ BT::NodeStatus IsDoorOpen::onStart()
 
     start_time_ = node_->get_clock()->now();
 
-    start_angle_ = START_ANGLE_DOOR;
-    end_angle_ = END_ANGLE_DOOR;
-
     // At first no distance found
     distance_ = -1;
     return BT::NodeStatus::RUNNING;

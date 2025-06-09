@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <iostream>
 #include <cstring>
-#include "ArduinoComms.h"
 
 void ArduinoComms::connect(const std::string &device, int timeout_ms)
 {

@@ -23,7 +23,8 @@ private:
 
     std::shared_ptr<rclcpp::Node> node_;
 
-    double angle_ = 0;
+    double start_angle_ = 0;
+    double end_angle_ = 0;
     double distance_ = -1.0;
 
     double timeout_duration_;

@@ -16,8 +16,7 @@ IsDoorOpen::IsDoorOpen(const std::string &name,
 // Declare input and output ports
 BT::PortsList IsDoorOpen::providedPorts()
 {
-    return
-    {
+    return {
         BT::InputPort<float>("timeout_duration"),
     };
 }
@@ -32,7 +31,8 @@ BT::NodeStatus IsDoorOpen::onStart()
 
     start_time_ = node_->get_clock()->now();
 
-    angle_ = ANGLE_DOOR;
+    start_angle_ = START_ANGLE_DOOR;
+    end_angle_ = END_ANGLE_DOOR;
 
     // At first no distance found
     distance_ = -1;
@@ -79,24 +79,30 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
     // Compute the index of the scan that corresponds to the desired angle
     size_t index = static_cast<size_t>((angle_ - angle_min) / angle_increment);
 
-    if (index >= num_readings)
+    if (end_angle_ >= num_readings)
     {
         RCLCPP_WARN(node_->get_logger(), "Computed index %zu out of range (max %zu)",
                     index, num_readings - 1);
         return;
     }
 
-    for (int i = 0; i < num_readings; i++){
-        RCLCPP_WARN(node_->get_logger(), "Range for %zu: %6.4lf", i, msg->ranges[i]);
+    float distance_sum = 0;
+    int distance_count = 0;
+
+    for (int i = start_angle_; i < end_angle_; i++)
+    {
+        if (!(std::isnan(msg->ranges[i]) || std::isinf(msg->ranges[i]) || msg->ranges[i] > msg.range_max || msg->ranges[i] < msg.range_min))
+        {
+            distance_sum += msg->ranges[i];
+            distance_count++;
+        }
     }
 
-    float range = msg->ranges[index];
-
-    if (std::isnan(range) || std::isinf(range) || range <= 0.0)
+    if (distance_count == 0)
     {
-        RCLCPP_WARN(node_->get_logger(), "Invalid LIDAR reading at angle %.2f (index %zu): %6.4lf", angle_, index, range);
+        RCLCPP_WARN(node_->get_logger(), "Invalid LIDAR reading.");
         return;
     }
 
-    distance_ = range;
+    distance_ = distance_sum;
 }

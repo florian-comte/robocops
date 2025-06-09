@@ -2,5 +2,5 @@
 drop_point: [-1.0, -0.5, 1.57]
 zone4_outside_entry: [7, 4.28, 3.14]
 zone4_inside_entry: [7.75, 6.53, 1.57]
-zone3_inside_entry: [2.50, 7.50, 3.14]
+zone3_inside_entry: [2.50, 7.70, 3.14]
 button_robot_position: [4.10, 7.50, -1.57]

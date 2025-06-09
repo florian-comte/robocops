@@ -18,6 +18,7 @@
 #include "search_and_grab_behavior.h"
 #include "set_pose_behavior.h"
 #include "can_go_to_zone_behavior.h"
+#include "get_lidar_distance_at_angle_behavior.h"
 
 using namespace std::chrono_literals;
 
@@ -60,6 +61,7 @@ public:
         factory.registerNodeType<SetPose>("SetPose", shared_from_this());
         factory.registerNodeType<SearchAndGrab>("SearchAndGrab", shared_from_this());
         factory.registerNodeType<CanGoToZone>("CanGoToZone");
+        factory.registerNodeType<GetLidarDistanceAtAngle>("GetLidarDistanceAtAngle");
 
         auto blackboard = BT::Blackboard::create();
 
@@ -76,6 +78,9 @@ public:
         blackboard->set<bool>("never_timed_out_opening_door", true);
 
         blackboard->set<bool>("is_door_open", false);
+
+        blackboard->set<double>("lidar_angle", 0.0);
+        blackboard->set<double>("lidar_distance", -1.0);
 
         RCLCPP_INFO(this->get_logger(), "Attempting to create tree from XML...");
 

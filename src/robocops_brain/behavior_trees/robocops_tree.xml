@@ -7,6 +7,8 @@
         <Fallback name="ZoneSelector">
           <!-- Zone 3 -->
           <Sequence>
+
+            <!-- Check if can go zone 3, SUCCESS = true, FAILURE = false -->
             <CanGoToZone 
               zone_index="2" 
               MAX_INVENTORY="{MAX_INVENTORY}"
@@ -18,25 +20,34 @@
               never_timed_out_opening_door="{never_timed_out_opening_door}"
               />
             
-            <!-- If door not open, go and have back next to button and open it -->
+            <!-- Check if door is not open, if yes SUCCESS, if not enter precond -->
             <Precondition if="!is_door_open" else="SUCCESS">
                 <Sequence>
+                    <!-- Go to the button facing back -->
                     <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
+                      
+                    <RetryUntilSuccessful num_attempts="3">
+                      <!-- Activate button routine -->
+                      <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="2.0" />
+                      
+                      <!-- Get lidar distance on the right of the robot -->
+                      <GetLidarDistanceAtAngle angle="3.14" timeout_duration="5.0" _failureIf="lidar_distance < 1.5"/>
+                      
+                      <!-- Check if the door open with lidar -->
+                      <Precondition if="lidar_distance < 1.50" else="SUCCESS">
+                        <Script code="is_door_open := false" />
+                      </Precondition>
 
-                    <Fallback>
-                    <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="2.0" />
-                    <Script code="never_timed_out_opening_door := false" />
-                    </Fallback>
+                    </RetryUntilSuccessful>
                 </Sequence>
             </Precondition>
 
             <!-- If door is open, enter zone 3 -->
-            <Precondition if="never_timed_out_opening_door" else="FAILURE">
-            <Sequence>
-                <Script code="is_door_open := true" />
-                <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
-                <!-- <SearchAndGrab zone="3"/> -->
-            </Sequence>
+            <Precondition if="is_door_open" else="FAILURE">
+              <Sequence>
+                  <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
+                  <!-- <SearchAndGrab zone="3"/> -->
+              </Sequence>
             </Precondition>
           </Sequence>
 

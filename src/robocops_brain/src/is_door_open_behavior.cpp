@@ -90,7 +90,7 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
 
     if (std::isnan(range) || std::isinf(range) || range <= 0.0)
     {
-        RCLCPP_WARN(node_->get_logger(), "Invalid LIDAR reading at angle %.2f (index %zu)", angle_, index);
+        RCLCPP_WARN(node_->get_logger(), "Invalid LIDAR reading at angle %.2f (index %zu): %6.4lf", angle_, index, range);
         return;
     }
 

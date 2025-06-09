@@ -7,57 +7,67 @@
 #include <algorithm>
 #include <cstdint>
 #include <sys/select.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <errno.h>
+#include <iostream>
+#include <cstring>
+#include "ArduinoComms.h"
 
-void ArduinoComms::connect(const std::string &serial_device, int32_t timeout_ms)
+void ArduinoComms::connect(const std::string &device, int timeout_ms)
 {
-    timeout_ms_ = timeout_ms;
+    disconnect(); 
 
-    // Open the serial device with read/write access, no controlling terminal, and synchronous I/O
-    serial_fd_ = open(serial_device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    serial_fd_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
     if (serial_fd_ < 0)
     {
-        perror("Error opening serial port");
+        std::cerr << "Error opening " << device << ": " << strerror(errno) << std::endl;
         return;
     }
 
-    // Create a termios struct and clear it
+    this->timeout_ms_ = timeout_ms;
+
     struct termios tty;
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(serial_fd_, &tty) != 0)
     {
-        perror("Error from tcgetattr");
+        std::cerr << "Error from tcgetattr: " << strerror(errno) << std::endl;
+        disconnect();
         return;
     }
 
-    // Set baud rate to 57600 (input and output)
+    // Set baud rate (57600)
     cfsetospeed(&tty, B57600);
     cfsetispeed(&tty, B57600);
 
-    // Configure terminal settings:
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;         // 8 data bits
-    tty.c_iflag &= ~IGNBRK;                             // Disable break processing
-    tty.c_lflag = 0;                                    // No signaling chars, no echo, no canonical input
-    tty.c_oflag = 0;                                    // No remapping, no delays
-    tty.c_cc[VMIN] = 0;                                 // Non-blocking read
-    tty.c_cc[VTIME] = std::min(timeout_ms_ / 100, 255); // Read timeout in 0.1s units
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit chars
+    tty.c_iflag &= ~IGNBRK;                     // disable break processing
+    tty.c_lflag = 0;                            // no signaling chars, no echo
+    tty.c_oflag = 0;                            // no remapping, no delays
+    tty.c_cc[VMIN] = 0;                         // non-blocking read
+    tty.c_cc[VTIME] = timeout_ms_ / 100;        // read timeout (tenths of second)
 
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // No software flow control
-    tty.c_cflag |= (CLOCAL | CREAD);        // Enable receiver, ignore modem control lines
-    tty.c_cflag &= ~(PARENB | PARODD);      // No parity
-    tty.c_cflag &= ~CSTOPB;                 // One stop bit
-    tty.c_cflag &= ~CRTSCTS;                // No hardware flow control
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+    tty.c_cflag |= (CLOCAL | CREAD);        // ignore modem controls, enable reading
+    tty.c_cflag &= ~(PARENB | PARODD);      // no parity
+    tty.c_cflag &= ~CSTOPB;                 // one stop bit
+    tty.c_cflag &= ~CRTSCTS;                // no flow control
 
-    // Apply the settings immediately
     if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0)
     {
-        perror("Error from tcsetattr");
+        std::cerr << "Error from tcsetattr: " << strerror(errno) << std::endl;
+        disconnect();
         return;
     }
+
+    // Flush any old data
+    tcflush(serial_fd_, TCIOFLUSH);
 }
 
 void ArduinoComms::disconnect()
 {
-    if (connected())
+    if (serial_fd_ >= 0)
     {
         close(serial_fd_);
         serial_fd_ = -1;
@@ -68,6 +78,19 @@ bool ArduinoComms::connected() const
 {
     return serial_fd_ >= 0;
 }
+
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <cstring>
+#include <iostream>
+#include <cstdint>
+#include "ArduinoComms.h"
+
+#define START_MARKER 0xAA
+#define END_MARKER 0x55
+#define COMMANDS_BUFFER_SIZE 5
+#define STATES_BUFFER_SIZE 11
 
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,
@@ -89,161 +112,113 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 int *back_ultrasound_distance,
                                 bool print_output)
 {
-    if (!connected())
+    if (serial_fd_ < 0)
     {
-        std::cerr << "[Serial] Port not connected." << std::endl;
+        std::cerr << "Serial port not open.\n";
         return;
     }
 
-    // Prepare command buffer with markers
-    uint8_t cmd[7]; // START_MARKER + 5 bytes payload + END_MARKER
-    cmd[0] = 0xAA;  // START_MARKER
+    uint8_t tx_buffer[COMMANDS_BUFFER_SIZE + 2]; // command + markers
+    uint8_t rx_buffer[STATES_BUFFER_SIZE + 2];   // state + markers
 
-    // Offset motor speeds to avoid negative numbers (since Arduino expects unsigned)
-    maxon_left += 10000;
-    maxon_right += 10000;
+    // Format command (offset by 10000 as required)
+    int16_t adjusted_left = maxon_left + 10000;
+    int16_t adjusted_right = maxon_right + 10000;
 
-    // Encode speeds into 2 bytes each (big-endian)
-    cmd[1] = (maxon_left >> 8) & 0xFF;
-    cmd[2] = maxon_left & 0xFF;
-    cmd[3] = (maxon_right >> 8) & 0xFF;
-    cmd[4] = maxon_right & 0xFF;
+    tx_buffer[0] = START_MARKER;
+    tx_buffer[1] = (adjusted_left >> 8) & 0xFF;
+    tx_buffer[2] = adjusted_left & 0xFF;
+    tx_buffer[3] = (adjusted_right >> 8) & 0xFF;
+    tx_buffer[4] = adjusted_right & 0xFF;
 
-    // Encode control signals into bit flags in cmd[5]
-    cmd[5] = 0;
-    cmd[5] |= (capture_activate & 1);
-    cmd[5] |= ((unload_activate & 1) << 1);
-    cmd[5] |= ((button_activate & 1) << 2);
-    cmd[5] |= ((slope_up_activate & 1) << 3);
-    cmd[5] |= ((slope_down_activate & 1) << 4);
-    cmd[5] |= ((emergency_activate & 1) << 5);
+    // Pack control bits
+    uint8_t flags = 0;
+    flags |= (capture_activate & 0x01) << 0;
+    flags |= (unload_activate & 0x01) << 1;
+    flags |= (button_activate & 0x01) << 2;
+    flags |= (slope_up_activate & 0x01) << 3;
+    flags |= (slope_down_activate & 0x01) << 4;
+    flags |= (emergency_activate & 0x01) << 5;
+    tx_buffer[5] = flags;
+    tx_buffer[6] = END_MARKER;
 
-    cmd[6] = 0x55; // END_MARKER
-
-    fd_set write_fds;
-    FD_ZERO(&write_fds);
-    FD_SET(serial_fd_, &write_fds);
-    struct timeval tv_write = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
-
-    if (select(serial_fd_ + 1, nullptr, &write_fds, nullptr, &tv_write) > 0)
+    // Write to serial
+    if (write(serial_fd_, tx_buffer, sizeof(tx_buffer)) != sizeof(tx_buffer))
     {
-        if (write(serial_fd_, cmd, 7) != 7)
-        {
-            perror("[Serial] Failed to write full command");
-            return;
-        }
-    }
-    else
-    {
-        std::cerr << "[Serial] Write timeout or error" << std::endl;
+        std::cerr << "Failed to write command to serial.\n";
         return;
     }
 
-    // Now read the response with markers
-    uint8_t response[13]; // START_MARKER + 11 bytes payload + END_MARKER
-    int bytes_read = 0;
-    bool start_marker_found = false;
-    bool end_marker_found = false;
-    // struct timeval tv_read = {timeout_ms_ / 1000, (timeout_ms_ % 1000) * 1000};
-    time_t start_time = time(nullptr);
+    // Read response (wait until buffer fills or timeout)
+    uint8_t b;
+    bool started = false;
+    int index = 0;
+    auto start_time = static_cast<int>(time(nullptr));
 
-    while (!end_marker_found && (time(nullptr) - start_time) * 1000 < timeout_ms_)
+    while (true)
     {
-        fd_set read_fds;
-        FD_ZERO(&read_fds);
-        FD_SET(serial_fd_, &read_fds);
-        struct timeval tv = {0, 10000}; // 10ms timeout for each select call
-
-        if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv) > 0)
+        int n = read(serial_fd_, &b, 1);
+        if (n <= 0)
         {
-   
-            uint8_t byte;
-
-            std::cout << "[Serial] Received byte: 0x"
-                      << std::hex << static_cast<int>(byte) << std::dec << std::endl;
-            int n = read(serial_fd_, &byte, 1);
-            if (n == 1)
+            if (static_cast<int>(time(nullptr)) - start_time > timeout_ms_ / 1000)
             {
-                if (!start_marker_found)
-                {
-                    if (byte == 0xAA)
-                    {
-                        start_marker_found = true;
-                        bytes_read = 0;
-                    }
-                }
-                else
-                {
-                    if (byte == 0x55)
-                    {
-                        end_marker_found = true;
-                    }
-                    else
-                    {
-                        if (bytes_read < 11)
-                        {
-                            response[bytes_read++] = byte;
-                        }
-                        else
-                        {
-                            // Buffer overflow, reset
-                            start_marker_found = false;
-                        }
-                    }
-                }
+                std::cerr << "Timeout waiting for response.\n";
+                return;
+            }
+            continue;
+        }
+
+        if (!started)
+        {
+            if (b == START_MARKER)
+            {
+                started = true;
+                index = 0;
+            }
+        }
+        else
+        {
+            rx_buffer[index++] = b;
+            if (b == END_MARKER || index >= STATES_BUFFER_SIZE + 1)
+            {
+                break;
             }
         }
     }
 
-    if (!end_marker_found || bytes_read != 11)
+    if (rx_buffer[index - 1] != END_MARKER || index != STATES_BUFFER_SIZE + 1)
     {
-        std::cerr << "[Serial] Read timeout or incomplete response" << std::endl;
+        std::cerr << "Invalid response.\n";
         return;
     }
 
-    // Extract encoder values
-    *encoder_left = static_cast<int16_t>((response[0] << 8) | response[1]) - 10000;
-    *encoder_right = static_cast<int16_t>((response[2] << 8) | response[3]) - 10000;
+    // Parse received data
+    uint8_t *data = rx_buffer;
 
-    // Extract GPIO states from response[4]
-    *capture_active = static_cast<bool>((response[4] >> 0) & 1);
-    *unload_active = static_cast<bool>((response[4] >> 1) & 1);
-    *button_active = static_cast<bool>((response[4] >> 2) & 1);
-    *slope_up_active = static_cast<bool>((response[4] >> 3) & 1);
-    *slope_down_active = static_cast<bool>((response[4] >> 4) & 1);
-    *emergency_active = static_cast<bool>((response[4] >> 5) & 1);
+    int16_t left_speed = (data[0] << 8) | data[1];
+    int16_t right_speed = (data[2] << 8) | data[3];
 
-    // Extract nb duplos
-    *nb_captured_duplos = static_cast<int16_t>((response[5] << 8) | response[6]);
+    *encoder_left = left_speed - 10000;
+    *encoder_right = right_speed - 10000;
 
-    // Extract other values
-    *back_ultrasound_distance = static_cast<int16_t>((response[7] << 8) | response[8]);
-    int16_t other_value = static_cast<int16_t>((response[9] << 8) | response[10]);
+    uint8_t status = data[4];
+    *capture_active = (status >> 0) & 0x01;
+    *unload_active = (status >> 1) & 0x01;
+    *button_active = (status >> 2) & 0x01;
+    *slope_up_active = (status >> 3) & 0x01;
+    *slope_down_active = (status >> 4) & 0x01;
+    *emergency_active = (status >> 5) & 0x01;
 
-    // Print debug if wanted
+    *nb_captured_duplos = (data[5] << 8) | data[6];
+    *back_ultrasound_distance = (data[7] << 8) | data[8];
+    // state_other (data[9-10]) is unused here
+
     if (print_output)
     {
-        std::cout << "[Serial] Sent command: ";
-        for (int i = 0; i < 7; ++i)
-            std::cout << "0x" << std::hex << static_cast<int>(cmd[i]) << " ";
-
-        std::cout << std::dec;
-        std::cout << "\n[Serial] Encoders: L=" << *encoder_left
-                  << " R=" << *encoder_right << std::endl;
-
-        std::cout << "[Serial] GPIO States: "
-                  << "Capture: " << *capture_active
-                  << ", Unload: " << *unload_active
-                  << ", Button Active: " << *button_active
-                  << ", Slope up active: " << *slope_up_active
-                  << ", Slope down active: " << *slope_down_active
-                  << ", Emergency active: " << *emergency_active
-                  << ", Nb duplos captured: " << *nb_captured_duplos
-                  << ", Back ultrasound distance: " << *back_ultrasound_distance
-                  << std::endl;
-
-        std::cout << "[Serial] Debug values: "
-                  << "Other value 1: " << other_value
-                  << std::endl;
+        std::cout << "Left: " << *encoder_left << " Right: " << *encoder_right << "\n";
+        std::cout << "Capture: " << *capture_active << " Unload: " << *unload_active
+                  << " Button: " << *button_active << " SlopeUp: " << *slope_up_active
+                  << " SlopeDown: " << *slope_down_active << " Emergency: " << *emergency_active << "\n";
+        std::cout << "Duplos: " << *nb_captured_duplos << " Ultrasound: " << *back_ultrasound_distance << "\n";
     }
 }

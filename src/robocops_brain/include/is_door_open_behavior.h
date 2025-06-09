@@ -12,6 +12,8 @@
 #define START_ANGLE_DOOR 170
 #define END_ANGLE_DOOR 180
 
+#define MIN_DISTANCE_DOOR 500
+
 class IsDoorOpen : public BT::StatefulActionNode
 {
 public:

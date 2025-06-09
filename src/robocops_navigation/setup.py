@@ -27,7 +27,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'lidar_filter = robocops_navigation.filter_lidar_data:main'
+            'lidar_filter = robocops_navigation.filter_lidar_data:main',
+            'nav2_api = robocops_navigation.nav2_api:main'
         ],
     },
 )

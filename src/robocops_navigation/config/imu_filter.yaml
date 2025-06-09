@@ -2,9 +2,9 @@ imu_filter:
   ros__parameters:
     stateless: false
     use_mag: true
-    publish_tf: true
+    publish_tf: false
     reverse_tf: false
-    fixed_frame: "odom"
+    fixed_frame: "map"
     constant_dt: 0.0
     publish_debug_topics: false
     world_frame: "enu"

@@ -9,7 +9,7 @@ amcl:
     beam_skip_distance: 0.5 # ignore beams that are further than value from closest occupied cell 
     beam_skip_error_threshold: 0.9 # percentage of beams to force map update when 90% bad convergence
     beam_skip_threshold: 0.3 # percentage of beams required to match map, if not skip
-    do_beamskip: true # apply beam skipping or not
+    do_beamskip: false # apply beam skipping or not
     global_frame_id: "map"
     lambda_short: 0.1 # exponential decay for z_short
     laser_likelihood_max_dist: 2.0 # max distance to do obstacle inflation on map
@@ -29,7 +29,7 @@ amcl:
     save_pose_rate: 0.5 # max rate (Hz) at which to store the last estimated pose to the parameter server
     sigma_hit: 0.2 # stand dev for Gaussian model used in z_hit
     tf_broadcast: true # whether to publish TF between global_frame and odom
-    transform_tolerance: 1.0 # timing tolerance to keep transform valid in future [use 1.0 ?]
+    transform_tolerance: 0.5 # timing tolerance to keep transform valid in future [use 1.0 ?]
     update_min_a: 0.05 # rotational movement required to update filter in radians
     update_min_d: 0.05 # translational movement required to update filter in meters
     z_hit: 0.5
@@ -120,18 +120,18 @@ controller_server:
     controller_plugins: ["FollowPath"]
     progress_checker: # plugin to check progress made by the robot
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5 # min movement to consider progress being done
+      required_movement_radius: 0.25 # min movement to consider progress being done
       movement_time_allowance: 10.0 # max amount time to move required_movement_radius
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.35 #0.35 # tolerance to meet goal completion (in meters)
-      yaw_goal_tolerance: 0.50 #0.50 # tolerance to meet goal completion (in radians)
+      xy_goal_tolerance: 0.15 #0.35 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.25 #0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 15
+      time_steps: 25
       model_dt: 0.2 # Set to the duration of the control frequency
-      batch_size: 4000
+      batch_size: 3000
       ax_max: 3.0
       ax_min: -3.0
       ay_max: 3.0
@@ -238,7 +238,7 @@ local_costmap:
       denoise_layer: # denoise layer for lidar in costmap
         plugin: "nav2_costmap_2d::DenoiseLayer"
         enabled: true
-        minimal_group_size: 50 # number of neighbours that get deleted
+        minimal_group_size: 3 # number of neighbours that get deleted
         group_connectivity_type: 8 # 4 or 8 depending on desired distance measurement
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -264,7 +264,7 @@ global_costmap:
       publish_frequency: 5.0 # rate of publishing costmap to topic
       global_frame: map
       robot_base_frame: base_link
-      transform_tolerance: 1.0 # timing tolerance for TF future
+      transform_tolerance: 0.7 # timing tolerance for TF future
       robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
       resolution: 0.05 # resolution of 1 pixel in meters
       track_unknown_space: true # false: consider unknown cell as free space
@@ -358,7 +358,7 @@ waypoint_follower:
 
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_link"
+    base_frame_id: "chassis"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"

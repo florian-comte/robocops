@@ -156,9 +156,11 @@ void ArduinoComms::send_command(int16_t maxon_left,
 
         if (select(serial_fd_ + 1, &read_fds, nullptr, nullptr, &tv) > 0)
         {
+   
+            uint8_t byte;
+
             std::cout << "[Serial] Received byte: 0x"
                       << std::hex << static_cast<int>(byte) << std::dec << std::endl;
-            uint8_t byte;
             int n = read(serial_fd_, &byte, 1);
             if (n == 1)
             {

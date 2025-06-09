@@ -19,7 +19,7 @@ BT::PortsList BlockingGPIO::providedPorts()
     return {
         BT::InputPort<std::string>("gpio_name"),
         BT::InputPort<std::string>("interface_name"),
-        BT::InputPort<double>("timeout"),
+        BT::InputPort<double>("timeout_duration"),
         BT::InputPort<double>("pulse_duration"),
         BT::InputPort<double>("wait_after_duration")};
 }
@@ -29,16 +29,16 @@ BT::NodeStatus BlockingGPIO::onStart()
 {
     getInput("gpio_name", gpio_name_);
     getInput("interface_name", interface_name_);
-    getInput("timeout", timeout_sec_);
+    getInput("timeout_duration", timeout_duration_);
     getInput("pulse_duration", pulse_duration_);
     getInput("wait_after_duration", wait_after_duration_);
 
     RCLCPP_INFO(node_->get_logger(), "Starting BlockingGPIO for [%s] interface [%s]",
                 gpio_name_.c_str(), interface_name_.c_str());
     RCLCPP_INFO(node_->get_logger(), "Pulse duration: %.2f s, Timeout: %.2f s",
-                pulse_duration_, timeout_sec_);
+                pulse_duration_, timeout_duration_);
 
-    if (pulse_duration_ > timeout_sec_)
+    if (pulse_duration_ + wait_after_duration_ > timeout_duration_)
     {
         RCLCPP_ERROR(node_->get_logger(), "Pulse duration exceeds timeout. Aborting.");
         return BT::NodeStatus::FAILURE;
@@ -57,7 +57,7 @@ BT::NodeStatus BlockingGPIO::onRunning()
 {
     auto now = node_->get_clock()->now();
 
-    if ((now - start_time_).seconds() > timeout_sec_)
+    if ((now - start_time_).seconds() > timeout_duration_)
     {
         RCLCPP_WARN(node_->get_logger(), "Timeout exceeded waiting for GPIO to deactivate.");
         return BT::NodeStatus::FAILURE;
@@ -77,9 +77,9 @@ BT::NodeStatus BlockingGPIO::onRunning()
             RCLCPP_INFO(node_->get_logger(), "GPIO [%s] Returned success.", gpio_name_.c_str());
             return BT::NodeStatus::SUCCESS;
         }
-        else
+        else if (!is_waiting_)
         {
-            RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Returning SUCCESS.", gpio_name_.c_str());
+            RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Waiting the needed time...", gpio_name_.c_str());
             is_waiting_ = true;
             wait_time_ = now;
         }

@@ -5,6 +5,8 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include "rclcpp/rclcpp.hpp"
 
+#define ANGLE_DOOR 3.10
+
 class IsDoorOpen : public BT::StatefulActionNode
 {
 public:

@@ -32,7 +32,7 @@ BT::NodeStatus IsDoorOpen::onStart()
 
     start_time_ = node_->get_clock()->now();
 
-    angle_ = M_PI;
+    angle_ = ANGLE_DOOR;
 
     // At first no distance found
     distance_ = -1;

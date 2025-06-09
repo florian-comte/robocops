@@ -29,6 +29,7 @@ BT::NodeStatus BlockingGPIO::onStart()
     getInput("interface_name", interface_name_);
     getInput("timeout", timeout_sec_);
     getInput("pulse_duration", pulse_duration_);
+    getInput("wait_after_duration", wait_after_duration_);
 
     RCLCPP_INFO(node_->get_logger(), "Starting BlockingGPIO for [%s] interface [%s]",
                 gpio_name_.c_str(), interface_name_.c_str());
@@ -41,7 +42,8 @@ BT::NodeStatus BlockingGPIO::onStart()
         return BT::NodeStatus::FAILURE;
     }
 
-    already_pulsed = false;
+    already_pulsed_ = false;
+    is_waiting_ = false;
 
     send_gpio_command(true);
     start_time_ = node_->get_clock()->now();
@@ -53,23 +55,32 @@ BT::NodeStatus BlockingGPIO::onRunning()
 {
     auto now = node_->get_clock()->now();
 
-    if ((now - start_time_).seconds() > pulse_duration_ && !already_pulsed)
-    {
-        RCLCPP_INFO(node_->get_logger(), "Pulse duration exceeded. Sending OFF command.");
-        send_gpio_command(false);
-        already_pulsed = true;
-    }
-
     if ((now - start_time_).seconds() > timeout_sec_)
     {
         RCLCPP_WARN(node_->get_logger(), "Timeout exceeded waiting for GPIO to deactivate.");
         return BT::NodeStatus::FAILURE;
     }
 
+    if ((now - start_time_).seconds() > pulse_duration_ && !already_pulsed_)
+    {
+        RCLCPP_INFO(node_->get_logger(), "Pulse duration exceeded. Sending OFF command.");
+        send_gpio_command(false);
+        already_pulsed_ = true;
+    }
+
     if (!gpio_active_)
     {
-        RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Returning SUCCESS.", gpio_name_.c_str());
-        return BT::NodeStatus::SUCCESS;
+        if (is_waiting_ && now - wait_time_ > wait_after_duration_)
+        {
+            RCLCPP_INFO(node_->get_logger(), "GPIO [%s] Returned success.", gpio_name_.c_str());
+            return BT::NodeStatus::SUCCESS;
+        }
+        else
+        {
+            RCLCPP_INFO(node_->get_logger(), "GPIO [%s] deactivated. Returning SUCCESS.", gpio_name_.c_str());
+            is_waiting_ = true;
+            wait_time_ = node_->get_clock()->now();
+        }
     }
 
     return BT::NodeStatus::RUNNING;
@@ -98,7 +109,7 @@ void BlockingGPIO::send_gpio_command(bool active)
 
 void BlockingGPIO::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-     for (size_t i = 0; i < msg->interface_groups.size(); ++i)
+    for (size_t i = 0; i < msg->interface_groups.size(); ++i)
     {
         if (msg->interface_groups[i] == gpio_name_)
         {

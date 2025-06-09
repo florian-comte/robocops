@@ -36,9 +36,13 @@ private:
     std::string interface_name_;
     double timeout_sec_;
     double pulse_duration_;
+    double wait_after_duration_;
     rclcpp::Time start_time_;
+    rclcpp::Time wait_time_;
     bool gpio_active_ = true;
-    bool already_pulsed = false;
+    bool already_pulsed_ = false;
+    bool is_waiting_ = false;
+
 };
 
 #endif // BLOCKING_GPIO_H_

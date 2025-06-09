@@ -9,7 +9,7 @@ IsDoorOpen::IsDoorOpen(const std::string &name,
     : BT::StatefulActionNode(name, config), node_(node)
 {
     lidar_sub_ = node_->create_subscription<sensor_msgs::msg::LaserScan>(
-        "/scan/filtered", 10,
+        "/scan_filtered", 10,
         std::bind(&IsDoorOpen::lidar_callback, this, std::placeholders::_1));
 }
 

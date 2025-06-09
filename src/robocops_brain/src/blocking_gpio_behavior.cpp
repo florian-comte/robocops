@@ -98,7 +98,7 @@ void BlockingGPIO::send_gpio_command(bool active)
 
 void BlockingGPIO::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-    RCLCPP_INFO(node_->get_logger(), "Number of interface groups: %d\n", msg->interface_groups.size());
+    RCLCPP_INFO(node_->get_logger(), "Number of interface groups: %ld\n", msg->interface_groups.size());
 
      for (size_t i = 0; i < msg->interface_groups.size(); ++i)
     {

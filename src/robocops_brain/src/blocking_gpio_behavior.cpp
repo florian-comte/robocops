@@ -22,8 +22,8 @@ BT::PortsList BlockingGPIO::providedPorts()
         BT::InputPort<double>("timeout"),
         BT::InputPort<double>("pulse_duration"),
         BT::InputPort<double>("wait_after_duration")};
-};
 }
+
 
 BT::NodeStatus BlockingGPIO::onStart()
 {

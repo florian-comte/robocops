@@ -1,53 +1,47 @@
-#include "get_lidar_distance_at_angle_node.h"
+#include "is_door_open_behavior.h"
 #include <cmath>
 #include <iostream>
+#include "rclcpp/rclcpp.hpp"
 
 // Constructor
-GetLidarDistanceAtAngle::GetLidarDistanceAtAngle(const std::string &name,
-                                                 const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node)
+IsDoorOpen::IsDoorOpen(const std::string &name,
+                       const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node)
     : BT::StatefulActionNode(name, config), node_(node)
 {
     lidar_sub_ = node_->create_subscription<sensor_msgs::msg::LaserScan>(
         "/scan/filtered", 10,
-        std::bind(&GetLidarDistanceAtAngle::lidar_callback, this, std::placeholders::_1));
+        std::bind(&IsDoorOpen::lidar_callback, this, std::placeholders::_1));
 }
 
 // Declare input and output ports
-BT::PortsList GetLidarDistanceAtAngle::providedPorts()
+BT::PortsList IsDoorOpen::providedPorts()
 {
-    return {
+    return
+    {
         BT::InputPort<float>("timeout_duration"),
-        BT::InputPort<float>("angle"),
-        BT::OutputPort<float>("lidar_angle"),
-        BT::OutputPort<float>("lidar_distance")};
+    };
 }
 
-BT::NodeStatus GetLidarDistanceAtAngle::onStart()
+BT::NodeStatus IsDoorOpen::onStart()
 {
-    if (!getInput("angle", angle_))
-    {
-        throw BT::RuntimeError("Missing required input [angle]");
-    }
-
-    if (angle_ > 2* M_PI || angle_ < 0)
-    {
-        throw BT::RuntimeError("Angle should be between 0 and pi");
-    }
-
     if (!getInput("timeout_duration", timeout_duration_))
     {
         throw BT::RuntimeError("Missing required input [timeout_duration]");
+        return BT::NodeStatus::FAILURE;
     }
 
     start_time_ = node_->get_clock()->now();
 
+    angle_ = M_PI;
+
     // At first no distance found
     distance_ = -1;
+    return BT::NodeStatus::RUNNING;
 }
 
-BT::NodeStatus GetLidarDistanceAtAngle::onRunning()
+BT::NodeStatus IsDoorOpen::onRunning()
 {
-    if ((node_->get_clock()->now() - start_time_) > timeout_duration_)
+    if ((node_->get_clock()->now() - start_time_).seconds() > timeout_duration_)
     {
         RCLCPP_INFO(node_->get_logger(), "Reading lidar duration exceeded. Return FAILURE.");
         return BT::NodeStatus::FAILURE;
@@ -55,16 +49,18 @@ BT::NodeStatus GetLidarDistanceAtAngle::onRunning()
 
     if (distance_ >= 0)
     {
-        setOutput("lidar_angle", angle);
-        setOutput("lidar_distance", distance_);
-
-        return BT::NodeStatus::SUCCESS;
+        return distance_ > 1.5 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 
     return BT::NodeStatus::RUNNING;
 }
 
-void GetLidarDistanceAtAngle::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+void IsDoorOpen::onHalted()
+{
+    RCLCPP_WARN(node_->get_logger(), "IsDoorOpen halted.");
+}
+
+void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
     float angle_min = msg->angle_min;
     float angle_max = msg->angle_max;

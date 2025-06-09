@@ -38,6 +38,7 @@ set(AUTONOMY_SOURCES
     src/search_and_grab_behavior.cpp
     src/set_pose_behavior.cpp
     src/can_go_to_zone_behavior.cpp
+    src/is_door_open_behavior.cpp
 )
 
 set(TARGET_DEPENDS

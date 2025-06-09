@@ -18,7 +18,7 @@
 #include "search_and_grab_behavior.h"
 #include "set_pose_behavior.h"
 #include "can_go_to_zone_behavior.h"
-#include "get_lidar_distance_at_angle_behavior.h"
+#include "is_door_open_behavior.h"
 
 using namespace std::chrono_literals;
 
@@ -61,7 +61,7 @@ public:
         factory.registerNodeType<SetPose>("SetPose", shared_from_this());
         factory.registerNodeType<SearchAndGrab>("SearchAndGrab", shared_from_this());
         factory.registerNodeType<CanGoToZone>("CanGoToZone");
-        factory.registerNodeType<GetLidarDistanceAtAngle>("GetLidarDistanceAtAngle");
+        factory.registerNodeType<IsDoorOpen>("IsDoorOpen", shared_from_this());
 
         auto blackboard = BT::Blackboard::create();
 

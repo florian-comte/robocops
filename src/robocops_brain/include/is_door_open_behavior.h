@@ -2,11 +2,13 @@
 #define GET_LIDAR_READING_NODE_H
 
 #include <behaviortree_cpp/bt_factory.h>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include "rclcpp/rclcpp.hpp"
 
-class GetLidarDistanceAtAngle : public BT::StatefulActionNode
+class IsDoorOpen : public BT::StatefulActionNode
 {
 public:
-    GetLidarDistanceAtAngle(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node);
+    IsDoorOpen(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node);
 
     static BT::PortsList providedPorts();
 

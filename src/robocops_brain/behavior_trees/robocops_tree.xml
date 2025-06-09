@@ -5,7 +5,6 @@
 
       <KeepRunningUntilFailure>
         <Fallback name="ZoneSelector">
-          <Sequence>
           <!-- Zone 3 -->
           <Sequence>
             <CanGoToZone 

@@ -6,8 +6,12 @@
 #include "routines.h"
 #include "lift_driver.h"
 #include "ir_sensor.h"
+#include "back_ultrasound_sensor.h"
 
-#define BAUDRATE 57600
+#define START_MARKER 0xAA
+#define END_MARKER   0x55
+
+#define BAUDRATE 115200
 #define STATES_BUFFER_SIZE 11
 #define COMMANDS_BUFFER_SIZE 5
 
@@ -28,8 +32,7 @@ int command_maxon_right = 0;
 int16_t state_maxon_left = 0;
 int16_t state_maxon_right = 0;
 
-int16_t state_other_one = 0;
-int16_t state_other_two = 0;
+int16_t state_other = 0;
 
 int16_t state_nb_captured_duplos = 0;
 
@@ -51,9 +54,8 @@ void update_commands(){
     if(command_capture){
       if(capture_state == CAPTURE_IDLE && lift_state == LIFT_IDLE){
           capture_state = CAPTURE_BRUSHING;
-          state_nb_captured_duplos++;
       }
-    } else {
+    } else if(capture_state == CAPTURE_BRUSHING) {
       capture_state = CAPTURE_IDLE;
     }
     
@@ -128,6 +130,7 @@ void update_states(){
   state_maxon_right = maxon_encoder_speeds[MAXON_REAR_RIGHT] + 10000;
 
   // Update additional state values
+  //update_back_ultrasound_sensor();
 }
 
 void setup() {
@@ -141,6 +144,7 @@ void setup() {
   init_ir_sensors();
   init_lift();
   init_routines();
+  init_back_ultrasound_sensor();
 }
 
 void loop() {
@@ -175,47 +179,73 @@ void loop() {
 //  - 16 bits: state_other_two      (states_buffer[9] << 8 | states_buffer[10])
 
 int handle_serial_command() {
-  if (Serial.available() >= 5) {    
-    Serial.readBytes(commands_buffer, 5);
+  static int payload_index = 0;
+  static byte incoming_payload[COMMANDS_BUFFER_SIZE];
+  static bool receiving = false;
 
-    // Maxon left (16 bits)
-    command_maxon_left = ((commands_buffer[0] << 8) | commands_buffer[1]);
-    command_maxon_left -= 10000;
+  while (Serial.available()) {
+    byte b = Serial.read();
 
-    // Maxon right (16 bits)
-    command_maxon_right = ((commands_buffer[2] << 8) | commands_buffer[3]);
-    command_maxon_right -= 10000;    
+    if (!receiving) {
+      if (b == START_MARKER) {
+        receiving = true;
+        payload_index = 0;
+      }
+    } else {
+      if (b == END_MARKER) {
+        if (payload_index == COMMANDS_BUFFER_SIZE) {
+          // Maxon left (16 bits)
+          command_maxon_left = ((incoming_payload[0] << 8) | incoming_payload[1]) - 10000;
 
-    //  Send (handle) commands to arduino
-    command_capture = commands_buffer[4] & 0x01;
-    command_unload = (commands_buffer[4] >> 1) & 0x01;
-    command_button = (commands_buffer[4] >> 2) & 0x01;
-    command_slope_up = (commands_buffer[4] >> 3) & 0x01;
-    command_slope_down = (commands_buffer[4] >> 4) & 0x01;
-    command_emergency = (commands_buffer[4] >> 5) & 0x01;
+          // Maxon right (16 bits)
+          command_maxon_right = ((incoming_payload[2] << 8) | incoming_payload[3]) - 10000;
 
-    // Send states to raspberry
-    states_buffer[0] = highByte(state_maxon_left);
-    states_buffer[1] = lowByte(state_maxon_left);
-    states_buffer[2] = highByte(state_maxon_right);
-    states_buffer[3] = lowByte(state_maxon_right);
+          //  Send (handle) commands to arduino
+          command_capture = incoming_payload[4] & 0x01;
+          command_unload = (incoming_payload[4] >> 1) & 0x01;
+          command_button = (incoming_payload[4] >> 2) & 0x01;
+          command_slope_up = (incoming_payload[4] >> 3) & 0x01;
+          command_slope_down = (incoming_payload[4] >> 4) & 0x01;
+          command_emergency = (incoming_payload[4] >> 5) & 0x01;
 
-    states_buffer[4] = 0;
-    states_buffer[4] |= ((capture_state != CAPTURE_IDLE) & 0x01);
-    states_buffer[4] |= ((unload_state != UNLOAD_IDLE) & 0x01) << 1;
-    states_buffer[4] |= ((button_state != BUTTON_IDLE) & 0x01) << 2;
-    states_buffer[4] |= ((slope_up_state != SLOPE_UP_IDLE) & 0x01) << 3;
-    states_buffer[4] |= ((slope_down_state != SLOPE_DOWN_IDLE) & 0x01) << 4;
-    states_buffer[4] |= (command_emergency & 0x01) << 5;
+          // Send states to raspberry
+          states_buffer[0] = highByte(state_maxon_left);
+          states_buffer[1] = lowByte(state_maxon_left);
+          states_buffer[2] = highByte(state_maxon_right);
+          states_buffer[3] = lowByte(state_maxon_right);
 
-    states_buffer[5] = highByte(state_nb_captured_duplos);
-    states_buffer[6] = lowByte(state_nb_captured_duplos);
+          states_buffer[4] = 0;
+          states_buffer[4] |= ((capture_state != CAPTURE_IDLE) & 0x01);
+          states_buffer[4] |= ((unload_state != UNLOAD_IDLE) & 0x01) << 1;
+          states_buffer[4] |= ((button_state != BUTTON_IDLE) & 0x01) << 2;
+          states_buffer[4] |= ((slope_up_state != SLOPE_UP_IDLE) & 0x01) << 3;
+          states_buffer[4] |= ((slope_down_state != SLOPE_DOWN_IDLE) & 0x01) << 4;
+          states_buffer[4] |= (command_emergency & 0x01) << 5;
 
-    states_buffer[7] = highByte(state_other_one);
-    states_buffer[8] = lowByte(state_other_one);
-    states_buffer[9] = highByte(state_other_two);
-    states_buffer[10] = lowByte(state_other_two);
-    
-    Serial.write(states_buffer, 11);
+          states_buffer[5] = highByte(state_nb_captured_duplos);
+          states_buffer[6] = lowByte(state_nb_captured_duplos);
+
+          int16_t ultrasound_feedback = back_ultrasound_averaged_distance;
+          states_buffer[7] = highByte(ultrasound_feedback);
+          states_buffer[8] = lowByte(ultrasound_feedback);
+          states_buffer[9] = highByte(state_other);
+          states_buffer[10] = lowByte(state_other);
+
+          Serial.write(START_MARKER);
+          Serial.write(states_buffer, STATES_BUFFER_SIZE);
+          Serial.write(END_MARKER);
+        }
+
+        receiving = false;
+      } else {
+        if (payload_index < COMMANDS_BUFFER_SIZE) {
+          incoming_payload[payload_index++] = b;
+        } else {
+          // Overflow: reset state
+          receiving = false;
+        }
+      }
+    }
   }
+  return 0;
 }

@@ -59,7 +59,7 @@ extern unsigned long lift_timer;
 
 // --- BUTTON ROUTINE ---
 
-#define BUTTON_TIME_TO_DRIVE 3000
+#define BUTTON_TIME_TO_DRIVE 1750
 
 enum ButtonState {
   BUTTON_IDLE,
@@ -96,7 +96,7 @@ extern unsigned long slope_down_timer;
 #define CAPTURE_BRUSHING_STOP_AFTER 1000
 #define CAPTURE_SMALL_BACKWARD_TIMEOUT 5000
 #define CAPTURE_SMALL_CONVOYER_SPEED 80
-#define CAPTURE_SMALL_CONVOYER_INTERVAL 500 
+#define CAPTURE_SMALL_CONVOYER_INTERVAL 200 
 #define CAPTURE_SMALL_CONVOYER_DURATION 200 
 
 enum CaptureState {

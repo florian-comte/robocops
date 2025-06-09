@@ -2,7 +2,7 @@
 
 const int IR_SENSORS_PINS[IR_SENSOR_COUNT] = {
   41, // BOTTOM
-  47, // TOP
+  49, // TOP
   9 /// FRONT_IR
 };
 

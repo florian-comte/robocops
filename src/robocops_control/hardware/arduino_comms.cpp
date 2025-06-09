@@ -87,6 +87,7 @@ void ArduinoComms::send_command(int16_t maxon_left,
                                 bool *slope_down_active,
                                 bool *emergency_active,
                                 int *nb_captured_duplos,
+                                int *back_ultrasound_distance,
                                 bool print_output)
 {
     if (!connected())
@@ -166,8 +167,8 @@ void ArduinoComms::send_command(int16_t maxon_left,
         *nb_captured_duplos = static_cast<int16_t>((response[5] << 8) | response[6]);
 
         // Extract other values
-        int16_t other_value_one = static_cast<int16_t>((response[7] << 8) | response[8]);
-        int16_t other_value_two = static_cast<int16_t>((response[9] << 8) | response[10]);
+        *back_ultrasound_distance = static_cast<int16_t>((response[7] << 8) | response[8]);
+        int16_t other_value = static_cast<int16_t>((response[9] << 8) | response[10]);
 
         // Print debug if wanted
         if (print_output)
@@ -188,11 +189,11 @@ void ArduinoComms::send_command(int16_t maxon_left,
                       << ", Slope down active: " << *slope_down_active
                       << ", Emergency active: " << *emergency_active
                       << ", Nb duplos captured: " << *nb_captured_duplos
+                      << ", Back ultrasound distance: " << *back_ultrasound_distance
                       << std::endl;
 
             std::cout << "[Serial] Debug values: "
-                      << "Other value 1: " << other_value_one
-                      << ", Other value 2: " << other_value_two
+                      << "Other value 1: " << other_value
                       << std::endl;
         }
     }

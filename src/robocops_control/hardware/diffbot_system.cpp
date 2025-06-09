@@ -58,6 +58,7 @@ namespace robocops_control
     slope_down_active_ = false;
 
     nb_captured_duplos_ = 0;
+    back_ultrasound_distance_ = 0;
 
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
@@ -205,6 +206,7 @@ namespace robocops_control
     set_state("slope_down/active", slope_down_active_ ? 1.0 : 0.0);
 
     set_state("captured_duplos/number", (double) nb_captured_duplos_);
+    set_state("back_ultrasound/distance", (double) back_ultrasound_distance_);
 
     return hardware_interface::return_type::OK;
   }
@@ -242,6 +244,7 @@ namespace robocops_control
         &slope_down_active_,
         &emergency_active_,
         &nb_captured_duplos_,
+        &back_ultrasound_distance_,
         false);
 
     return hardware_interface::return_type::OK;

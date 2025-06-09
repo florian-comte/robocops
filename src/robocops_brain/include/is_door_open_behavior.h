@@ -5,6 +5,9 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include "rclcpp/rclcpp.hpp"
 
+#include <control_msgs/msg/dynamic_interface_group_values.hpp>
+#include <control_msgs/msg/interface_value.hpp>
+
 #define ANGLE_DOOR 3.10
 #define START_ANGLE_DOOR 170
 #define END_ANGLE_DOOR 180
@@ -20,8 +23,8 @@ public:
     BT::NodeStatus onRunning() override;
     void onHalted() override;
 private:
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
-    void lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+    void gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg);
+    rclcpp::Subscription<control_msgs::msg::DynamicInterfaceGroupValues>::SharedPtr gpio_sub_;
 
     std::shared_ptr<rclcpp::Node> node_;
 

@@ -55,6 +55,10 @@
       <gpio name="captured_duplos">
         <state_interface name="number"/>
       </gpio>
+      
+      <gpio name="back_ultrasound">
+        <state_interface name="distance"/>
+      </gpio>
     </ros2_control>
 
   </xacro:macro>

@@ -109,3 +109,6 @@ gpio_controller:
       captured_duplos:
         - interfaces:
           - number
+      back_ultrasound:
+        - interfaces:
+          - distance

@@ -8,9 +8,9 @@ IsDoorOpen::IsDoorOpen(const std::string &name,
                        const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node)
     : BT::StatefulActionNode(name, config), node_(node)
 {
-    lidar_sub_ = node_->create_subscription<sensor_msgs::msg::LaserScan>(
-        "/scan", 10,
-        std::bind(&IsDoorOpen::lidar_callback, this, std::placeholders::_1));
+    gpio_sub_ = node_->create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
+        "/gpio_controller/gpio_states", 10,
+        std::bind(&IsDoorOpen::gpio_state_callback, this, std::placeholders::_1));
 }
 
 // Declare input and output ports
@@ -61,33 +61,24 @@ void IsDoorOpen::onHalted()
     RCLCPP_WARN(node_->get_logger(), "IsDoorOpen halted.");
 }
 
-void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+void IsDoorOpen::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-    size_t num_readings = msg->ranges.size();
-
-    if (end_angle_ >= num_readings)
+    for (size_t i = 0; i < msg->interface_groups.size(); ++i)
     {
-        RCLCPP_WARN(node_->get_logger(), "Computed index out of range.");
-        return;
-    }
-
-    float distance_sum = 0;
-    int distance_count = 0;
-
-    for (int i = start_angle_; i < end_angle_; i++)
-    {
-        if (!(std::isnan(msg->ranges[i]) || std::isinf(msg->ranges[i]) || msg->ranges[i] > msg->range_max || msg->ranges[i] < msg->range_min))
+        if (msg->interface_groups[i] == "back_ultrasound")
         {
-            distance_sum += msg->ranges[i];
-            distance_count++;
+            for (size_t j = 0; j < msg->interface_values[i].interface_names.size(); ++j)
+            {
+                if (msg->interface_values[i].interface_names[j] == "distance")
+                {
+                    double val = msg->interface_values[i].values[j];
+
+                    RCLCPP_DEBUG(node_->get_logger(), "GPIO state received: [%s] -> [%s] = %.2f",
+                                 "back_ultrasound", "distance", val);
+                    distance_ = val;
+                    return;
+                }
+            }
         }
     }
-
-    if (distance_count == 0)
-    {
-        RCLCPP_WARN(node_->get_logger(), "Invalid LIDAR reading.");
-        return;
-    }
-
-    distance_ = distance_sum;
 }

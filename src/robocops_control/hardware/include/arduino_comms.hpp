@@ -26,6 +26,7 @@ public:
                       bool *slope_down_active,
                       bool *emergency_active,
                       int *nb_captured_duplos,
+                      int *back_ultrasound_distance,
                       bool print_output = false);
 
 private:

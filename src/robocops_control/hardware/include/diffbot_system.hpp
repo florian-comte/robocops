@@ -122,7 +122,7 @@ namespace robocops_control
         bool emergency_active_;
 
         int nb_captured_duplos_;
-
+        int back_ultrasound_distance_;
     };
 
 } // namespace robocops_control

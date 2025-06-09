@@ -14,6 +14,11 @@
 #include <iostream>
 #include <cstring>
 
+#define START_MARKER 0xAA
+#define END_MARKER 0x55
+#define COMMANDS_BUFFER_SIZE 5
+#define STATES_BUFFER_SIZE 11
+
 void ArduinoComms::connect(const std::string &device, int timeout_ms)
 {
     disconnect(); 
@@ -77,19 +82,6 @@ bool ArduinoComms::connected() const
 {
     return serial_fd_ >= 0;
 }
-
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
-#include <cstdint>
-#include "ArduinoComms.h"
-
-#define START_MARKER 0xAA
-#define END_MARKER 0x55
-#define COMMANDS_BUFFER_SIZE 5
-#define STATES_BUFFER_SIZE 11
 
 void ArduinoComms::send_command(int16_t maxon_left,
                                 int16_t maxon_right,

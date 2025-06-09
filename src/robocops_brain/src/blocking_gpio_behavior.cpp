@@ -10,7 +10,7 @@ BlockingGPIO::BlockingGPIO(const std::string &name,
         "/gpio_controller/commands", 10);
 
     gpio_sub_ = node_->create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
-        "/gpio_controller/state", 10,
+        "/gpio_controller/gpio_states", 10,
         std::bind(&BlockingGPIO::gpio_state_callback, this, std::placeholders::_1));
 }
 

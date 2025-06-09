@@ -21,6 +21,7 @@ def generate_launch_description():
             'frame_id': 'laser_frame',
             'angle_compensate': True,
             'scan_mode': 'Standard'
+            'scan_frequency': 20.0
         }]
     )
     ld.add_action(lidar_node)

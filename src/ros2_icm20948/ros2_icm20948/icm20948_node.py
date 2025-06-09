@@ -39,7 +39,7 @@ class ICM20948Node(Node):
         # Publishers
         self.imu_pub_ = self.create_publisher(sensor_msgs.msg.Imu, "imu/data_raw", 10)
         self.mag_pub_ = self.create_publisher(
-            sensor_msgs.msg.MagneticField, "imu/mag_raw", 10
+            sensor_msgs.msg.MagneticField, "imu/mag", 10
         )
         self.pub_clk_ = self.create_timer(1 / self.pub_rate, self.publish_cback)
 

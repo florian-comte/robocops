@@ -6,6 +6,8 @@
 #include "rclcpp/rclcpp.hpp"
 
 #define ANGLE_DOOR 3.10
+#define START_ANGLE_DOOR 170
+#define END_ANGLE_DOOR 180
 
 class IsDoorOpen : public BT::StatefulActionNode
 {

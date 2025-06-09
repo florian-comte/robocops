@@ -68,9 +68,6 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
     float angle_increment = msg->angle_increment;
     size_t num_readings = msg->ranges.size();
 
-    // Compute the index of the scan that corresponds to the desired angle
-    size_t index = static_cast<size_t>((angle_ - angle_min) / angle_increment);
-
     if (end_angle_ >= num_readings)
     {
         RCLCPP_WARN(node_->get_logger(), "Computed index %zu out of range (max %zu)",

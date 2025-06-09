@@ -125,8 +125,8 @@ controller_server:
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.05 #0.35 # tolerance to meet goal completion (in meters)
-      yaw_goal_tolerance: 0.15 #0.50 # tolerance to meet goal completion (in radians)
+      xy_goal_tolerance: 0.15 #0.35 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.25 #0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 25
@@ -238,7 +238,7 @@ local_costmap:
       denoise_layer: # denoise layer for lidar in costmap
         plugin: "nav2_costmap_2d::DenoiseLayer"
         enabled: true
-        minimal_group_size: 5 # number of neighbours that get deleted
+        minimal_group_size: 3 # number of neighbours that get deleted
         group_connectivity_type: 8 # 4 or 8 depending on desired distance measurement
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"

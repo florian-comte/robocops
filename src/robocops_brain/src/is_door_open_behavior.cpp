@@ -49,6 +49,7 @@ BT::NodeStatus IsDoorOpen::onRunning()
 
     if (distance_ >= 0)
     {
+        RCLCPP_INFO(node_->get_logger(), "Current distance on door: %.2f", distance_);
         return distance_ > 1.5 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 

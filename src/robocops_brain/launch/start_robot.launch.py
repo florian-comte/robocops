@@ -10,7 +10,7 @@ def generate_launch_description():
     xml_file_path = os.path.join(
         get_package_share_directory("robocops_brain"),
         "behavior_trees",
-        "robocops_tree.xml"
+        "test_is_door_open_tree.xml"
     )
     
     locations_file_path = os.path.join(

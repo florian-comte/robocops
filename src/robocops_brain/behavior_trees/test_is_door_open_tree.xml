@@ -1,0 +1,7 @@
+<root BTCPP_format="4" main_tree_to_execute="Main">
+  <BehaviorTree ID="Main">
+    <KeepRunningUntilFailure>
+        <IsDoorOpen timeout_duration="5.0"/>
+    </KeepRunningUntilFailure>
+  </BehaviorTree>
+</root>

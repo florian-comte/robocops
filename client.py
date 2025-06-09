@@ -28,7 +28,6 @@ class DuploControl(Node):
         self.navigator.waitUntilNav2Active()
         self.navigator.changeMap('/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml')
 
-
         # Duplo detection subscriber
         self.duplo_subscriber = self.create_subscription(
             DuploArray,
@@ -112,8 +111,9 @@ class DuploControl(Node):
             print("3. Clear duplos")
             print("4. Read duplos")
             print("5. Search and grab closest Duplo")
-            print("6. Exit")
-            choice = input("Enter your choice (1-6): ")
+            print("6. Stop capturing")
+            print("7. Exit")
+            choice = input("Enter your choice (1-7): ")
 
             if choice == '1':
                 self.activate_detection()
@@ -193,10 +193,18 @@ class DuploControl(Node):
         self.get_logger().info("Starting search and grab sequence.")
 
         self.activate_detection()
-        time.sleep(2.0)
+        
+        SEARCHING_TIME_PER_STOP = 3000 #ms
+        
+        closest_duplo = None;
+        start_searching_time = self.get_clock().now()
+        
+        # Take photo and find d
+        while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
+            closest_duplo = self.get_closest_duplo()
+        
         self.deactivate_detection()
-
-        closest_duplo = self.get_closest_duplo()
+        
         if not closest_duplo:
             self.get_logger().info("No Duplos found.")
             return

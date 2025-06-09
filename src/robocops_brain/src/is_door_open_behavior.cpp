@@ -87,10 +87,10 @@ void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg
     }
 
     for (int i = 0; i < num_readings; i++){
-        RCLCPP_WARN(node_->get_logger(), "Range for %zu: %6.4lf", i, range);
+        RCLCPP_WARN(node_->get_logger(), "Range for %zu: %6.4lf", i, msg->ranges[i]);
     }
 
-        float range = msg->ranges[index];
+    float range = msg->ranges[index];
 
     if (std::isnan(range) || std::isinf(range) || range <= 0.0)
     {

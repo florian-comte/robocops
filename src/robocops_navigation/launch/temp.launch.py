@@ -73,9 +73,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # imu_node,
-        # imu_filter_node,
-        # robot_localization_node,
+        imu_node,
+        imu_filter_node,
+        robot_localization_node,
         diffbot_launch,
         camera_launch,
         lidar_launch,

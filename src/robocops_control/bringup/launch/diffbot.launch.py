@@ -59,7 +59,7 @@ def generate_launch_description():
         package="twist_mux",
         executable="twist_mux",
         parameters=[twist_mux_params],
-        remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel'), ('/diffbot_base_controller/odom','/odom')]
+        remappings=[('/cmd_vel_out','/diffbot_base_controller/cmd_vel')]
     )
 
     # joint_state_broadcaster_spawner = Node(

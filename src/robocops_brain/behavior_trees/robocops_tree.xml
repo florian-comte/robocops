@@ -24,7 +24,7 @@
                     <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
 
                     <Fallback>
-                    <BlockingGPIO gpio_name="button" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_duration="1.0" />
+                    <BlockingGPIO gpio_name="button" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_after_duration="1.0" />
                     <Script code="never_timed_out_opening_door := false" />
                     </Fallback>
                 </Sequence>
@@ -54,11 +54,11 @@
               />
           
             <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry" />
-            <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_duration="1.0"/>
+            <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
             <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}" />
             <!-- <SearchAndGrab zone="4" /> -->
             <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_entry" />
-            <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_duration="1.0"/>
+            <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
             <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_entry}" />
           </Sequence>
 
@@ -79,7 +79,7 @@
           <!-- Default Fallback: Drop point -->
           <Sequence>
             <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="drop_point" />
-            <BlockingGPIO gpio_name="unload" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_duration="1.0"/>
+            <BlockingGPIO gpio_name="unload" interface_name="active" timeout="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
           </Sequence>
         </Fallback>
       </KeepRunningUntilFailure>

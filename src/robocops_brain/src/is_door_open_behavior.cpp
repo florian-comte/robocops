@@ -63,15 +63,11 @@ void IsDoorOpen::onHalted()
 
 void IsDoorOpen::lidar_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
-    float angle_min = msg->angle_min;
-    float angle_max = msg->angle_max;
-    float angle_increment = msg->angle_increment;
     size_t num_readings = msg->ranges.size();
 
     if (end_angle_ >= num_readings)
     {
-        RCLCPP_WARN(node_->get_logger(), "Computed index %zu out of range (max %zu)",
-                    index, num_readings - 1);
+        RCLCPP_WARN(node_->get_logger(), "Computed index out of range.");
         return;
     }
 

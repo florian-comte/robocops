@@ -215,67 +215,49 @@ void handle_slope_up_routine() {
     case SLOPE_UP_SMASH_WALL:
       slope_up_timer = millis();
       slope_up_state = SLOPE_UP_FWD_CORR;
-      maxon_target_speeds[MAXON_REAR_LEFT] = -1000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -1000;
+      maxon_target_speeds[MAXON_REAR_LEFT] = -3000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = -3000;
       break;
 
     case SLOPE_UP_FWD_CORR:
       if (millis() - slope_up_timer > SLOPE_UP_TIME_SMASH_WALL) {
-        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
-        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+        slope_up_timer = millis();
+        slope_up_state = SLOPE_UP_BACK_CORR;
+        maxon_target_speeds[MAXON_REAR_LEFT] = 4000;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 500;
       }
-      slope_up_timer = millis();
-      slope_up_state = SLOPE_UP_90DEG;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 1000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -1000;
+      
       break;
 
-    case SLOPE_UP_90DEG:
+    case SLOPE_UP_BACK_CORR:
       if (millis() - slope_up_timer > SLOPE_UP_TIME_FWD_CORR) {
-        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
-        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+        slope_up_timer = millis();
+        slope_up_state = SLOPE_UP_CLIMB_1;
+        maxon_target_speeds[MAXON_REAR_LEFT] = -2500;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = -3000;
       }
-      slope_up_timer = millis();
-      slope_up_state = SLOPE_UP_RIGHT_CORR;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 2000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -2000;
       break;
 
-    case SLOPE_UP_RIGHT_CORR:
-      if (millis() - slope_up_timer > SLOPE_UP_TIME_90DEG) {
-        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
-        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+    case SLOPE_UP_CLIMB_1:
+      if (millis() - slope_up_timer > SLOPE_UP_TIME_BACK_CORR) {
+        slope_up_timer = millis();
+        slope_up_state = SLOPE_UP_CLIMB_2;
+        maxon_target_speeds[MAXON_REAR_LEFT] = 5500;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 3500;
       }
-      slope_up_timer = millis();
-      slope_up_state = SLOPE_UP_LEFT_CORR;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 2000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = 1000;
       break;
 
-    case SLOPE_UP_LEFT_CORR:
-      if (millis() - slope_up_timer > SLOPE_UP_TIME_RIGHT_CORR) {
-        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
-        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+    case SLOPE_UP_CLIMB_2:
+      if (millis() - slope_up_timer > SLOPE_UP_TIME_CLIMB_1) {
+        slope_up_timer = millis();
+        slope_up_state = SLOPE_UP_REACHED;
+        maxon_target_speeds[MAXON_REAR_LEFT] = 5000;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 5000;
       }
-      slope_up_timer = millis();
-      slope_up_state = SLOPE_UP_CLIMB;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 1000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = 2000;
-      break;
-
-    case SLOPE_UP_CLIMB:
-      if (millis() - slope_up_timer > SLOPE_UP_TIME_LEFT_CORR) {
-        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
-        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
-      }
-      slope_up_timer = millis();
-      slope_up_state = SLOPE_UP_REACHED;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 5000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = 5000;
       break;
 
     case SLOPE_UP_REACHED:
-      if (millis() - slope_up_timer > SLOPE_TIME_CLIMB) {
+      if (millis() - slope_up_timer > SLOPE_UP_TIME_CLIMB_2) {
         maxon_target_speeds[MAXON_REAR_LEFT] = 0;
         maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
         slope_up_state = SLOPE_UP_IDLE;
@@ -318,7 +300,6 @@ CaptureState capture_state = CAPTURE_IDLE;
 unsigned long capture_timer = 0;
 unsigned long next_small_convoyer = -1;
 unsigned long current_small_convoyer = -1;
-
 bool front_detected_something = false;
 
 void handle_capture_routine() {
@@ -343,19 +324,6 @@ void handle_capture_routine() {
           capture_timer = millis();
           front_detected_something = false;
         }
-
-        if(current_small_convoyer == -1){
-          if(millis() > next_small_convoyer || next_small_convoyer == -1){
-            current_small_convoyer = millis();
-            dri_target_speeds[LIFT_CONVOYER_NAME] = CAPTURE_SMALL_CONVOYER_SPEED;
-          }
-        } else {
-          if(millis() - current_small_convoyer > CAPTURE_SMALL_CONVOYER_DURATION){
-            dri_target_speeds[LIFT_CONVOYER_NAME] = 0;
-            next_small_convoyer = millis() + CAPTURE_SMALL_CONVOYER_INTERVAL;
-            current_small_convoyer = -1;
-          }
-        }
       } else {
         if(duplo_detected_in_front_lift()){
           capture_timer = millis();
@@ -375,7 +343,6 @@ void handle_capture_routine() {
       
     case CAPTURE_SMALL_BACKWARD:
       // Small backward logic
-      
       if(current_small_convoyer == -1){
         if(millis() > next_small_convoyer || next_small_convoyer == -1){
           current_small_convoyer = millis();

@@ -194,7 +194,9 @@ class DuploControl(Node):
 
         self.activate_detection()
         
-        SEARCHING_TIME_PER_STOP = 3000 #ms
+        SEARCHING_TIME_PER_STOP = 3000
+        
+        time.sleep(3)
         
         closest_duplo = None;
         # start_searching_time = self.get_clock().now()

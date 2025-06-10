@@ -68,6 +68,7 @@ gpio_controller:
       - slope_down
       - emergency
       - captured_duplos
+      - back_ultrasound
     command_interfaces:
       capture:
         - interfaces:

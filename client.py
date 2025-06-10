@@ -239,8 +239,8 @@ class DuploControl(Node):
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
         
-        SEARCHING_TIME_PER_STOP = 3
-        ANGLE_STEP = 1.57 
+        SEARCHING_TIME_PER_STOP = 6
+        ANGLE_STEP = 1
         MAX_SEARCH_TIME = 60 
         
         closest_duplo = None

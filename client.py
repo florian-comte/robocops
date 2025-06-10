@@ -195,7 +195,7 @@ class DuploControl(Node):
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
         
-        SEARCHING_TIME_PER_STOP = 3000
+        SEARCHING_TIME_PER_STOP = 3
         ANGLE_STEP = 0.70
         
         time.sleep(3)
@@ -204,7 +204,7 @@ class DuploControl(Node):
         start_searching_time = self.get_clock().now()
         
         # Take photo and find d
-        while not closest_duplo or (self.get_clock().now() - start_searching_time) > 15000:
+        while not closest_duplo or (self.get_clock().now() - start_searching_time) > 15:
             self.activate_detection()
             
             time.sleep(SEARCHING_TIME_PER_STOP)

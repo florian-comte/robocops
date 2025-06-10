@@ -73,8 +73,22 @@ extern unsigned long button_timer;
 
 // --- SLOPE UP ROUTINE ---
 
+#define SLOPE_UP_TIME_SMASH_WALL 500
+#define SLOPE_UP_TIME_FWD_CORR 500
+#define SLOPE_UP_TIME_90DEG 1000
+#define SLOPE_UP_TIME_RIGHT_CORR 500
+#define SLOPE_UP_TIME_LEFT_CORR 500
+#define SLOPE_TIME_CLIMB 5000
+
 enum SlopeUpState {
   SLOPE_UP_IDLE,
+  SLOPE_UP_SMASH_WALL,
+  SLOPE_UP_FWD_CORR,
+  SLOPE_UP_90DEG,
+  SLOPE_UP_RIGHT_CORR,
+  SLOPE_UP_LEFT_CORR,
+  SLOPE_UP_CLIMB,
+  SLOPE_UP_REACHED
 };
 
 extern SlopeUpState slope_up_state;
@@ -82,8 +96,12 @@ extern unsigned long slope_up_timer;
 
 // --- SLOPE DOWN ROUTINE ---
 
+#define SLOPE_TIME_DOWN 5000
+
 enum SlopeDownState {
   SLOPE_DOWN_IDLE,
+  SLOPE_DOWN_ENGAGE,
+  SLOPE_DOWN_REACHED
 };
 
 extern SlopeDownState slope_down_state;
@@ -92,7 +110,7 @@ extern unsigned long slope_down_timer;
 // --- CAPTURE ROUTINE ---
 
 #define CAPTURE_BRUSH_SPEED 240
-#define CAPTURE_BRUSHING_STOP_AFTER 1000
+#define CAPTURE_BRUSHING_STOP_AFTER 2000
 #define CAPTURE_SMALL_BACKWARD_TIMEOUT 5000
 #define CAPTURE_SMALL_CONVOYER_SPEED 80
 #define CAPTURE_SMALL_CONVOYER_INTERVAL 200 

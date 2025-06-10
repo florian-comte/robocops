@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <NewPing.h>
 
-#define BACK_ULTRASOUND_WINDOW 4
+#define BACK_ULTRASOUND_WINDOW 2
 #define BACK_ULTRASOUND_MAX_DISTANCE 500
 
 extern double back_ultrasound_averaged_distance;

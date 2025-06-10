@@ -36,8 +36,8 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 5
-#define MIN_COUNT 18
+#define TOLERANCE_CM 3
+#define MIN_COUNT 50
 #define SCORE_THRESHOLD 0.90
 
 dai::Pipeline create_pipeline(const std::string nn_name)
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 
                 try
                 {
-                    map_point = tf_buffer.transform(camera_point, "brushes", tf2::durationFromSec(0.1));
+                    map_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
                 }
                 catch (tf2::TransformException &ex)
                 {

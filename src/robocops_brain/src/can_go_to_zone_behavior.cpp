@@ -1,8 +1,7 @@
 #include "can_go_to_zone_behavior.h"
 #include <iostream>
 
-CanGoToZone::CanGoToZone(const std::string &name,
-                         const BT::NodeConfiguration &config)
+CanGoToZone::CanGoToZone(const std::string &name, const BT::NodeConfiguration &config)
     : BT::SyncActionNode(name, config)
 {
 }
@@ -16,8 +15,7 @@ BT::PortsList CanGoToZone::providedPorts()
         BT::InputPort<std::vector<int>>("MIN_TO_GO_ZONES"),
         BT::InputPort<std::vector<int>>("TOTAL_ZONES"),
         BT::InputPort<std::vector<int>>("current_grabbed_zones"),
-        BT::InputPort<std::vector<bool>>("never_timed_out_zones"),
-        BT::InputPort<bool>("never_timed_out_opening_door")};
+        BT::InputPort<std::vector<int>>("never_timed_out_zones")};
 }
 
 BT::NodeStatus CanGoToZone::tick()
@@ -84,8 +82,7 @@ BT::NodeStatus CanGoToZone::tick()
 
     std::vector<bool> never_timed_out_zones;
     bool never_timed_out_door;
-    if (!getInput("never_timed_out_zones", never_timed_out_zones) ||
-        !getInput("never_timed_out_opening_door", never_timed_out_door))
+    if (!getInput("never_timed_out_zones", never_timed_out_zones))
     {
         throw BT::RuntimeError("Missing timeout flags");
     }
@@ -110,8 +107,7 @@ BT::NodeStatus CanGoToZone::tick()
     bool allowed =
         (max_inventory - current_inventory > min_to_go[zone]) &&
         (total_zones[zone] - current_grabbed[zone] > min_to_go[zone]) &&
-        never_timed_out_zones[zone] &&
-        (never_timed_out_door || zone != 2);
+        never_timed_out_zones[zone];
 
     // std::cout << "Evaluating allowed condition:" << std::endl;
     // std::cout << "  max_inventory - current_inventory > min_to_go[zone]: " << (max_inventory - current_inventory > min_to_go[zone]) << std::endl;

@@ -72,10 +72,9 @@ public:
         blackboard->set<std::vector<int>>("TOTAL_ZONES", std::vector<int>{15, 6, 6, 6});
 
         blackboard->set<std::vector<int>>("current_grabbed_zones", std::vector<int>{0, 0, 0, 0});
-        blackboard->set<std::vector<bool>>("never_timed_out_zones", std::vector<bool>{ true, true, true, true});
+        blackboard->set<std::vector<int>>("never_timed_out_zones", std::vector<int>{ 0, 0, 0, 0});
 
         blackboard->set<int>("current_inventory", 0);
-        blackboard->set<bool>("never_timed_out_opening_door", true);
 
         blackboard->set<int>("is_door_open", 0);
 

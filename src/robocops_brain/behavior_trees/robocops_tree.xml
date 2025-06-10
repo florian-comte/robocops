@@ -46,7 +46,6 @@
             <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
 
             <!-- GRAB ZONE 3 LOGIC -->
-            <!-- <SearchAndGrab zone="3"/> -->
 
           </Sequence>
 

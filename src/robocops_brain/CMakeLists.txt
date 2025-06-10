@@ -24,6 +24,9 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(action_msgs REQUIRED)
+
 
 # Install directories
 install(DIRECTORY
@@ -45,7 +48,7 @@ set(TARGET_DEPENDS
     ament_index_cpp rclcpp rclcpp_action
     nav2_msgs sensor_msgs cv_bridge image_transport
     behaviortree_cpp tf2 tf2_ros tf2_geometry_msgs yaml-cpp
-    control_msgs robocops_msgs 
+    control_msgs robocops_msgs std_srvs action_msgs
 )
 
 include_directories(include)

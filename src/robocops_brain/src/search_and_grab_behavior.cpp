@@ -1,4 +1,15 @@
 #include "search_and_grab_behavior.h"
+#include <chrono>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <thread>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include "action_msgs/msg/goal_status.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+using namespace std::chrono_literals;
 
 SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguration &config, rclcpp::Node::SharedPtr node)
     : BT::StatefulActionNode(name, config), node_(node)
@@ -7,70 +18,314 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
         "/gpio_controller/commands", 10);
 
     gpio_sub_ = node_->create_subscription<control_msgs::msg::DynamicInterfaceGroupValues>(
-        "/gpio_controller/state", 10,
+        "/gpio_controller/gpio_states", 10,
         std::bind(&SearchAndGrab::gpio_state_callback, this, std::placeholders::_1));
 
     detections_sub_ = node_->create_subscription<robocops_msgs::msg::DuploArray>(
-        "/", 10,
+        "/duplos", 10,
         std::bind(&SearchAndGrab::detections_state_callback, this, std::placeholders::_1));
+
+    activate_client_ = node_->create_client<std_srvs::srv::SetBool>("activate_detection");
+    clear_client_ = node_->create_client<std_srvs::srv::Empty>("clear_duplos");
+
+    nav_to_pose_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(
+        node_->get_node_base_interface(),
+        node_->get_node_graph_interface(),
+        node_->get_node_logging_interface(),
+        node_->get_node_waitables_interface(),
+        "navigate_to_pose");
+
+    spin_client_ = rclcpp_action::create_client<nav2_msgs::action::Spin>(
+        node_->get_node_base_interface(),
+        node_->get_node_graph_interface(),
+        node_->get_node_logging_interface(),
+        node_->get_node_waitables_interface(),
+        "spin");
 }
 
 BT::PortsList SearchAndGrab::providedPorts()
 {
-    return
-    {
+    return {
         BT::InputPort<int>("zone"),
+        BT::InputPort<int>("timeout_duration"),
+        BT::InputPort<int>("current_grabbed_zones"),
+        BT::InputPort<std::vector<int>>("never_timed_out_zones"),
+        BT::OutputPort<std::vector<int>>("never_timed_out_zones"),
     };
 }
 
 BT::NodeStatus SearchAndGrab::onStart()
 {
-    getInput("zone", zone_);
+    if (!getInput("zone", zone_))
+    {
+        throw BT::RuntimeError("Missing required input [zone]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("timeout_duration", timeout_duration_))
+    {
+        throw BT::RuntimeError("Missing required input [timeout_duration]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("current_grabbed_zones", current_grabbed_zones_))
+    {
+        throw BT::RuntimeError("Missing required input [current_grabbed_zones]");
+        return BT::NodeStatus::FAILURE;
+    }
 
     start_time_ = node_->get_clock()->now();
+    search_state_ = SEARCHING;
 
     return BT::NodeStatus::RUNNING;
 }
 
 BT::NodeStatus SearchAndGrab::onRunning()
 {
-
     auto now = node_->get_clock()->now();
 
-    if ((now - start_time_).seconds() > timeout_sec_)
+    if ((now - start_time_).seconds() > timeout_duration_)
     {
-        return BT::NodeStatus::FAILURE;
+        std::vector<int> never_timed_out_zones;
+
+        if (!getInput("never_timed_out_zones", never_timed_out_zones))
+        {
+            throw BT::RuntimeError("Missing required input [never_timed_out_zones]");
+            return BT::NodeStatus::FAILURE;
+        }
+
+        never_timed_out_zones[zone_] = 1;
+
+        setOutput("never_timed_out_zones", never_timed_out_zones);
+
+        // here timeout should be a success
+        return BT::NodeStatus::SUCCESS;
     }
 
+    if (is_moving)
+    {
+        return BT::NodeStatus::RUNNING;
+    }
 
-    return BT::NodeStatus::RUNNING;
+    switch (search_state_)
+    {
+    case SEARCHING:
+        return handleSearching();
+    case APPROACHING:
+        return handleApproaching();
+    case GRABBING:
+        return handleGrabbing();
+    case RETURNING:
+        return handleReturning();
+    default:
+        return BT::NodeStatus::FAILURE;
+    }
 }
 
 void SearchAndGrab::onHalted()
 {
+    deactivate_detection();
+    disable_capture();
+    clear_duplos();
 }
 
 void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-    for (size_t i = 0; i < msg->interface_groups.size(); ++i)
+    // TODO: count duplos
+}
+
+void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArray::SharedPtr msg)
+{
+    if (!msg->duplos.empty())
     {
-        if (msg->interface_groups[i] == "TODO")
-        {
-            for (size_t j = 0; j < msg->interface_values[i].interface_names.size(); ++j)
-            {
-                if (msg->interface_values[i].interface_names[j] == "TODO")
-                {
-                    double val = msg->interface_values[i].values[j];
-                    return;
-                }
-            }
-        }
+        duplos_list_ = msg->duplos;
+        update_closest_duplo();
     }
 }
 
-void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArray msg)
+void SearchAndGrab::activate_detection()
 {
-    for (size_t i = 0; i < msg.duplos.size(); ++i)
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    request->data = true;
+    activate_client_->async_send_request(request);
+}
+
+void SearchAndGrab::deactivate_detection()
+{
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    request->data = false;
+    activate_client_->async_send_request(request);
+}
+
+void SearchAndGrab::update_closest_duplo()
+{
+    if (duplos_list_.empty())
     {
+        closest_duplo_ = nullptr;
+        return;
     }
+
+    closest_duplo_ = std::make_shared<robocops_msgs::msg::Duplo>(*std::min_element(
+        duplos_list_.begin(), duplos_list_.end(),
+        [this](const robocops_msgs::msg::Duplo &a, const robocops_msgs::msg::Duplo &b)
+        {
+            return distance_to_point(a.position.point) < distance_to_point(b.position.point);
+        }));
+}
+
+double SearchAndGrab::distance_to_point(const geometry_msgs::msg::Point &point)
+{
+    return std::sqrt(point.x * point.x + point.y * point.y);
+}
+
+void SearchAndGrab::enable_capture()
+{
+    auto msg = std::make_shared<control_msgs::msg::DynamicInterfaceGroupValues>();
+    msg->interface_groups = {"capture"};
+
+    control_msgs::msg::InterfaceValue capture_msg;
+    capture_msg.interface_names = {"active"};
+    capture_msg.values = {1.0};
+
+    msg->interface_values.push_back(capture_msg);
+    gpio_pub_->publish(*msg);
+}
+
+void SearchAndGrab::disable_capture()
+{
+    auto msg = std::make_shared<control_msgs::msg::DynamicInterfaceGroupValues>();
+    msg->interface_groups = {"capture"};
+
+    control_msgs::msg::InterfaceValue capture_msg;
+    capture_msg.interface_names = {"active"};
+    capture_msg.values = {0.0};
+
+    msg->interface_values.push_back(capture_msg);
+    gpio_pub_->publish(*msg);
+}
+
+void SearchAndGrab::clear_duplos()
+{
+    auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+    clear_client_->async_send_request(request);
+    duplos_list_.clear();
+}
+
+void SearchAndGrab::go_to_pose(float x, float y, float yaw)
+{
+    using namespace nav2_msgs::action;
+
+    if (!nav_to_pose_client_->wait_for_action_server(1s))
+    {
+        RCLCPP_ERROR(node_->get_logger(), "NavigateToPose action server not available.");
+        return;
+    }
+
+    auto goal_msg = NavigateToPose::Goal();
+    goal_msg.pose.header.frame_id = "map"; // Use "map" or relevant global frame
+    goal_msg.pose.header.stamp = node_->get_clock()->now();
+
+    goal_msg.pose.pose.position.x = x;
+    goal_msg.pose.pose.position.y = y;
+
+    // Convert yaw to quaternion
+    tf2::Quaternion q;
+    q.setRPY(0, 0, yaw);
+    goal_msg.pose.pose.orientation = tf2::toMsg(q);
+
+    nav_to_pose_client_->async_send_goal(goal_msg);
+}
+
+void SearchAndGrab::spin(float angle)
+{
+    using namespace nav2_msgs::action;
+
+    if (!spin_client_->wait_for_action_server(1s))
+    {
+        RCLCPP_ERROR(node_->get_logger(), "Spin action server not available.");
+        return;
+    }
+
+    auto goal_msg = Spin::Goal();
+    goal_msg.target_yaw = angle;
+    goal_msg.time_allowance.sec = 10;
+
+    spin_client_->async_send_goal(goal_msg);
+}
+
+BT::NodeStatus SearchAndGrab::handleSearching()
+{
+    if (!search_started_)
+    {
+        RCLCPP_INFO(node_->get_logger(), "Starting search pattern");
+        activate_detection();
+        search_start_time_ = node_->get_clock()->now();
+        search_started_ = true;
+        return BT::NodeStatus::RUNNING;
+    }
+
+    auto now = node_->get_clock()->now();
+    if ((now - search_start_time_).seconds() < SEARCHING_TIME_PER_STOP)
+    {
+        return BT::NodeStatus::RUNNING;
+    }
+
+    if (closest_duplo_)
+    {
+        RCLCPP_INFO(node_->get_logger(), "Duplo found, switching to approach");
+        deactivate_detection();
+        search_state_ = APPROACHING;
+        return BT::NodeStatus::RUNNING;
+    }
+
+    // No duplo found, rotate and continue searching
+    spin(ANGLE_STEP);
+    search_start_time_ = node_->get_clock()->now();
+    return BT::NodeStatus::RUNNING;
+}
+
+BT::NodeStatus SearchAndGrab::handleApproaching()
+{
+    if (!approach_started_)
+    {
+        RCLCPP_INFO(node_->get_logger(), "Approaching duplo");
+        enable_capture();
+
+        auto pos = closest_duplo_->position.point;
+        go_to_pose(pos.x + 0.05, pos.y, 1.57);
+
+        approach_started_ = true;
+        return BT::NodeStatus::RUNNING;
+    }
+
+    RCLCPP_INFO(node_->get_logger(), "Approach complete, switching to grab");
+    search_state_ = GRABBING;
+    grab_start_time_ = node_->get_clock()->now();
+    return BT::NodeStatus::RUNNING;
+}
+
+BT::NodeStatus SearchAndGrab::handleGrabbing()
+{
+    auto now = node_->get_clock()->now();
+    if ((now - grab_start_time_).seconds() < GRABBING_TIME)
+    {
+        return BT::NodeStatus::RUNNING;
+    }
+
+    disable_capture();
+    clear_duplos();
+
+    // Reset for next search
+    search_started_ = false;
+    approach_started_ = false;
+    closest_duplo_ = nullptr;
+    search_state_ = SEARCHING;
+
+    return BT::NodeStatus::RUNNING;
+}
+
+BT::NodeStatus SearchAndGrab::handleReturning()
+{
+    // Implement return logic if needed
+    return BT::NodeStatus::SUCCESS;
 }

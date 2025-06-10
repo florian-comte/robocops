@@ -55,10 +55,6 @@ class DuploControl(Node):
 
         self.get_logger().info('All services and action servers available.')
 
-        # Launch CLI menu
-        self.menu_thread = threading.Thread(target=self.run_menu, daemon=True)
-        self.menu_thread.start()
-
     def activate_detection(self):
         request = SetBool.Request()
         request.data = True
@@ -103,37 +99,7 @@ class DuploControl(Node):
                 self.get_logger().info(
                     f"Duplo ID: {duplo.id}, Position: x={pos.x:.2f}, y={pos.y:.2f}, Score: {duplo.score:.2f}"
                 )
-
-    def run_menu(self):
-        while rclpy.ok():
-            print("\n--- Duplo Control Menu ---")
-            print("1. Start detection")
-            print("2. Stop detection")
-            print("3. Clear duplos")
-            print("4. Read duplos")
-            print("5. Search and grab closest Duplo")
-            print("6. Stop capturing")
-            print("7. Exit")
-            choice = input("Enter your choice (1-7): ")
-
-            if choice == '1':
-                self.activate_detection()
-            elif choice == '2':
-                self.deactivate_detection()
-            elif choice == '3':
-                self.clear_duplos()
-            elif choice == '4':
-                self.read_duplos()
-            elif choice == '5':
-                self.search_and_grab()
-            elif choice == '6':
-                self.stop_capture()
-            elif choice == '7':
-                self.get_logger().info("Exiting...")
-                break
-            else:
-                print("Invalid option. Please choose between 1 and 6.")
-
+                
     def get_closest_duplo(self):
         if not self.duplos_list:
             return None
@@ -286,15 +252,7 @@ class DuploControl(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = DuploControl()
-    executor = MultiThreadedExecutor()
-    executor.add_node(node)
-
-    try:
-        while rclpy.ok():
-            executor.spin_once()
-    except KeyboardInterrupt:
-        node.get_logger().info("Shutting down due to keyboard interrupt.")
-
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 

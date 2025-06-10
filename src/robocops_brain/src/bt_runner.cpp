@@ -19,6 +19,7 @@
 #include "set_pose_behavior.h"
 #include "can_go_to_zone_behavior.h"
 #include "is_door_open_behavior.h"
+#include "non_blocking_gpio_behavior.h"
 
 using namespace std::chrono_literals;
 
@@ -62,6 +63,7 @@ public:
         factory.registerNodeType<SearchAndGrab>("SearchAndGrab", shared_from_this());
         factory.registerNodeType<CanGoToZone>("CanGoToZone");
         factory.registerNodeType<IsDoorOpen>("IsDoorOpen", shared_from_this());
+        factory.registerNodeType<NonBlockingGPIO>("NonBlockingGPIO", shared_from_this());
 
         auto blackboard = BT::Blackboard::create();
 
@@ -71,8 +73,8 @@ public:
         blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{ 0, 0, 1, 1 });
         blackboard->set<std::vector<int>>("TOTAL_ZONES", std::vector<int>{15, 6, 6, 6});
 
-        blackboard->set<std::vector<int>>("current_grabbed_zones", std::vector<int>{0, 0, 0, 0});
-        blackboard->set<std::vector<int>>("never_timed_out_zones", std::vector<int>{ 0, 0, 0, 0});
+        blackboard->set<std::vector<int>>("current_grabbed_zones", std::vector<int>{0, 0, 0, 0, 0, 0, 0});
+        blackboard->set<std::vector<int>>("never_timed_out_zones", std::vector<int>{ 0, 0, 0, 0, 0, 0, 0});
 
         blackboard->set<int>("current_inventory", 0);
 

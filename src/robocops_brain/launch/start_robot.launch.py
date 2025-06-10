@@ -7,6 +7,8 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
+    declare_bt = DeclareLaunchArgument('bt', default_value='robocops_tree.xml')
+
     xml_file_path = os.path.join(
         get_package_share_directory("robocops_brain"),
         "behavior_trees",

@@ -36,9 +36,14 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 3
-#define MIN_COUNT 50
+#define TOLERANCE_CM 5
+#define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
+
+#define ZONE_2_X_MIN 4.9
+#define ZONE_2_X_MAX 8.0
+#define ZONE_2_Y_MIN 0.0
+#define ZONE_2_Y_MAX 2.05
 
 dai::Pipeline create_pipeline(const std::string nn_name)
 {
@@ -221,7 +226,9 @@ int main(int argc, char **argv)
 
                 try
                 {
-                    map_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
+                    map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+
+                    // Check if not in zone 2
                 }
                 catch (tf2::TransformException &ex)
                 {
@@ -237,7 +244,7 @@ int main(int argc, char **argv)
                 //             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
                 //             map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
 
-                new_duplo.position = map_point;
+                new_duplo.position = camera_point;
                 // Print map point here
                 new_duplo.score = det.confidence;
                 new_duplo.count = 1;

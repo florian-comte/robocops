@@ -41,6 +41,8 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
         node_->get_node_logging_interface(),
         node_->get_node_waitables_interface(),
         "spin");
+
+    initial_duplos_counter_ = -1;
 }
 
 BT::PortsList SearchAndGrab::providedPorts()
@@ -49,8 +51,11 @@ BT::PortsList SearchAndGrab::providedPorts()
         BT::InputPort<int>("zone"),
         BT::InputPort<int>("timeout_duration"),
         BT::InputPort<std::vector<int>>("current_grabbed_zones"),
+        BT::OutputPort<std::vector<int>>("current_grabbed_zones"),
         BT::InputPort<std::vector<int>>("never_timed_out_zones"),
         BT::OutputPort<std::vector<int>>("never_timed_out_zones"),
+        BT::InputPort<std::vector<int>>("current_inventory"),
+        BT::OutputPort<std::vector<int>>("current_inventory"),
     };
 }
 
@@ -71,6 +76,12 @@ BT::NodeStatus SearchAndGrab::onStart()
     if (!getInput("current_grabbed_zones", current_grabbed_zones_))
     {
         throw BT::RuntimeError("Missing required input [current_grabbed_zones]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("current_inventory", current_inventory_))
+    {
+        throw BT::RuntimeError("Missing required input [current_inventory]");
         return BT::NodeStatus::FAILURE;
     }
 
@@ -131,7 +142,33 @@ void SearchAndGrab::onHalted()
 
 void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-    // TODO: count duplos
+    for (size_t i = 0; i < msg->interface_groups.size(); ++i)
+    {
+        if (msg->interface_groups[i] == "captured_duplos")
+        {
+            for (size_t j = 0; j < msg->interface_values[i].interface_names.size(); ++j)
+            {
+                if (msg->interface_values[i].interface_names[j] == "number")
+                {
+                    double val = msg->interface_values[i].values[j];
+
+                    if (initial_duplos_counter_ == -1)
+                    {
+                        initial_duplos_counter_ = (int)val;
+                    }
+
+                    current_grabbed_zones_[zone_] = (int)val - initial_duplos_counter_;
+
+                    setOutput("current_grabbed_zones", current_grabbed_zones_);
+                    setOutput("current_inventory", ++current_inventory_);
+
+                    // RCLCPP_DEBUG(node_->get_logger(), "GPIO state received: [%s] -> [%s] = %.2f",
+                    //              "gpio_name_.c_str()", "interface_name_.c_str()", val);
+                    return;
+                }
+            }
+        }
+    }
 }
 
 void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArray::SharedPtr msg)
@@ -224,15 +261,12 @@ void SearchAndGrab::go_to_pose(float x, float y, float yaw)
     }
 
     auto goal_msg = NavigateToPose::Goal();
-    goal_msg.pose.header.frame_id = "base_link";
+    goal_msg.pose.header.frame_id = "camera";
     goal_msg.pose.header.stamp = node_->get_clock()->now();
 
     goal_msg.pose.pose.position.x = x;
     goal_msg.pose.pose.position.y = y;
-
-    tf2::Quaternion q;
-    q.setRPY(0, 0, yaw);
-    goal_msg.pose.pose.orientation = tf2::toMsg(q);
+    goal_msg.pose.pose.orientation.w = yaw;
 
     is_moving = true;
 

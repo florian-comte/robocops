@@ -32,7 +32,7 @@
                     <RetryUntilSuccessful num_attempts="3">
                       <Sequence>
                         <!-- Activate button routine -->
-                        <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="2.0" />
+                        <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="5.0" />
                                                 
                         <!-- Return FAILURE if not open and SUCCESS if open -->
                         <IsDoorOpen timeout_duration="5.0"/>

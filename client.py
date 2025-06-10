@@ -260,11 +260,7 @@ class DuploControl(Node):
             # If no duplo found, rotate
             self.deactivate_detection()
             
-            current_pose = self.navigator.getCurrentPose()
-            current_yaw = self.quaternion_to_yaw(current_pose.pose.orientation)
-            new_yaw = current_yaw + ANGLE_STEP
-            
-            self.send_navigation_goal(0, 0, new_yaw)
+            self.navigator.spin(ANGLE_STEP)
             
             if (self.get_clock().now() - start_searching_time) > Duration(seconds=MAX_SEARCH_TIME):
                 self.get_logger().info("Search timeout reached.")

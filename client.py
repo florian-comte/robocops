@@ -26,7 +26,7 @@ class DuploControl(Node):
         
         self.navigator = BasicNavigator()
         self.navigator.waitUntilNav2Active()
-        self.navigator.changeMap('/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml')
+        # self.navigator.changeMap('/home/robocops/robocops/src/robocops_navigation/maps/final_arena_blank.yaml')
 
         # Duplo detection subscriber
         self.duplo_subscriber = self.create_subscription(

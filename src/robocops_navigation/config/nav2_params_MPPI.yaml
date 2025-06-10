@@ -125,8 +125,8 @@ controller_server:
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.15 #0.35 # tolerance to meet goal completion (in meters)
-      yaw_goal_tolerance: 0.25 #0.50 # tolerance to meet goal completion (in radians)
+      xy_goal_tolerance: 0.30 #0.35 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.30 #0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 25
@@ -226,13 +226,13 @@ local_costmap:
       width: 3 # local costmap width
       height: 3 # local costmap height
       resolution: 0.05 # resolution of 1 pixel in meters
-      robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
+      robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
       # footprint_padding: 0.01 # inflation layer around footprint
       plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.2 # inflation radius
-        cost_scaling_factor: 3.0 # exponential decay factor through infaltion radius
+        inflation_radius: 0.1 # inflation radius
+        cost_scaling_factor: 5.0 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
       denoise_layer: # denoise layer for lidar in costmap
@@ -265,7 +265,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       transform_tolerance: 0.7 # timing tolerance for TF future
-      robot_radius: 0.37 # radius of circular robot. if SET -> collision checking will be circular
+      robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
       resolution: 0.05 # resolution of 1 pixel in meters
       track_unknown_space: true # false: consider unknown cell as free space
       footprint_padding: 0.03 # inflation layer around footprint
@@ -290,11 +290,6 @@ global_costmap:
         map_subscribe_transient_local: true
         transform_tolerance: 0.1 # timing tolerance for TF 
         subscribe_to_updates: true # subscribe to map udpates
-      # denoise_layer: # denoise layer for lidar in costmap
-      #   plugin: "nav2_costmap_2d::DenoiseLayer"
-      #   enabled: true
-      #   minimal_group_size: 5 # number of neighbours that get deleted
-      #   group_connectivity_type: 8 # 4 or 8 depending on desired distance measurement
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 0.6 # inflation radius

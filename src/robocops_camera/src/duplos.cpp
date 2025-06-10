@@ -229,13 +229,13 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                RCLCPP_INFO(node->get_logger(),
-                            "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
-                            det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
+                // RCLCPP_INFO(node->get_logger(),
+                //             "Camera point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                //             det.spatialCoordinates.x / 1000, det.spatialCoordinates.y / 1000, det.spatialCoordinates.z / 1000, det.confidence);
 
-                RCLCPP_INFO(node->get_logger(),
-                            "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
-                            map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
+                // RCLCPP_INFO(node->get_logger(),
+                //             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
+                //             map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
 
                 new_duplo.position = map_point;
                 // Print map point here

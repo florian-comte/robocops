@@ -254,36 +254,30 @@ class DuploControl(Node):
             
             # Check for duplos
             closest_duplo = self.get_closest_duplo()
-            if closest_duplo:
-                break
-                
-            # If no duplo found, rotate
+            
             self.deactivate_detection()
             
-            self.navigator.spin(ANGLE_STEP)
-            
-            while not self.navigator.isTaskComplete():
-                continue
+            if closest_duplo:
+                pos = closest_duplo.position.point
+                self.get_logger().info(
+                    f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
+                )
+                
+                # Approach duplo
+                self.enable_capture(True)
+                self.send_navigation_goal(pos.x + 0.05, pos.y, 1.57)
+                self.enable_capture(False)
+                self.clear_duplos()
             
             if (self.get_clock().now() - start_searching_time) > Duration(seconds=MAX_SEARCH_TIME):
                 self.get_logger().info("Search timeout reached.")
                 return
-        
-        if not closest_duplo:
-            self.get_logger().info("No Duplos found.")
-            return
-
-        pos = closest_duplo.position.point
-        self.get_logger().info(
-            f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
-        )
-        
-        # Approach duplo
-        self.enable_capture(True)
-        self.send_navigation_goal(pos.x + 0.05, pos.y, 1.57)  # Approach with 90° orientation
-        time.sleep(5)
-        self.enable_capture(False)
-        self.clear_duplos()
+                
+            # If no duplo found, rotate
+            self.navigator.spin(ANGLE_STEP)
+            
+            while not self.navigator.isTaskComplete():
+                continue
         
     def stop_capture(self):
         self.enable_capture(False)

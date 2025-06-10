@@ -26,9 +26,10 @@
             <!-- OPENING DOOR LOGIC -->
             <!-- Check if door is not open, if not try to open -->
             <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->
-            <Precondition if="is_door_open != 1" else="SUCCESS">
-                <!-- This sequence returns SUCCESS if can enter the zone and FAILURE if not -->
-                <Sequence>
+            <Fallback>
+              <IsDoorOpen timeout_duration="5.0"/>
+
+              <Sequence>
                     <RetryUntilSuccessful num_attempts="3">
                       <Sequence>
                         <!-- Activate button routine -->
@@ -39,7 +40,7 @@
                       </Sequence>
                     </RetryUntilSuccessful>
                 </Sequence>
-            </Precondition>
+            </Fallback>
 
             <!-- ENTER ZONE 3 LOGIC -->
             <GoToPose name="go_to_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />

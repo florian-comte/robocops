@@ -32,6 +32,8 @@ private:
 
     double timeout_duration_;
     rclcpp::Time start_time_;
+
+    bool is_door_open_ = false;
 };
 
 #endif // GET_LIDAR_READING_NODE_H

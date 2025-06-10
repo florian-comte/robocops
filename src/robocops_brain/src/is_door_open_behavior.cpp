@@ -17,6 +17,7 @@ IsDoorOpen::IsDoorOpen(const std::string &name,
 BT::PortsList IsDoorOpen::providedPorts()
 {
     return {
+        BT::InputPort<int>("is_door_open"),
         BT::InputPort<float>("timeout_duration"),
         BT::OutputPort<int>("is_door_open"),
     };
@@ -28,6 +29,17 @@ BT::NodeStatus IsDoorOpen::onStart()
     {
         throw BT::RuntimeError("Missing required input [timeout_duration]");
         return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("is_door_open", is_door_open_))
+    {
+        throw BT::RuntimeError("Missing required input [is_door_open]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (is_door_open_)
+    {
+        return BT::NodeStatus::SUCCESS;
     }
 
     start_time_ = node_->get_clock()->now();

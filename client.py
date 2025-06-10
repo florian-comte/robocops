@@ -262,6 +262,9 @@ class DuploControl(Node):
             
             self.navigator.spin(ANGLE_STEP)
             
+            while not self.navigator.isTaskComplete():
+                continue
+            
             if (self.get_clock().now() - start_searching_time) > Duration(seconds=MAX_SEARCH_TIME):
                 self.get_logger().info("Search timeout reached.")
                 return

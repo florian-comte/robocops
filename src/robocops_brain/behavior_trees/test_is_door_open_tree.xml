@@ -1,7 +1,8 @@
 <root BTCPP_format="4" main_tree_to_execute="Main">
   <BehaviorTree ID="Main">
     <Sequence>
-      <SearchAndGrab zone="0" timeout_duration="180" current_grabbed_zones="{current_grabbed_zones}" never_timed_out_zones="{never_timed_out_zones}" />
+      <SetLocations name="set_locations" num_locs="{num_locs}" loc_names="{loc_names}" loc_poses="{loc_poses}" />
+      <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry" />
     </Sequence>
   </BehaviorTree>
 </root>

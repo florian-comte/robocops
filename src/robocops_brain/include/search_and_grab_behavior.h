@@ -44,7 +44,7 @@ private:
     // Constants
     const float SEARCHING_TIME_PER_STOP = 6.0;
     const float ANGLE_STEP = 1.0;
-    const float GRABBING_TIME = 5.0;
+    const float GRABBING_TIME = 20.0;
 
     // ROS 2 components
     rclcpp::Node::SharedPtr node_;

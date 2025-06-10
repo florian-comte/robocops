@@ -7,7 +7,7 @@
 #define IR_SENSOR_BACK_WINDOW 10
 #define IR_SENSOR_BACK_INTERVAL 50
 #define IR_SENSOR_FRONT_WINDOW 5
-#define IR_SENSOR_FRONT_INTERVAL 10
+#define IR_SENSOR_FRONT_INTERVAL 5
 
 enum ir_sensor_position {
     BOTTOM_IR = 0,

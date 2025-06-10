@@ -210,6 +210,7 @@ void SearchAndGrab::clear_duplos()
     auto request = std::make_shared<std_srvs::srv::Empty::Request>();
     clear_client_->async_send_request(request);
     duplos_list_.clear();
+    closest_duplo_ = nullptr;
 }
 
 void SearchAndGrab::go_to_pose(float x, float y, float yaw)
@@ -302,7 +303,7 @@ BT::NodeStatus SearchAndGrab::handleSearching()
         return BT::NodeStatus::RUNNING;
     }
 
-    if (closest_duplo_)
+    if (closest_duplo_ != nullptr)
     {
         RCLCPP_INFO(node_->get_logger(), "Duplo found, switching to approach");
         deactivate_detection();

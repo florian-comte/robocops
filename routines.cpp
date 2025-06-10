@@ -194,11 +194,8 @@ void handle_button_routine() {
       if (millis() - button_timer > BUTTON_TIME_TO_DRIVE) {
         maxon_target_speeds[MAXON_REAR_LEFT] = 0;
         maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
-        button_state = BUTTON_FINISHED; 
+        button_state = BUTTON_IDLE; 
       }
-      break;
-
-    case BUTTON_FINISHED:
       break;
   }
 }

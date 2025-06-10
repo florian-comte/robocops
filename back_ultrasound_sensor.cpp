@@ -26,7 +26,7 @@ void init_back_ultrasound_sensor(){
   next_ping_time = millis();
 }
 
-void update_back_ultrasound_sensorr() {
+void update_back_ultrasound_sensor() {
   if(available_to_ping){
     available_to_ping = false;
     next_ping_time = millis() + BACK_ULTRASOUND_PING_INTERVAL;
@@ -34,20 +34,5 @@ void update_back_ultrasound_sensorr() {
   
   if(millis() > next_ping_time){
     back_ultrasound_sensor.ping_timer(ultrasound_back_echo_callback); 
-  }
-}
-
-void update_back_ultrasound_sensor(){
-  if(millis() > next_ping_time){
-    digitalWrite(BACK_ULTRASOUND_SENSOR_TRIGGER_PIN, LOW);
-    delayMicroseconds(2);
-    digitalWrite(BACK_ULTRASOUND_SENSOR_TRIGGER_PIN, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(BACK_ULTRASOUND_SENSOR_TRIGGER_PIN, LOW);
-  
-    double duration = pulseIn(BACK_ULTRASOUND_SENSOR_ECHO_PIN, HIGH);
-    back_ultrasound_averaged_distance = (duration*.0343)/2;
-
-    next_ping_time = millis() + BACK_ULTRASOUND_PING_INTERVAL;
   }
 }

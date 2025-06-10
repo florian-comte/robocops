@@ -59,7 +59,7 @@ void update_commands(){
       capture_state = CAPTURE_IDLE;
     }
     
-    if((command_unload == 1) && lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN && (unload_state == UNLOAD_IDLE) && ((button_state == BUTTON_IDLE) || (button_state == BUTTON_FINISHED))){
+    if(command_unload == 1 && lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN && unload_state == UNLOAD_IDLE && button_state == BUTTON_IDLE){
       unload_state = UNLOAD_OPEN_DOOR; 
     }
     
@@ -78,7 +78,7 @@ void update_commands(){
     }
     
     // Apply speeds
-    if((button_state == BUTTON_FINISHED || button_state == BUTTON_IDLE) && slope_up_state == SLOPE_UP_IDLE && slope_down_state == SLOPE_DOWN_IDLE) {
+    if((button_state == BUTTON_IDLE) && slope_up_state == SLOPE_UP_IDLE && slope_down_state == SLOPE_DOWN_IDLE) {
       maxon_target_speeds[MAXON_REAR_LEFT] = command_maxon_left;
       maxon_target_speeds[MAXON_REAR_RIGHT] = command_maxon_right;
     }
@@ -130,7 +130,7 @@ void update_states(){
   state_maxon_right = maxon_encoder_speeds[MAXON_REAR_RIGHT] + 10000;
 
   // Update additional state values
-  //update_back_ultrasound_sensor();
+  update_back_ultrasound_sensor();
 }
 
 void setup() {

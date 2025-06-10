@@ -65,8 +65,7 @@ enum ButtonState {
   BUTTON_IDLE,
   BUTTON_BACKWARD,
   BUTTON_FORWARD,
-  BUTTON_GOING_FORWARD,
-  BUTTON_FINISHED
+  BUTTON_GOING_FORWARD
 };
 
 extern ButtonState button_state;

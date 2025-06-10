@@ -27,7 +27,7 @@
             <!-- Check if door is not open, if not try to open -->
             <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->
             <Fallback>
-              <IsDoorOpen timeout_duration="5.0"/>
+              <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
 
               <Sequence>
                     <RetryUntilSuccessful num_attempts="3">
@@ -36,7 +36,7 @@
                         <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="8.0" />
                                                 
                         <!-- Return FAILURE if not open and SUCCESS if open -->
-                        <IsDoorOpen timeout_duration="5.0"/>
+                        <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
                       </Sequence>
                     </RetryUntilSuccessful>
                 </Sequence>

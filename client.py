@@ -150,7 +150,7 @@ class DuploControl(Node):
         goal_pose.pose.position.y = y
         goal_pose.pose.orientation.w = yaw
         
-        go_to_pose_task = self.navigator.goToPose(goal_pose)
+        self.navigator.clearLocalCostmap()
         
         i = 0
         while not self.navigator.isTaskComplete():
@@ -218,6 +218,7 @@ class DuploControl(Node):
         )
         
         self.enable_capture(True)
+        
 
         self.send_navigation_goal(pos.x, pos.y)
         

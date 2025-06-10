@@ -79,13 +79,11 @@ void update_commands(){
     }
     
     if((command_slope_up == 1) && slope_up_state == SLOPE_UP_IDLE){
-      // todo
-      slope_up_state = SLOPE_UP_IDLE; 
+      slope_up_state = SLOPE_UP_SMASH_WALL; 
     }
     
     if((command_slope_down == 1) && slope_down_state == SLOPE_DOWN_IDLE){
-      // todo
-      slope_down_state = SLOPE_DOWN_IDLE; 
+      slope_down_state = SLOPE_DOWN_ENGAGE; 
     }
     
     // Apply speeds

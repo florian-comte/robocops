@@ -143,7 +143,7 @@ class DuploControl(Node):
 
     def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0):
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'base_link'
+        goal_pose.header.frame_id = 'brushes'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y

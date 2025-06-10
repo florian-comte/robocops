@@ -280,7 +280,7 @@ class DuploControl(Node):
         
         # Approach duplo
         self.enable_capture(True)
-        self.send_navigation_goal(pos.x - 0.05, pos.y, 1.57)  # Approach with 90° orientation
+        self.send_navigation_goal(pos.x + 0.05, pos.y, 1.57)  # Approach with 90° orientation
         time.sleep(5)
         self.enable_capture(False)
         self.clear_duplos()

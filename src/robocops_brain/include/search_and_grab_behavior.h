@@ -65,7 +65,7 @@ private:
     rclcpp::Time grab_start_time_;
     int zone_;
     int timeout_duration_;
-    int current_grabbed_zones_;
+    std::vector<int> current_grabbed_zones_;
     bool is_moving = false;
 
     // Duplo tracking

@@ -48,7 +48,7 @@ BT::PortsList SearchAndGrab::providedPorts()
     return {
         BT::InputPort<int>("zone"),
         BT::InputPort<int>("timeout_duration"),
-        BT::InputPort<int>("current_grabbed_zones"),
+        BT::InputPort<std::vector<int>>("current_grabbed_zones"),
         BT::InputPort<std::vector<int>>("never_timed_out_zones"),
         BT::OutputPort<std::vector<int>>("never_timed_out_zones"),
     };
@@ -222,18 +222,33 @@ void SearchAndGrab::go_to_pose(float x, float y, float yaw)
     }
 
     auto goal_msg = NavigateToPose::Goal();
-    goal_msg.pose.header.frame_id = "map"; // Use "map" or relevant global frame
+    goal_msg.pose.header.frame_id = "base_link";
     goal_msg.pose.header.stamp = node_->get_clock()->now();
 
     goal_msg.pose.pose.position.x = x;
     goal_msg.pose.pose.position.y = y;
 
-    // Convert yaw to quaternion
     tf2::Quaternion q;
     q.setRPY(0, 0, yaw);
     goal_msg.pose.pose.orientation = tf2::toMsg(q);
 
-    nav_to_pose_client_->async_send_goal(goal_msg);
+    is_moving = true;
+
+    auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
+    send_goal_options.result_callback = [this](const rclcpp_action::ClientGoalHandle<NavigateToPose>::WrappedResult &result)
+    {
+        if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+        {
+            RCLCPP_INFO(node_->get_logger(), "Navigation goal succeeded.");
+        }
+        else
+        {
+            RCLCPP_WARN(node_->get_logger(), "Navigation goal failed or was canceled.");
+        }
+        is_moving = false;
+    };
+
+    nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
 }
 
 void SearchAndGrab::spin(float angle)
@@ -250,7 +265,23 @@ void SearchAndGrab::spin(float angle)
     goal_msg.target_yaw = angle;
     goal_msg.time_allowance.sec = 10;
 
-    spin_client_->async_send_goal(goal_msg);
+    is_moving = true;
+
+    auto send_goal_options = rclcpp_action::Client<Spin>::SendGoalOptions();
+    send_goal_options.result_callback = [this](const rclcpp_action::ClientGoalHandle<Spin>::WrappedResult &result)
+    {
+        if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+        {
+            RCLCPP_INFO(node_->get_logger(), "Spin action succeeded.");
+        }
+        else
+        {
+            RCLCPP_WARN(node_->get_logger(), "Spin action failed or was canceled.");
+        }
+        is_moving = false;
+    };
+
+    spin_client_->async_send_goal(goal_msg, send_goal_options);
 }
 
 BT::NodeStatus SearchAndGrab::handleSearching()

@@ -206,8 +206,23 @@ SlopeUpState slope_up_state = SLOPE_UP_IDLE;
 unsigned long slope_up_timer = 0;
 
 void handle_slope_up_routine() {
-  switch (slope_up_state) {      
+  switch (slope_up_state) { 
     case SLOPE_UP_IDLE:
+      break;
+
+    case SLOPE_UP_ENGAGE:
+      slope_up_timer = millis();
+      slope_up_state = SLOPE_UP_REACHED;
+      maxon_target_speeds[MAXON_REAR_LEFT] = 5000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = 5000;
+      break;
+
+    case SLOPE_UP_REACHED:
+      if (millis() - slope_up_timer > SLOPE_TIME_UP) {
+        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+        slope_up_state = SLOPE_UP_IDLE;
+      }
       break;
   }
 }
@@ -221,6 +236,21 @@ unsigned long slope_down_timer = 0;
 void handle_slope_down_routine() {
   switch (slope_down_state) {      
     case SLOPE_DOWN_IDLE:
+      break;
+
+    case SLOPE_DOWN_ENGAGE:
+      slope_down_timer = millis();
+      slope_down_state = SLOPE_DOWN_REACHED;
+      maxon_target_speeds[MAXON_REAR_LEFT] = 5000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = 5000;
+      break;
+
+    case SLOPE_DOWN_REACHED:
+      if (millis() - slope_down_timer > SLOPE_TIME_DOWN) {
+        maxon_target_speeds[MAXON_REAR_LEFT] = 0;
+        maxon_target_speeds[MAXON_REAR_RIGHT] = 0;
+        slope_down_state = SLOPE_DOWN_IDLE;
+      }
       break;
   }
 }

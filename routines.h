@@ -73,8 +73,12 @@ extern unsigned long button_timer;
 
 // --- SLOPE UP ROUTINE ---
 
+#define SLOPE_TIME_UP 5000
+
 enum SlopeUpState {
   SLOPE_UP_IDLE,
+  SLOPE_UP_ENGAGE,
+  SLOPE_UP_REACHED
 };
 
 extern SlopeUpState slope_up_state;
@@ -82,8 +86,12 @@ extern unsigned long slope_up_timer;
 
 // --- SLOPE DOWN ROUTINE ---
 
+#define SLOPE_TIME_DOWN 5000
+
 enum SlopeDownState {
   SLOPE_DOWN_IDLE,
+  SLOPE_DOWN_ENGAGE,
+  SLOPE_DOWN_REACHED
 };
 
 extern SlopeDownState slope_down_state;

@@ -196,7 +196,7 @@ class DuploControl(Node):
         self.get_logger().info("Starting search and grab sequence.")
         
         SEARCHING_TIME_PER_STOP = 3000
-        ANGLE_STEP = 0.35
+        ANGLE_STEP = 0.70
         
         time.sleep(3)
         
@@ -211,7 +211,7 @@ class DuploControl(Node):
             start_searching_time = self.get_clock().now()
             
             if not closest_duplo:
-                self.send_navigation_goal(0, 0, ANGLE_STEP)
+                self.send_navigation_goal(0.0, 0.0, ANGLE_STEP)
                 
             time.sleep(SEARCHING_TIME_PER_STOP)
             

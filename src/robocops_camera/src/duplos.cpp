@@ -133,6 +133,10 @@ float calculateNnFps()
 // Global flag for activation of detection
 bool detection_active_ = true;
 
+std::vector<robocops_msgs::msg::Duplo> duplos_buffer_map;
+std::vector<int> already_published_map;
+std::vector<robocops_msgs::msg::Duplo> duplos_official_map;
+
 std::vector<robocops_msgs::msg::Duplo> duplos_buffer;
 std::vector<int> already_published;
 std::vector<robocops_msgs::msg::Duplo> duplos_official;
@@ -192,11 +196,16 @@ int main(int argc, char **argv)
     rclcpp::Rate rate(18);
 
     rclcpp::Publisher<robocops_msgs::msg::DuploArray>::SharedPtr duplos_pub = node->create_publisher<robocops_msgs::msg::DuploArray>("duplos", 10);
+    rclcpp::Publisher<robocops_msgs::msg::DuploArray>::SharedPtr duplos_pub_map = node->create_publisher<robocops_msgs::msg::DuploArray>("duplos_map", 10);
+
     int current_duplo_id_ = 0;
+    int current_duplo_id_map = 0;
 
     robocops_msgs::msg::Duplo new_duplo;
+    robocops_msgs::msg::Duplo new_duplo_map;
     geometry_msgs::msg::PointStamped camera_point;
     geometry_msgs::msg::PointStamped map_point;
+    geometry_msgs::msg::PointStamped base_link_point;
 
     // Services
     auto activate_service = node->create_service<std_srvs::srv::SetBool>(
@@ -217,7 +226,7 @@ int main(int argc, char **argv)
                 {
                     continue;
                 }
-                
+
                 camera_point.header.frame_id = "camera";
                 camera_point.header.stamp = node->get_clock()->now();
                 camera_point.point.x = det.spatialCoordinates.z / 1000;
@@ -227,8 +236,16 @@ int main(int argc, char **argv)
                 try
                 {
                     map_point = tf_buffer.transform(camera_point, "map", tf2::durationFromSec(0.1));
+                    base_link_point = tf_buffer.transform(camera_point, "base_link", tf2::durationFromSec(0.1));
 
                     // Check if not in zone 2
+                    // Skip if point is in Zone 2
+                    if (map_point.point.x >= ZONE_2_X_MIN && map_point.point.x <= ZONE_2_X_MAX &&
+                        map_point.point.y >= ZONE_2_Y_MIN && map_point.point.y <= ZONE_2_Y_MAX)
+                    {
+                        RCLCPP_DEBUG(node->get_logger(), "Detected Duplo in Zone 2, skipping...");
+                        continue;
+                    }
                 }
                 catch (tf2::TransformException &ex)
                 {
@@ -244,13 +261,58 @@ int main(int argc, char **argv)
                 //             "Map Point - x: %.2f, y: %.2f, z: %.2f, confidence: %.2f",
                 //             map_point.point.x, map_point.point.y, map_point.point.z, det.confidence);
 
-                new_duplo.position = camera_point;
-                // Print map point here
+                new_duplo.position = base_link_point;
                 new_duplo.score = det.confidence;
                 new_duplo.count = 1;
                 new_duplo.id = -1;
 
+                new_duplo_map.position = map_point;
+                new_duplo_map.score = det.confidence;
+                new_duplo_map.count = 1;
+                new_duplo_map.id = -1;
+
+
+
                 bool found = false;
+
+                // MAP
+                for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer_map)
+                {
+                    if (calculate_distance(existing_duplo.position.point, new_duplo_map.position.point) < TOLERANCE_CM / 100.0)
+                    {
+                        found = true;
+
+                        existing_duplo.position.point.x = (new_duplo_map.position.point.x + existing_duplo.count * new_duplo_map.position.point.x) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.y = (new_duplo_map.position.point.y + existing_duplo.count * new_duplo_map.position.point.y) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.z = (new_duplo_map.position.point.z + existing_duplo.count * new_duplo_map.position.point.z) / (existing_duplo.count + 1);
+
+                        if (++existing_duplo.count >= MIN_COUNT)
+                        {
+                            if (std::find(already_published_map.begin(), already_published_map.end(), existing_duplo.id) == already_published_map.end())
+                            {
+                                duplos_official_map.push_back(existing_duplo);
+                                already_published_map.push_back(existing_duplo.id);
+                            }
+                        }
+                    }
+                }
+
+                if (!found)
+                {
+                    if (duplos_buffer_map.size() >= BUFFER_SIZE)
+                    {
+                        RCLCPP_WARN(node->get_logger(), "Map buffer full, discarding duplo");
+                        continue;
+                    }
+
+                    new_duplo_map.id = current_duplo_id_map++;
+                    duplos_buffer_map.push_back(new_duplo_map);
+                    // RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer");
+                }
+
+                found = false;
+
+                // BASE LINK
                 for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer)
                 {
                     if (calculate_distance(existing_duplo.position.point, new_duplo.position.point) < TOLERANCE_CM / 100.0)
@@ -292,6 +354,14 @@ int main(int argc, char **argv)
             robocops_msgs::msg::DuploArray array_msg;
             array_msg.duplos = duplos_official;
             duplos_pub->publish(array_msg);
+            // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
+        }
+
+        if (!duplos_official_map.empty())
+        {
+            robocops_msgs::msg::DuploArray array_msg;
+            array_msg.duplos = duplos_official_map;
+            duplos_pub_map->publish(array_msg);
             // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
         }
 

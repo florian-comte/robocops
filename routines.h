@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+extern int16_t state_nb_captured_duplos;
+
 // --- UNLOAD ROUTINE ---
 
 //#define UNLOAD_LATCH_SERVO_CLOSED_POS 0

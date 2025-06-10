@@ -39,8 +39,6 @@ int16_t state_maxon_right = 0;
 
 int16_t state_other = 0;
 
-int16_t state_nb_captured_duplos = 0;
-
 void update_commands(){
   if(command_emergency){
     for (int i = 0; i < MAXON_MOTOR_COUNT; i++) {

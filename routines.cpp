@@ -6,6 +6,8 @@
 #include "l298n_driver.h"
 #include "ir_sensor.h"
 
+int16_t state_nb_captured_duplos = 0;
+
 void init_routines(){
   unload_state = UNLOAD_IDLE; 
   lift_state = LIFT_IDLE;
@@ -316,6 +318,7 @@ CaptureState capture_state = CAPTURE_IDLE;
 unsigned long capture_timer = 0;
 unsigned long next_small_convoyer = -1;
 unsigned long current_small_convoyer = -1;
+
 bool front_detected_something = false;
 
 void handle_capture_routine() {
@@ -340,6 +343,19 @@ void handle_capture_routine() {
           capture_timer = millis();
           front_detected_something = false;
         }
+
+        if(current_small_convoyer == -1){
+          if(millis() > next_small_convoyer || next_small_convoyer == -1){
+            current_small_convoyer = millis();
+            dri_target_speeds[LIFT_CONVOYER_NAME] = CAPTURE_SMALL_CONVOYER_SPEED;
+          }
+        } else {
+          if(millis() - current_small_convoyer > CAPTURE_SMALL_CONVOYER_DURATION){
+            dri_target_speeds[LIFT_CONVOYER_NAME] = 0;
+            next_small_convoyer = millis() + CAPTURE_SMALL_CONVOYER_INTERVAL;
+            current_small_convoyer = -1;
+          }
+        }
       } else {
         if(duplo_detected_in_front_lift()){
           capture_timer = millis();
@@ -359,6 +375,7 @@ void handle_capture_routine() {
       
     case CAPTURE_SMALL_BACKWARD:
       // Small backward logic
+      
       if(current_small_convoyer == -1){
         if(millis() > next_small_convoyer || next_small_convoyer == -1){
           current_small_convoyer = millis();

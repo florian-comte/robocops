@@ -197,11 +197,11 @@ class DuploControl(Node):
         SEARCHING_TIME_PER_STOP = 3000 #ms
         
         closest_duplo = None;
-        start_searching_time = self.get_clock().now()
+        # start_searching_time = self.get_clock().now()
         
         # Take photo and find d
-        while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
-            closest_duplo = self.get_closest_duplo()
+        # while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
+        closest_duplo = self.get_closest_duplo()
         
         self.deactivate_detection()
         

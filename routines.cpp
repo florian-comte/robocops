@@ -224,8 +224,8 @@ void handle_slope_up_routine() {
       }
       slope_up_timer = millis();
       slope_up_state = SLOPE_UP_90DEG;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 2000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -2000;
+      maxon_target_speeds[MAXON_REAR_LEFT] = 1000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = -1000;
       break;
 
     case SLOPE_UP_90DEG:
@@ -247,7 +247,7 @@ void handle_slope_up_routine() {
       slope_up_timer = millis();
       slope_up_state = SLOPE_UP_LEFT_CORR;
       maxon_target_speeds[MAXON_REAR_LEFT] = 2000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -2000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = 1000;
       break;
 
     case SLOPE_UP_LEFT_CORR:
@@ -257,8 +257,8 @@ void handle_slope_up_routine() {
       }
       slope_up_timer = millis();
       slope_up_state = SLOPE_UP_CLIMB;
-      maxon_target_speeds[MAXON_REAR_LEFT] = 2000;
-      maxon_target_speeds[MAXON_REAR_RIGHT] = -2000;
+      maxon_target_speeds[MAXON_REAR_LEFT] = 1000;
+      maxon_target_speeds[MAXON_REAR_RIGHT] = 2000;
       break;
 
     case SLOPE_UP_CLIMB:

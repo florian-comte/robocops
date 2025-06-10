@@ -205,14 +205,15 @@ class DuploControl(Node):
         start_searching_time = self.get_clock().now()
         
         # Take photo and find d
-        while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
-            closest_duplo = self.get_closest_duplo()
-            start_searching_time = self.get_clock().now()
+        # while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
+        #     closest_duplo = self.get_closest_duplo()
+        #     start_searching_time = self.get_clock().now()
             
-            if not closest_duplo:
-                send_navigation_goal(0, 0, 1.)
+        #     if not closest_duplo:
+        #         send_navigation_goal(0, 0, 1.0)
                 
-        
+        closest_duplo = self.get_closest_duplo()
+
         self.deactivate_detection()
         
         if not closest_duplo:

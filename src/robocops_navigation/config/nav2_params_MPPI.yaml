@@ -233,7 +233,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 0.60 # inflation radius
-        cost_scaling_factor: 10.0 # exponential decay factor through infaltion radius
+        cost_scaling_factor: 8.0 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
       denoise_layer: # denoise layer for lidar in costmap
@@ -295,7 +295,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 1.0 # inflation radius
-        cost_scaling_factor: 12.0 # exponential decay factor through infaltion radius
+        cost_scaling_factor: 8.0 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
       always_send_full_costmap: true # whether to send full cost map every update, rather than updates

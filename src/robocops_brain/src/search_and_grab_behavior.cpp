@@ -145,6 +145,7 @@ void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArr
 
 void SearchAndGrab::activate_detection()
 {
+    clear_duplos();
     auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
     request->data = true;
     activate_client_->async_send_request(request);

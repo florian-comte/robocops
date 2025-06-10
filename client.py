@@ -74,6 +74,7 @@ class DuploControl(Node):
     def clear_duplos(self):
         self.get_logger().info('Clearing duplos...')
         self.clear_client.call_async(Empty.Request())
+        self.duplos_list = []
 
     def enable_capture(self, enable: bool):
         msg = DynamicInterfaceGroupValues()
@@ -218,7 +219,7 @@ class DuploControl(Node):
         
         self.enable_capture(True)
 
-        self.send_navigation_goal(pos.x + 0.1, pos.y)
+        self.send_navigation_goal(pos.x, pos.y)
         
         time.sleep(5)
         

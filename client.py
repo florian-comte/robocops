@@ -268,6 +268,7 @@ class DuploControl(Node):
                 self.send_navigation_goal(pos.x + 0.05, pos.y, 1.57)
                 self.enable_capture(False)
                 self.clear_duplos()
+                continue;
             
             if (self.get_clock().now() - start_searching_time) > Duration(seconds=MAX_SEARCH_TIME):
                 self.get_logger().info("Search timeout reached.")

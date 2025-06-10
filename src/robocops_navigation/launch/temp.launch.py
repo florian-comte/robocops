@@ -79,5 +79,5 @@ def generate_launch_description():
         diffbot_launch,
         camera_launch,
         lidar_launch,
-        delayed_nav2
+        # delayed_nav2
     ])

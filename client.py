@@ -142,13 +142,13 @@ class DuploControl(Node):
     def distance_to_point(self, point: Point):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
-    def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0):
+    def send_navigation_goal(self, x: float, y: float, yaw: float = 0.0):
         self.navigator.clearLocalCostmap()
 
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'base_link'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
-        goal_pose.pose.position.x = x - 10
+        goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
         goal_pose.pose.orientation.w = yaw
         
@@ -202,11 +202,16 @@ class DuploControl(Node):
         time.sleep(3)
         
         closest_duplo = None;
-        # start_searching_time = self.get_clock().now()
+        start_searching_time = self.get_clock().now()
         
         # Take photo and find d
-        # while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
-        closest_duplo = self.get_closest_duplo()
+        while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
+            closest_duplo = self.get_closest_duplo()
+            start_searching_time = self.get_clock().now()
+            
+            if not closest_duplo:
+                send_navigation_goal(0, 0, 1.)
+                
         
         self.deactivate_detection()
         

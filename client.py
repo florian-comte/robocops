@@ -143,6 +143,8 @@ class DuploControl(Node):
         return math.sqrt(point.x ** 2 + point.y ** 2)
 
     def send_navigation_goal(self, x: float, y: float, yaw: float = 1.0):
+        self.navigator.clearLocalCostmap()
+
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'base_link'
         goal_pose.header.stamp = self.get_clock().now().to_msg()
@@ -150,7 +152,7 @@ class DuploControl(Node):
         goal_pose.pose.position.y = y
         goal_pose.pose.orientation.w = yaw
         
-        self.navigator.clearLocalCostmap()
+        go_to_pose_task = self.navigator.goToPose(goal_pose)
         
         i = 0
         while not self.navigator.isTaskComplete():

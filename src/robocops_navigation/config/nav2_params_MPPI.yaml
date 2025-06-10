@@ -125,8 +125,8 @@ controller_server:
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.20 #0.35 # tolerance to meet goal completion (in meters)
-      yaw_goal_tolerance: 0.25 #0.50 # tolerance to meet goal completion (in radians)
+      xy_goal_tolerance: 0.30 #0.35 # tolerance to meet goal completion (in meters)
+      yaw_goal_tolerance: 0.30 #0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 25

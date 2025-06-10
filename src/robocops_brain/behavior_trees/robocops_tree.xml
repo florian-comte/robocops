@@ -26,7 +26,7 @@
             <!-- OPENING DOOR LOGIC -->
             <!-- Check if door is not open, if not try to open -->
             <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->
-            <Precondition if="!is_door_open" else="SUCCESS">
+            <Precondition if="is_door_open != 1" else="SUCCESS">
                 <!-- This sequence returns SUCCESS if can enter the zone and FAILURE if not -->
                 <Sequence>
                     <RetryUntilSuccessful num_attempts="3">
@@ -37,7 +37,7 @@
                         <!-- Return FAILURE if not open and SUCCESS if open -->
                         <IsDoorOpen timeout_duration="5.0"/>
 
-                        <Script code="is_door_open := true" />
+                        <Script code="is_door_open := 1" />
                       </Sequence>
                     </RetryUntilSuccessful>
                 </Sequence>

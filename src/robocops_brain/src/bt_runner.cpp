@@ -77,7 +77,7 @@ public:
         blackboard->set<int>("current_inventory", 0);
         blackboard->set<bool>("never_timed_out_opening_door", true);
 
-        blackboard->set<bool>("is_door_open", false);
+        blackboard->set<int>("is_door_open", 0);
 
         blackboard->set<double>("lidar_angle", 0.0);
         blackboard->set<double>("lidar_distance", -1.0);

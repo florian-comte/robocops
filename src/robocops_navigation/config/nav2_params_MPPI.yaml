@@ -125,7 +125,7 @@ controller_server:
     goal_checker: # plugin to check if goal is reached by robot
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: false # after rotating goal orientation, whether to check for XY position tolerance [false ?]
-      xy_goal_tolerance: 0.40 #0.35 # tolerance to meet goal completion (in meters)
+      xy_goal_tolerance: 0.30 #0.35 # tolerance to meet goal completion (in meters)
       yaw_goal_tolerance: 0.20 #0.50 # tolerance to meet goal completion (in radians)
     FollowPath: # controller plugin
       plugin: "nav2_mppi_controller::MPPIController"
@@ -315,7 +315,7 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
-      tolerance: 0.10 # tolerance between requested goal pose and end of path (meters) [0.5 ?]
+      tolerance: 0.05 # tolerance between requested goal pose and end of path (meters) [0.5 ?]
       use_astar: false # true: A* algorithm, false: Dijkstra
       allow_unknown: false # whether to allow plannig through unknown cells
       use_final_approach_orientation: false # true: make orientation at goal pose the same as the vector connecting last two points

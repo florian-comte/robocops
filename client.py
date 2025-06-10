@@ -194,27 +194,28 @@ class DuploControl(Node):
 
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
-
-        self.activate_detection()
         
         SEARCHING_TIME_PER_STOP = 3000
+        ANGLE_STEP = 0.35
         
         time.sleep(3)
         
-        closest_duplo = None;
+        closest_duplo = None
         start_searching_time = self.get_clock().now()
         
         # Take photo and find d
-        # while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
-        #     closest_duplo = self.get_closest_duplo()
-        #     start_searching_time = self.get_clock().now()
+        while not closest_duplo or (self.get_clock().now() - start_searching_time) > SEARCHING_TIME_PER_STOP:
+            self.activate_detection()
             
-        #     if not closest_duplo:
-        #         send_navigation_goal(0, 0, 1.0)
+            closest_duplo = self.get_closest_duplo()
+            start_searching_time = self.get_clock().now()
+            
+            if not closest_duplo:
+                self.send_navigation_goal(0, 0, ANGLE_STEP)
                 
-        closest_duplo = self.get_closest_duplo()
-
-        self.deactivate_detection()
+            time.sleep(SEARCHING_TIME_PER_STOP)
+            
+            self.deactivate_detection()
         
         if not closest_duplo:
             self.get_logger().info("No Duplos found.")
@@ -227,8 +228,7 @@ class DuploControl(Node):
         
         self.enable_capture(True)
         
-
-        self.send_navigation_goal(pos.x - 0.10, pos.y)
+        self.send_navigation_goal(pos.x - 0.10, pos.y, 1.57)
         
         time.sleep(5)
         

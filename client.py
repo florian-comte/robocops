@@ -192,30 +192,83 @@ class DuploControl(Node):
         else:
             print('Goal has an invalid return status!')
 
+    # def search_and_grab(self):
+    #     self.get_logger().info("Starting search and grab sequence.")
+        
+    #     SEARCHING_TIME_PER_STOP = 3
+    #     ANGLE_STEP = 0.70
+        
+    #     time.sleep(3)
+        
+    #     closest_duplo = None
+    #     start_searching_time = self.get_clock().now()
+        
+    #     # Take photo and find d
+    #     while not closest_duplo or (self.get_clock().now() - start_searching_time) > 15:
+    #         self.activate_detection()
+            
+    #         time.sleep(SEARCHING_TIME_PER_STOP)
+
+    #         closest_duplo = self.get_closest_duplo()
+    #         start_searching_time = self.get_clock().now()
+            
+    #         if not closest_duplo:
+    #             self.send_navigation_goal(0.0, 0.0, ANGLE_STEP)
+                
+    #         self.deactivate_detection()
+        
+    #     if not closest_duplo:
+    #         self.get_logger().info("No Duplos found.")
+    #         return
+
+    #     pos = closest_duplo.position.point
+    #     self.get_logger().info(
+    #         f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
+    #     )
+        
+    #     self.enable_capture(True)
+        
+    #     self.send_navigation_goal(pos.x - 0.10, pos.y, 1.57)
+        
+    #     time.sleep(5)
+        
+    #     self.enable_capture(False)
+        
+    #     self.clear_duplos()
+    
     def search_and_grab(self):
         self.get_logger().info("Starting search and grab sequence.")
         
         SEARCHING_TIME_PER_STOP = 3
-        ANGLE_STEP = 0.70
-        
-        time.sleep(3)
+        ANGLE_STEP = 1.57 
+        MAX_SEARCH_TIME = 60 
         
         closest_duplo = None
         start_searching_time = self.get_clock().now()
         
-        # Take photo and find d
-        while not closest_duplo or (self.get_clock().now() - start_searching_time) > 15:
+        # Search pattern
+        while rclpy.ok():
+            # Activate detection and wait
             self.activate_detection()
-            
             time.sleep(SEARCHING_TIME_PER_STOP)
-
-            closest_duplo = self.get_closest_duplo()
-            start_searching_time = self.get_clock().now()
             
-            if not closest_duplo:
-                self.send_navigation_goal(0.0, 0.0, ANGLE_STEP)
+            # Check for duplos
+            closest_duplo = self.get_closest_duplo()
+            if closest_duplo:
+                break
                 
+            # If no duplo found, rotate
             self.deactivate_detection()
+            
+            current_pose = self.navigator.getCurrentPose()
+            current_yaw = self.quaternion_to_yaw(current_pose.pose.orientation)
+            new_yaw = current_yaw + ANGLE_STEP
+            
+            self.send_navigation_goal(0, 0, new_yaw)
+            
+            if (self.get_clock().now() - start_searching_time) > Duration(seconds=MAX_SEARCH_TIME):
+                self.get_logger().info("Search timeout reached.")
+                return
         
         if not closest_duplo:
             self.get_logger().info("No Duplos found.")
@@ -226,14 +279,11 @@ class DuploControl(Node):
             f"Closest Duplo found: ID {closest_duplo.id} at x={pos.x:.2f}, y={pos.y:.2f}"
         )
         
+        # Approach duplo
         self.enable_capture(True)
-        
-        self.send_navigation_goal(pos.x - 0.10, pos.y, 1.57)
-        
+        self.send_navigation_goal(pos.x, pos.y, 1.57)  # Approach with 90° orientation
         time.sleep(5)
-        
         self.enable_capture(False)
-        
         self.clear_duplos()
         
     def stop_capture(self):

@@ -36,8 +36,6 @@
                                                 
                         <!-- Return FAILURE if not open and SUCCESS if open -->
                         <IsDoorOpen timeout_duration="5.0"/>
-
-                        <Script code="is_door_open := 1" />
                       </Sequence>
                     </RetryUntilSuccessful>
                 </Sequence>

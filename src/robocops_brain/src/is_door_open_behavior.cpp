@@ -18,6 +18,7 @@ BT::PortsList IsDoorOpen::providedPorts()
 {
     return {
         BT::InputPort<float>("timeout_duration"),
+        BT::OutputPort<int>("is_door_open"),
     };
 }
 
@@ -47,6 +48,7 @@ BT::NodeStatus IsDoorOpen::onRunning()
     if (distance_ >= 0)
     {
         RCLCPP_INFO(node_->get_logger(), "Current distance on door: %.2f", distance_);
+        setOutput("is_door_open", 1);
         return distance_ > MIN_DISTANCE_DOOR ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 

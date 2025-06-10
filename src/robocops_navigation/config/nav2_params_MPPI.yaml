@@ -226,12 +226,13 @@ local_costmap:
       width: 3 # local costmap width
       height: 3 # local costmap height
       resolution: 0.05 # resolution of 1 pixel in meters
-      robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
+      # robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
+      footprint: "[ [47,-25], [47,25], [-27,-25], [-27,25] ]" # set polygon instead of circular pattern
       # footprint_padding: 0.01 # inflation layer around footprint
       plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.25 # inflation radius
+        inflation_radius: 0.10 # inflation radius
         cost_scaling_factor: 1.5 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
@@ -265,7 +266,8 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       transform_tolerance: 0.7 # timing tolerance for TF future
-      robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
+      # robot_radius: 0.40 # radius of circular robot. if SET -> collision checking will be circular
+      footprint: "[ [47,-25], [47,25], [-27,-25], [-27,25] ]" # set footprint as a polygon instead of circular pattern
       resolution: 0.05 # resolution of 1 pixel in meters
       track_unknown_space: true # false: consider unknown cell as free space
       footprint_padding: 0.03 # inflation layer around footprint

@@ -15,6 +15,8 @@
 #define STATES_BUFFER_SIZE 11
 #define COMMANDS_BUFFER_SIZE 5
 
+#define ULTRASOUND_TIME_AFTER_ROUTINE 20000
+
 byte commands_buffer[COMMANDS_BUFFER_SIZE];
 byte states_buffer[STATES_BUFFER_SIZE];
 
@@ -25,6 +27,9 @@ bool command_unload = 0;
 bool command_button = 0;
 bool command_slope_up = 0;
 bool command_slope_down = 0;
+
+bool should_read_ultrasound = 0;
+float ultrasound_timer = -1.0;
 
 int command_maxon_left = 0;
 int command_maxon_right = 0;
@@ -62,9 +67,15 @@ void update_commands(){
     if(command_unload == 1 && lift_state != LIFT_REVERSE_CONVOYER && lift_state != LIFT_DOWN && unload_state == UNLOAD_IDLE && button_state == BUTTON_IDLE){
       unload_state = UNLOAD_OPEN_DOOR; 
     }
+
+    if(millis() > ultrasound_timer){
+      should_read_ultrasound = 0;
+    }
     
     if((command_button == 1) && (button_state == BUTTON_IDLE) && (unload_state == UNLOAD_IDLE)){
       button_state = BUTTON_BACKWARD; 
+      should_read_ultrasound = 1;
+      ultrasound_timer = millis() + ULTRASOUND_TIME_AFTER_ROUTINE;
     }
     
     if((command_slope_up == 1) && slope_up_state == SLOPE_UP_IDLE){

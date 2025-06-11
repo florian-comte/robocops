@@ -159,10 +159,10 @@ void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfac
 
                     if (current_grabbed_zones_.size() <= zone_)
                     {
-                        RCLCPP_DEBUG(node_->get_logger(), "Almsot seg fault.");
+                        RCLCPP_INFO(node_->get_logger(), "Almsot seg fault.");
                         return;
                     }
-                    
+
                     current_grabbed_zones_[zone_] = (int)val - initial_duplos_counter_;
 
                     setOutput("current_grabbed_zones", current_grabbed_zones_);

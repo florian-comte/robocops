@@ -88,6 +88,8 @@ BT::NodeStatus SearchAndGrab::onStart()
     start_time_ = node_->get_clock()->now();
     search_state_ = SEARCHING;
 
+    RCLCPP_INFO(node_->get_logger(), "YOOOO");
+
     return BT::NodeStatus::RUNNING;
 }
 
@@ -97,7 +99,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
     if ((now - start_time_).seconds() > timeout_duration_)
     {
-        std::vector<int> never_timed_out_zones;
+        std::vector<int> never_timed_out_zones = std::vector<int>{0, 0, 0, 0, 0, 0, 0};
 
         if (!getInput("never_timed_out_zones", never_timed_out_zones))
         {

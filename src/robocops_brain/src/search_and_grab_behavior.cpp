@@ -144,6 +144,27 @@ BT::NodeStatus SearchAndGrab::onRunning()
         return BT::NodeStatus::SUCCESS;
     }
 
+    if (is_moving && (node_->get_clock()->now() - nav_goal_sent_time_).seconds() > 15)
+    {
+        RCLCPP_WARN(node_->get_logger(), "Navigation goal timed out after 15 seconds.");
+        is_moving = false;
+
+        nav_to_pose_client_->async_cancel_all_goals();
+
+        // disable_capture();
+        clear_duplos();
+
+        // Reset for next search
+        search_started_ = false;
+        approach_started_ = false;
+        closest_duplo_ = nullptr;
+        search_state_ = SEARCHING;
+        last_take_time_ = now;
+        already_changed_ = true;
+
+        return BT::NodeStatus::RUNNING;
+    }
+
     if ((now - last_take_time_).seconds() > CHANGE_TO_SECOND_POS && !already_changed_)
     {
         // disable_capture();
@@ -206,7 +227,7 @@ void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfac
 
                     if (current_grabbed_zones_.size() <= zone_)
                     {
-                        RCLCPP_INFO(node_->get_logger(), "Almsot seg fault.");
+                        RCLCPP_DEBUG(node_->get_logger(), "Almsot seg fault.");
                         return;
                     }
 
@@ -336,8 +357,10 @@ void SearchAndGrab::go_to_pose(float x, float y, float yaw)
         }
         is_moving = false;
     };
-
+    
     nav_to_pose_client_->async_send_goal(goal_msg, send_goal_options);
+    nav_goal_sent_time_ = node_->get_clock()->now();
+    
 }
 
 void SearchAndGrab::spin(float angle)
@@ -373,6 +396,7 @@ void SearchAndGrab::spin(float angle)
     };
 
     spin_client_->async_send_goal(goal_msg, send_goal_options);
+    nav_goal_sent_time_ = node_->get_clock()->now();
 }
 
 BT::NodeStatus SearchAndGrab::handleSearching()

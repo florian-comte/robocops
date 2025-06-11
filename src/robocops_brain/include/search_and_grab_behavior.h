@@ -68,10 +68,11 @@ private:
     bool approach_started_ = false;
     rclcpp::Time start_time_;
     rclcpp::Time search_start_time_;
+    rclcpp::Time nav_goal_sent_time_;
     rclcpp::Time grab_start_time_;
     int zone_;
     int timeout_duration_;
-    std::vector<int> current_grabbed_zones_;
+    std::vector<int> current_grabbed_zones_ = std::vector<int>{0, 0, 0, 0, 0, 0, 0};
     bool is_moving = false;
 
     float second_pose_x_;

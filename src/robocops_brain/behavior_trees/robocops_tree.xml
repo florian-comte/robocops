@@ -33,7 +33,7 @@
                     <RetryUntilSuccessful num_attempts="3">
                       <Sequence>
                         <!-- Activate button routine -->
-                        <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="8.0" />
+                        <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="15.0" />
                                                 
                         <!-- Return FAILURE if not open and SUCCESS if open -->
                         <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
@@ -54,8 +54,8 @@
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 
-              second_pose_x="0.75"
-              second_pose_y="5.75"
+              second_pose_x="1"
+              second_pose_y="6"
               second_pose_yaw="0"
             />
 

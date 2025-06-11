@@ -42,8 +42,8 @@ private:
     };
 
     // Constants
-    const float SEARCHING_TIME_PER_STOP = 4.0;
-    const float ANGLE_STEP = 0.5;
+    const float SEARCHING_TIME_PER_STOP = 1.0;
+    const float ANGLE_STEP = 0.3;
     const float GRABBING_TIME = 3.0;
     const float TIMEOUT_CHANGE_POSE = 30.0;
 

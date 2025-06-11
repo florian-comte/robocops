@@ -142,33 +142,33 @@ void SearchAndGrab::onHalted()
 
 void SearchAndGrab::gpio_state_callback(const control_msgs::msg::DynamicInterfaceGroupValues::SharedPtr msg)
 {
-    for (size_t i = 0; i < msg->interface_groups.size(); ++i)
-    {
-        if (msg->interface_groups[i] == "captured_duplos")
-        {
-            for (size_t j = 0; j < msg->interface_values[i].interface_names.size(); ++j)
-            {
-                if (msg->interface_values[i].interface_names[j] == "number")
-                {
-                    double val = msg->interface_values[i].values[j];
+    // for (size_t i = 0; i < msg->interface_groups.size(); ++i)
+    // {
+    //     if (msg->interface_groups[i] == "captured_duplos")
+    //     {
+    //         for (size_t j = 0; j < msg->interface_values[i].interface_names.size(); ++j)
+    //         {
+    //             if (msg->interface_values[i].interface_names[j] == "number")
+    //             {
+    //                 double val = msg->interface_values[i].values[j];
 
-                    if (initial_duplos_counter_ == -1)
-                    {
-                        initial_duplos_counter_ = (int)val;
-                    }
+    //                 if (initial_duplos_counter_ == -1)
+    //                 {
+    //                     initial_duplos_counter_ = (int)val;
+    //                 }
 
-                    current_grabbed_zones_[zone_] = (int)val - initial_duplos_counter_;
+    //                 current_grabbed_zones_[zone_] = (int)val - initial_duplos_counter_;
 
-                    setOutput("current_grabbed_zones", current_grabbed_zones_);
-                    setOutput("current_inventory", ++current_inventory_);
+    //                 setOutput("current_grabbed_zones", current_grabbed_zones_);
+    //                 setOutput("current_inventory", ++current_inventory_);
 
-                    // RCLCPP_DEBUG(node_->get_logger(), "GPIO state received: [%s] -> [%s] = %.2f",
-                    //              "gpio_name_.c_str()", "interface_name_.c_str()", val);
-                    return;
-                }
-            }
-        }
-    }
+    //                 // RCLCPP_DEBUG(node_->get_logger(), "GPIO state received: [%s] -> [%s] = %.2f",
+    //                 //              "gpio_name_.c_str()", "interface_name_.c_str()", val);
+    //                 return;
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void SearchAndGrab::detections_state_callback(const robocops_msgs::msg::DuploArray::SharedPtr msg)

@@ -22,32 +22,27 @@
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
             <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+
+            <RetryUntilSuccessful num_attempts="3">
+              <Sequence>
+                <!-- Activate button routine -->
+                <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="20.0" pulse_duration="1.5" wait_after_duration="15.0" />
+                                        
+                <!-- Return FAILURE if not open and SUCCESS if open -->
+                <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
+              </Sequence>
+            </RetryUntilSuccessful>
          
             <!-- OPENING DOOR LOGIC -->
             <!-- Check if door is not open, if not try to open -->
-            <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->
-            <Fallback>
-              <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
-
-              <Sequence>
-                    <RetryUntilSuccessful num_attempts="3">
-                      <Sequence>
-                        <!-- Activate button routine -->
-                        <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="20.0" pulse_duration="1.5" wait_after_duration="15.0" />
-                                                
-                        <!-- Return FAILURE if not open and SUCCESS if open -->
-                        <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
-                      </Sequence>
-                    </RetryUntilSuccessful>
-                </Sequence>
-            </Fallback>
+            <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->             
 
             <!-- ENTER ZONE 3 LOGIC -->
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
             <GoToPose name="enter_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <!-- GRAB ZONE 3 LOGIC -->
+              <!-- GRAB ZONE 3 LOGIC -->
             <SearchAndGrab 
               zone="2" 
               timeout_duration="120" 
@@ -58,7 +53,6 @@
               second_pose_y="6"
               second_pose_yaw="0"
             />
-
           </Sequence>
 
           <!-- ZONE 5 LOGIC -->

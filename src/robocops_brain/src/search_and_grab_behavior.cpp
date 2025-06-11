@@ -61,6 +61,8 @@ BT::PortsList SearchAndGrab::providedPorts()
 
 BT::NodeStatus SearchAndGrab::onStart()
 {
+    RCLCPP_INFO(node_->get_logger(), "YOOOO");
+
     if (!getInput("zone", zone_))
     {
         throw BT::RuntimeError("Missing required input [zone]");

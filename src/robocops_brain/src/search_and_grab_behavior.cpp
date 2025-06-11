@@ -365,7 +365,7 @@ BT::NodeStatus SearchAndGrab::handleApproaching()
         enable_capture();
 
         auto pos = closest_duplo_->position.point;
-        go_to_pose(pos.x + 0.10, pos.y, 1.57);
+        go_to_pose(pos.x + 0.05, pos.y, 1.57);
 
         approach_started_ = true;
         return BT::NodeStatus::RUNNING;

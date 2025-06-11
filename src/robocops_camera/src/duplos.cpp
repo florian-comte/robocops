@@ -36,8 +36,8 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 2
-#define MIN_COUNT 3
+#define TOLERANCE_CM 10
+#define MIN_COUNT 20
 #define SCORE_THRESHOLD 0.90
 
 #define ZONE_2_X_MIN 4.9

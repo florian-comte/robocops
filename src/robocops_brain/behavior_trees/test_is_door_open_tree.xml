@@ -4,8 +4,9 @@
         zone="0" 
         timeout_duration="120" 
         current_grabbed_zones="{current_grabbed_zones}" 
-        current_grabbed_zones="{never_timed_out_zones}" 
-        current_grabbed_zones="{current_inventory}" 
+        never_timed_out_zones="{never_timed_out_zones}" 
+        current_inventory="{current_inventory}" 
       />
   </BehaviorTree>
 </root>
+

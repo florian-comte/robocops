@@ -25,9 +25,7 @@ def generate_launch_description():
     )
 
     # Make re-written yaml
-    param_substitutions = [{
-        'use_sim_time': False,
-        'yaml_filename': keepout_map_file}]
+    param_substitutions = [{'use_sim_time': False}, {'yaml_filename': keepout_map_file}]
 
     configured_params = RewrittenYaml(
         source_file=keepout_params_file,

@@ -11,10 +11,17 @@ import os
 def generate_launch_description():
     ld = LaunchDescription()
 
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
     nav2_yaml = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'nav2_params_MPPI_keepout.yaml')
     map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'final_arena_blank.yaml')
     keepout_map_file = os.path.join(get_package_share_directory('robocops_navigation'), 'maps', 'final_arena_keepout.yaml')
     keepout_params_file = os.path.join(get_package_share_directory('robocops_navigation'), 'config', 'keepout_params.yaml')
+
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation (Gazebo) clock if true')
 
     nav2_launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -25,7 +32,10 @@ def generate_launch_description():
     )
 
     # Make re-written yaml
-    param_substitutions = [{'use_sim_time': False}, {'yaml_filename': keepout_map_file}]
+    # Make re-written yaml
+    param_substitutions = {
+        'use_sim_time': use_sim_time,
+        'yaml_filename': keepout_map_file}
 
     configured_params = RewrittenYaml(
         source_file=keepout_params_file,

@@ -46,6 +46,11 @@ private:
     const float ANGLE_STEP = 0.3;
     const float GRABBING_TIME = 3.0;
     const float TIMEOUT_CHANGE_POSE = 30.0;
+    const float CHANGE_TO_SECOND_POS = 30.0;
+
+    bool already_changed_ = false;
+
+    int number_of_failed_spins = 0;
 
     // ROS 2 components
     rclcpp::Node::SharedPtr node_;
@@ -68,6 +73,12 @@ private:
     int timeout_duration_;
     std::vector<int> current_grabbed_zones_;
     bool is_moving = false;
+
+    float second_pose_x_;
+    float second_pose_y_;
+    float second_pose_yaw_;
+
+    rclcpp::Time last_take_time_;
 
     int initial_duplos_counter_;
     int current_inventory_;

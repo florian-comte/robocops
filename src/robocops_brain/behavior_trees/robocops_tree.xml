@@ -55,6 +55,9 @@
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 
+              second_pose_x="0.75"
+              second_pose_y="5.75"
+              second_pose_yaw="0"
             />
 
           </Sequence>
@@ -72,6 +75,9 @@
                 current_grabbed_zones="{current_grabbed_zones}" 
                 never_timed_out_zones="{never_timed_out_zones}" 
                 current_inventory="{current_inventory}" 
+                second_pose_x="3.50"
+                second_pose_y="5.0"
+                second_pose_yaw="0"
               />
           </Sequence>
 
@@ -112,13 +118,13 @@
 
             <!-- GRAB ZONE 4 LOGIC -->
         
-            <SearchAndGrab 
+            <!-- <SearchAndGrab 
               zone="3" 
               timeout_duration="120" 
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 
-            />
+            /> -->
 
             <!-- LEAVE ZONE 4 LOGIC -->
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
@@ -141,6 +147,9 @@
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 
+              second_pose_x="4.9"
+              second_pose_y="2.7"
+              second_pose_yaw="0"
             />
           </Sequence>
 

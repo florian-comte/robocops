@@ -35,13 +35,6 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
         node_->get_node_waitables_interface(),
         "navigate_to_pose");
 
-    // backup_client_ = rclcpp_action::create_client<nav2_msgs::action::BackUp>(
-    //     node_->get_node_base_interface(),
-    //     node_->get_node_graph_interface(),
-    //     node_->get_node_logging_interface(),
-    //     node_->get_node_waitables_interface(),
-    //     "backup");
-
     spin_client_ = rclcpp_action::create_client<nav2_msgs::action::Spin>(
         node_->get_node_base_interface(),
         node_->get_node_graph_interface(),
@@ -63,6 +56,10 @@ BT::PortsList SearchAndGrab::providedPorts()
         BT::OutputPort<std::vector<int>>("never_timed_out_zones"),
         BT::InputPort<int>("current_inventory"),
         BT::OutputPort<int>("current_inventory"),
+        BT::InputPort<float>("second_pose_x"),
+        BT::InputPort<float>("second_pose_y"),
+        BT::InputPort<float>("second_pose_yaw"),
+
     };
 }
 
@@ -92,7 +89,26 @@ BT::NodeStatus SearchAndGrab::onStart()
         return BT::NodeStatus::FAILURE;
     }
 
+    if (!getInput("second_pose_x", second_pose_x_))
+    {
+        throw BT::RuntimeError("Missing required input [second_pose]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("second_pose_y", second_pose_y_))
+    {
+        throw BT::RuntimeError("Missing required input [second_pose]");
+        return BT::NodeStatus::FAILURE;
+    }
+
+    if (!getInput("second_pose_yaw", second_pose_yaw_))
+    {
+        throw BT::RuntimeError("Missing required input [second_pose]");
+        return BT::NodeStatus::FAILURE;
+    }
+
     start_time_ = node_->get_clock()->now();
+    last_take_time_ = node_->get_clock()->now();
     search_state_ = SEARCHING;
 
     return BT::NodeStatus::RUNNING;
@@ -101,6 +117,12 @@ BT::NodeStatus SearchAndGrab::onStart()
 BT::NodeStatus SearchAndGrab::onRunning()
 {
     auto now = node_->get_clock()->now();
+
+    if (current_grabbed_zones_.size() > zone_ && current_grabbed_zones_[zone_] > 6)
+    {
+        disable_capture();
+        return BT::NodeStatus::SUCCESS;
+    }
 
     if ((now - start_time_).seconds() > timeout_duration_)
     {
@@ -116,8 +138,26 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
         setOutput("never_timed_out_zones", never_timed_out_zones);
 
+        disable_capture();
+
         // here timeout should be a success
         return BT::NodeStatus::SUCCESS;
+    }
+
+    if ((now - last_take_time_).seconds() > CHANGE_TO_SECOND_POS && !already_changed_)
+    {
+        // disable_capture();
+        clear_duplos();
+
+        // Reset for next search
+        search_started_ = false;
+        approach_started_ = false;
+        closest_duplo_ = nullptr;
+        search_state_ = SEARCHING;
+        last_take_time_ = now;
+        already_changed_ = true;
+
+        go_to_pose(second_pose_x_, second_pose_y_, second_pose_yaw_);
     }
 
     if (is_moving)
@@ -312,7 +352,7 @@ void SearchAndGrab::spin(float angle)
 
     auto goal_msg = Spin::Goal();
     goal_msg.target_yaw = angle;
-    goal_msg.time_allowance.sec = 10;
+    goal_msg.time_allowance.sec = 5;
 
     is_moving = true;
 
@@ -326,8 +366,9 @@ void SearchAndGrab::spin(float angle)
         else
         {
             RCLCPP_WARN(node_->get_logger(), "Spin action failed or was canceled.");
-            
+            number_of_failed_spins++;
         }
+
         is_moving = false;
     };
 
@@ -393,7 +434,7 @@ BT::NodeStatus SearchAndGrab::handleGrabbing()
         return BT::NodeStatus::RUNNING;
     }
 
-    disable_capture();
+    // disable_capture();
     clear_duplos();
 
     // Reset for next search
@@ -401,6 +442,7 @@ BT::NodeStatus SearchAndGrab::handleGrabbing()
     approach_started_ = false;
     closest_duplo_ = nullptr;
     search_state_ = SEARCHING;
+    last_take_time_ = now;
 
     return BT::NodeStatus::RUNNING;
 }

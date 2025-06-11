@@ -1,24 +1,7 @@
 <root BTCPP_format="4" main_tree_to_execute="Main">
   <BehaviorTree ID="Main">
     <Sequence>
-      <SearchAndGrab 
-        zone="0" 
-        timeout_duration="180" 
-        current_grabbed_zones="{current_grabbed_zones}" 
-        never_timed_out_zones="{never_timed_out_zones}" 
-        current_inventory="{current_inventory}"  />
+      <Script code="">
     </Sequence>
   </BehaviorTree>
 </root>
-
-<!-- BT::PortsList CanGoToZone::providedPorts()
-{
-    return {
-        BT::InputPort<int>("zone_index"),
-        BT::InputPort<int>("MAX_INVENTORY"),
-        BT::InputPort<int>("current_inventory"),
-        BT::InputPort<std::vector<int>>("MIN_TO_GO_ZONES"),
-        BT::InputPort<std::vector<int>>("TOTAL_ZONES"),
-        BT::InputPort<std::vector<int>>("current_grabbed_zones"),
-        BT::InputPort<std::vector<int>>("never_timed_out_zones")};
-} -->

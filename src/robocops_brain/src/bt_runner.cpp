@@ -70,11 +70,11 @@ public:
         blackboard->set<std::string>("locations_file", locations_file_);
 
         blackboard->set<int>("MAX_INVENTORY", 15);
-        blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{ 0, 0, 1, 1 });
+        blackboard->set<std::vector<int>>("MIN_TO_GO_ZONES", std::vector<int>{0, 0, 1, 1});
         blackboard->set<std::vector<int>>("TOTAL_ZONES", std::vector<int>{15, 6, 6, 6});
 
         blackboard->set<std::vector<int>>("current_grabbed_zones", std::vector<int>{0, 0, 0, 0, 0, 0, 0});
-        blackboard->set<std::vector<int>>("never_timed_out_zones", std::vector<int>{ 0, 0, 0, 0, 0, 0, 0});
+        blackboard->set<std::vector<int>>("never_timed_out_zones", std::vector<int>{0, 0, 0, 0, 0, 0, 0});
 
         blackboard->set<int>("current_inventory", 0);
 

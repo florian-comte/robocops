@@ -42,6 +42,13 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
         node_->get_node_waitables_interface(),
         "spin");
 
+    backup_client_ = rclcpp_action::create_client<nav2_msgs::action::BackUp>(
+        node_->get_node_base_interface(),
+        node_->get_node_graph_interface(),
+        node_->get_node_logging_interface(),
+        node_->get_node_waitables_interface(),
+        "backup");
+
     initial_duplos_counter_ = -1;
 }
 
@@ -123,6 +130,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
         disable_capture();
         nav_to_pose_client_->async_cancel_all_goals();
         spin_client_->async_cancel_all_goals();
+        backup_client_->async_cancel_all_goals();
 
         return BT::NodeStatus::SUCCESS;
     }
@@ -145,6 +153,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
         nav_to_pose_client_->async_cancel_all_goals();
         spin_client_->async_cancel_all_goals();
+        backup_client_->async_cancel_all_goals();
 
         // here timeout should be a success
         return BT::NodeStatus::SUCCESS;
@@ -157,6 +166,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
         nav_to_pose_client_->async_cancel_all_goals();
         spin_client_->async_cancel_all_goals();
+        backup_client_->async_cancel_all_goals();
 
         // disable_capture();
         clear_duplos();
@@ -392,14 +402,34 @@ void SearchAndGrab::spin(float angle)
         if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
         {
             RCLCPP_INFO(node_->get_logger(), "Spin action succeeded.");
+            is_moving = false;
         }
         else
         {
             RCLCPP_WARN(node_->get_logger(), "Spin action failed or was canceled.");
             number_of_failed_spins++;
-        }
 
-        is_moving = false;
+            auto goal_msg_backup = BackUp::Goal();
+
+            is_moving = true;
+
+            auto send_goal_options_backup = rclcpp_action::Client<BackUp>::SendGoalOptions();
+            send_goal_options_backup.result_callback = [this](const rclcpp_action::ClientGoalHandle<BackUp>::WrappedResult &result)
+            {
+                if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+                {
+                    RCLCPP_INFO(node_->get_logger(), "Backup action succeeded.");
+                }
+                else
+                {
+                    RCLCPP_WARN(node_->get_logger(), "Backup action failed or was canceled.");
+                }
+
+                is_moving = false;
+            };
+
+            backup_client_->async_send_goal(goal_msg_backup, send_goal_options_backup);
+        }
     };
 
     spin_client_->async_send_goal(goal_msg, send_goal_options);

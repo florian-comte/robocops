@@ -13,6 +13,7 @@
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "nav2_msgs/action/spin.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+#include "nav2_msgs/action/back_up.hpp"
 
 #include "control_msgs/msg/dynamic_interface_group_values.hpp"
 #include "control_msgs/msg/interface_value.hpp"
@@ -61,6 +62,7 @@ private:
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr clear_client_;
     rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SharedPtr nav_to_pose_client_;
     rclcpp_action::Client<nav2_msgs::action::Spin>::SharedPtr spin_client_;
+    rclcpp_action::Client<nav2_msgs::action::BackUp>::SharedPtr backup_client_;
 
     // State variables
     SearchState search_state_;

@@ -61,8 +61,6 @@ BT::PortsList SearchAndGrab::providedPorts()
 
 BT::NodeStatus SearchAndGrab::onStart()
 {
-    RCLCPP_INFO(node_->get_logger(), "YOOOO");
-
     if (!getInput("zone", zone_))
     {
         throw BT::RuntimeError("Missing required input [zone]");
@@ -90,8 +88,6 @@ BT::NodeStatus SearchAndGrab::onStart()
     start_time_ = node_->get_clock()->now();
     search_state_ = SEARCHING;
 
-    RCLCPP_INFO(node_->get_logger(), "YOOOO");
-
     return BT::NodeStatus::RUNNING;
 }
 
@@ -101,7 +97,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
     if ((now - start_time_).seconds() > timeout_duration_)
     {
-        std::vector<int> never_timed_out_zones = std::vector<int>{0, 0, 0, 0, 0, 0, 0};
+        std::vector<int> never_timed_out_zones;
 
         if (!getInput("never_timed_out_zones", never_timed_out_zones))
         {

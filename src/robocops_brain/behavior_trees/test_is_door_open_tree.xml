@@ -1,12 +1,7 @@
 <root BTCPP_format="4" main_tree_to_execute="Main">
   <BehaviorTree ID="Main">
-     <SearchAndGrab 
-        zone="0" 
-        timeout_duration="120" 
-        current_grabbed_zones="{current_grabbed_zones}" 
-        never_timed_out_zones="{never_timed_out_zones}" 
-        current_inventory="{current_inventory}" 
-      />
+    <Sequence>
+      <SearchAndGrab zone="0" timeout_duration="180" current_grabbed_zones="{current_grabbed_zones}" never_timed_out_zones="{never_timed_out_zones}" current_inventory="{current_inventory}"  />
+    </Sequence>
   </BehaviorTree>
 </root>
-

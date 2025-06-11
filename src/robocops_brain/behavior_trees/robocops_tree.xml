@@ -8,16 +8,15 @@
           <!-- ZONE 3 LOGIC -->
           <Sequence>
             <!-- Check if can go zone 3, SUCCESS = true, FAILURE = false -->
-            <CanGoToZone 
-              zone_index="2" 
+            <!-- <CanGoToZone 
+              zone="2" 
               MAX_INVENTORY="{MAX_INVENTORY}"
               current_inventory="{current_inventory}"
               MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
               TOTAL_ZONES="{TOTAL_ZONES}"
               current_grabbed_zones="{current_grabbed_zones}"
               never_timed_out_zones="{never_timed_out_zones}"
-              never_timed_out_opening_door="{never_timed_out_opening_door}"
-              />
+              /> -->
 
             <!-- GO TO ZONE 3 LOGIC -->
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
@@ -92,16 +91,15 @@
           <!-- ZONE 4 LOGIC -->
           <Sequence>
             <!-- Check if can go zone 4, SUCCESS = true, FAILURE = false -->
-            <CanGoToZone 
-              zone_index="3" 
+            <!-- <CanGoToZone 
+              zone="3" 
               MAX_INVENTORY="{MAX_INVENTORY}"
               current_inventory="{current_inventory}"
               MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
               TOTAL_ZONES="{TOTAL_ZONES}"
               current_grabbed_zones="{current_grabbed_zones}"
               never_timed_out_zones="{never_timed_out_zones}"
-              never_timed_out_opening_door="{never_timed_out_opening_door}"
-              />
+              /> -->
 
             <!-- GO TO ZONE 4 LOGIC -->
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>

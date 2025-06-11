@@ -2,9 +2,14 @@
 drop_point: [0.5, 0.5, 0.78539816339]
 zone4_outside_entry: [7.50, 4.48, 3.14]
 zone4_inside_entry: [7.75, 6.53, 1.57] #TODO
-zone4_inside_exit: [7.75, 7.25, -1.57] 
+zone4_inside_exit: [7.80, 7.70, 3.14] 
 zone4_outside_exit: [7.75, 6.53, 1.57] # TODO
 zone3_inside_entry: [2.0, 7.50, 3.14]
+
+zone4_checkpoint_1: [7.75, 7.65, 3.14]
+zone4_checkpoint_2: [6.40, 7.65, -1.58]
+zone4_checkpoint_3: [6.42, 5.75, 0.02]
+zone4_checkpoint_4: [7.78, 6.51, 1.59]
 
 
 zone5_start: [5.0, 7.0, 3.14]

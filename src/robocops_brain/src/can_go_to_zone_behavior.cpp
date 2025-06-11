@@ -9,7 +9,7 @@ CanGoToZone::CanGoToZone(const std::string &name, const BT::NodeConfiguration &c
 BT::PortsList CanGoToZone::providedPorts()
 {
     return {
-        BT::InputPort<int>("zone_index"),
+        BT::InputPort<int>("zone"),
         BT::InputPort<int>("MAX_INVENTORY"),
         BT::InputPort<int>("current_inventory"),
         BT::InputPort<std::vector<int>>("MIN_TO_GO_ZONES"),

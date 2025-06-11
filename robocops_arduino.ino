@@ -81,7 +81,7 @@ void update_commands(){
     }
     
     if((command_slope_down == 1) && slope_down_state == SLOPE_DOWN_IDLE){
-      slope_down_state = SLOPE_DOWN_ENGAGE; 
+      slope_down_state = SLOPE_DOWN_SMASH_WALL; 
     }
     
     // Apply speeds

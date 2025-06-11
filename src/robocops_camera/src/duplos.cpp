@@ -36,7 +36,7 @@
 #include "std_srvs/srv/empty.hpp"
 
 #define BUFFER_SIZE 2000
-#define TOLERANCE_CM 5
+#define TOLERANCE_CM 10
 #define MIN_COUNT 50
 #define SCORE_THRESHOLD 0.90
 
@@ -266,49 +266,49 @@ int main(int argc, char **argv)
                 new_duplo.count = 1;
                 new_duplo.id = -1;
 
-                // new_duplo_map.position = map_point;
-                // new_duplo_map.score = det.confidence;
-                // new_duplo_map.count = 1;
-                // new_duplo_map.id = -1;
+                new_duplo_map.position = map_point;
+                new_duplo_map.score = det.confidence;
+                new_duplo_map.count = 1;
+                new_duplo_map.id = -1;
 
 
 
                 bool found = false;
 
                 // // MAP
-                // for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer_map)
-                // {
-                //     if (calculate_distance(existing_duplo.position.point, new_duplo_map.position.point) < TOLERANCE_CM / 100.0)
-                //     {
-                //         found = true;
+                for (robocops_msgs::msg::Duplo &existing_duplo : duplos_buffer_map)
+                {
+                    if (calculate_distance(existing_duplo.position.point, new_duplo_map.position.point) < TOLERANCE_CM / 100.0)
+                    {
+                        found = true;
 
-                //         existing_duplo.position.point.x = (new_duplo_map.position.point.x + existing_duplo.count * new_duplo_map.position.point.x) / (existing_duplo.count + 1);
-                //         existing_duplo.position.point.y = (new_duplo_map.position.point.y + existing_duplo.count * new_duplo_map.position.point.y) / (existing_duplo.count + 1);
-                //         existing_duplo.position.point.z = (new_duplo_map.position.point.z + existing_duplo.count * new_duplo_map.position.point.z) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.x = (new_duplo_map.position.point.x + existing_duplo.count * new_duplo_map.position.point.x) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.y = (new_duplo_map.position.point.y + existing_duplo.count * new_duplo_map.position.point.y) / (existing_duplo.count + 1);
+                        existing_duplo.position.point.z = (new_duplo_map.position.point.z + existing_duplo.count * new_duplo_map.position.point.z) / (existing_duplo.count + 1);
 
-                //         if (++existing_duplo.count >= MIN_COUNT)
-                //         {
-                //             if (std::find(already_published_map.begin(), already_published_map.end(), existing_duplo.id) == already_published_map.end())
-                //             {
-                //                 duplos_official_map.push_back(existing_duplo);
-                //                 already_published_map.push_back(existing_duplo.id);
-                //             }
-                //         }
-                //     }
-                // }
+                        if (++existing_duplo.count >= MIN_COUNT)
+                        {
+                            if (std::find(already_published_map.begin(), already_published_map.end(), existing_duplo.id) == already_published_map.end())
+                            {
+                                duplos_official_map.push_back(existing_duplo);
+                                already_published_map.push_back(existing_duplo.id);
+                            }
+                        }
+                    }
+                }
 
-                // if (!found)
-                // {
-                //     if (duplos_buffer_map.size() >= BUFFER_SIZE)
-                //     {
-                //         RCLCPP_WARN(node->get_logger(), "Map buffer full, discarding duplo");
-                //         continue;
-                //     }
+                if (!found)
+                {
+                    if (duplos_buffer_map.size() >= BUFFER_SIZE)
+                    {
+                        RCLCPP_WARN(node->get_logger(), "Map buffer full, discarding duplo");
+                        continue;
+                    }
 
-                //     new_duplo_map.id = current_duplo_id_map++;
-                //     duplos_buffer_map.push_back(new_duplo_map);
-                //     // RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer");
-                // }
+                    new_duplo_map.id = current_duplo_id_map++;
+                    duplos_buffer_map.push_back(new_duplo_map);
+                    // RCLCPP_INFO(node->get_logger(), "Added new duplo to buffer");
+                }
 
                 found = false;
 
@@ -357,13 +357,13 @@ int main(int argc, char **argv)
             // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
         }
 
-        // if (!duplos_official_map.empty())
-        // {
-        //     robocops_msgs::msg::DuploArray array_msg;
-        //     array_msg.duplos = duplos_official_map;
-        //     duplos_pub_map->publish(array_msg);
-        //     // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
-        // }
+        if (!duplos_official_map.empty())
+        {
+            robocops_msgs::msg::DuploArray array_msg;
+            array_msg.duplos = duplos_official_map;
+            duplos_pub_map->publish(array_msg);
+            // RCLCPP_INFO(node->get_logger(), "Published %zu official duplos.", duplos_official.size());
+        }
 
         rclcpp::spin_some(node);
         rate.sleep();

@@ -62,7 +62,7 @@ def generate_launch_description():
 
     nav2_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(nav_pkg, 'launch', 'start_nav_w_keepout.launch.py')
+            os.path.join(nav_pkg, 'launch', 'start_nav.launch.py')
         )
     )
 

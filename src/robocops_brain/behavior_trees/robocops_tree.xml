@@ -131,14 +131,14 @@
             <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}" />
 
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_start_zone4" loc_poses="{loc_poses}" loc="zone4_start" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
             <!-- GRAB ZONE 4 LOGIC -->
             <GoToPose name="zone4_checkpoint_1" loc_poses="{loc_poses}" loc="zone4_checkpoint_1" />
             <GoToPose name="zone4_checkpoint_2" loc_poses="{loc_poses}" loc="zone4_checkpoint_2" />
             <GoToPose name="zone4_checkpoint_3" loc_poses="{loc_poses}" loc="zone4_checkpoint_3" />
             <GoToPose name="zone4_checkpoint_4" loc_poses="{loc_poses}" loc="zone4_checkpoint_4" />
+            
+            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
             <!-- LEAVE ZONE 4 LOGIC -->
             <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>

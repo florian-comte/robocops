@@ -261,7 +261,7 @@ void SearchAndGrab::go_to_pose(float x, float y, float yaw)
     }
 
     auto goal_msg = NavigateToPose::Goal();
-    goal_msg.pose.header.frame_id = "camera";
+    goal_msg.pose.header.frame_id = "base_link";
     goal_msg.pose.header.stamp = node_->get_clock()->now();
 
     goal_msg.pose.pose.position.x = x;

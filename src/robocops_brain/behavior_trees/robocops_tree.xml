@@ -45,7 +45,7 @@
               <!-- GRAB ZONE 3 LOGIC -->
             <SearchAndGrab 
               zone="2" 
-              timeout_duration="120" 
+              timeout_duration="180" 
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 
@@ -63,7 +63,7 @@
 
               <SearchAndGrab 
                 zone="4" 
-                timeout_duration="60" 
+                timeout_duration="120" 
                 current_grabbed_zones="{current_grabbed_zones}" 
                 never_timed_out_zones="{never_timed_out_zones}" 
                 current_inventory="{current_inventory}" 
@@ -90,7 +90,7 @@
 
             <SearchAndGrab 
               zone="5" 
-              timeout_duration="60" 
+              timeout_duration="120" 
               current_grabbed_zones="{current_grabbed_zones}" 
               never_timed_out_zones="{never_timed_out_zones}" 
               current_inventory="{current_inventory}" 

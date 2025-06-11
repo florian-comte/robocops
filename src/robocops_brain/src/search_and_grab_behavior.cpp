@@ -121,6 +121,9 @@ BT::NodeStatus SearchAndGrab::onRunning()
     if (current_grabbed_zones_.size() > zone_ && current_grabbed_zones_[zone_] > 6)
     {
         disable_capture();
+        nav_to_pose_client_->async_cancel_all_goals();
+        spin_client_->async_cancel_all_goals();
+
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -140,6 +143,9 @@ BT::NodeStatus SearchAndGrab::onRunning()
 
         disable_capture();
 
+        nav_to_pose_client_->async_cancel_all_goals();
+        spin_client_->async_cancel_all_goals();
+
         // here timeout should be a success
         return BT::NodeStatus::SUCCESS;
     }
@@ -150,6 +156,7 @@ BT::NodeStatus SearchAndGrab::onRunning()
         is_moving = false;
 
         nav_to_pose_client_->async_cancel_all_goals();
+        spin_client_->async_cancel_all_goals();
 
         // disable_capture();
         clear_duplos();

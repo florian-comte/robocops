@@ -54,8 +54,8 @@ BT::PortsList SearchAndGrab::providedPorts()
         BT::OutputPort<std::vector<int>>("current_grabbed_zones"),
         BT::InputPort<std::vector<int>>("never_timed_out_zones"),
         BT::OutputPort<std::vector<int>>("never_timed_out_zones"),
-        BT::InputPort<std::vector<int>>("current_inventory"),
-        BT::OutputPort<std::vector<int>>("current_inventory"),
+        BT::InputPort<int>("current_inventory"),
+        BT::OutputPort<int>("current_inventory"),
     };
 }
 

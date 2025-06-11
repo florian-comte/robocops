@@ -41,12 +41,12 @@ CTRL-C to quit
 """
 
 KEY_BINDINGS = {
-    'w': (LIN_STEP, 0),
+    'z': (LIN_STEP, 0),
     's': (-LIN_STEP, 0),
-    'a': (0, ANG_STEP),
+    'q': (0, ANG_STEP),
     'd': (0, -ANG_STEP),
     ' ': (0, 0),
-    'q': (0, 0),
+    'a': (0, 0),
 }
 
 gpio_order = ["capture", "unload", "button", "slope_up", "slope_down", "emergency"]
@@ -90,7 +90,7 @@ class TeleopNode(Node):
     def update_velocity(self, key):
         if key in KEY_BINDINGS:
             lin_delta, ang_delta = KEY_BINDINGS[key]
-            if key in [' ', 'q']:
+            if key in [' ', 'a']:
                 self.linear = 0.0
                 self.angular = 0.0
             else:
@@ -133,15 +133,15 @@ def main():
             key = get_key()
             if key == '\x03':  # Ctrl-C
                 break
-            if key == 'p':
+            if key == 'w':
                 node.toggle_gpio("capture")
-            elif key == 'l':
+            elif key == 'x':
                 node.toggle_gpio("unload")
-            elif key == 'k':
+            elif key == 'c':
                 node.toggle_gpio("button")
-            elif key == 'i':
+            elif key == 'v':
                 node.toggle_gpio("slope_up")
-            elif key == 'o':
+            elif key == 'b':
                 node.toggle_gpio("slope_down")
             elif key == 'e':
                 node.toggle_gpio("emergency")

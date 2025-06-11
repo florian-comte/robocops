@@ -53,8 +53,8 @@
               zone="2" 
               timeout_duration="120" 
               current_grabbed_zones="{current_grabbed_zones}" 
-              current_grabbed_zones="{never_timed_out_zones}" 
-              current_grabbed_zones="{current_inventory}" 
+              never_timed_out_zones="{never_timed_out_zones}" 
+              current_inventory="{current_inventory}" 
             />
 
           </Sequence>
@@ -70,8 +70,8 @@
                 zone="4" 
                 timeout_duration="60" 
                 current_grabbed_zones="{current_grabbed_zones}" 
-                current_grabbed_zones="{never_timed_out_zones}" 
-                current_grabbed_zones="{current_inventory}" 
+                never_timed_out_zones="{never_timed_out_zones}" 
+                current_inventory="{current_inventory}" 
               />
           </Sequence>
 
@@ -116,8 +116,8 @@
               zone="3" 
               timeout_duration="120" 
               current_grabbed_zones="{current_grabbed_zones}" 
-              current_grabbed_zones="{never_timed_out_zones}" 
-              current_grabbed_zones="{current_inventory}" 
+              never_timed_out_zones="{never_timed_out_zones}" 
+              current_inventory="{current_inventory}" 
             />
 
             <!-- LEAVE ZONE 4 LOGIC -->
@@ -139,8 +139,8 @@
               zone="5" 
               timeout_duration="60" 
               current_grabbed_zones="{current_grabbed_zones}" 
-              current_grabbed_zones="{never_timed_out_zones}" 
-              current_grabbed_zones="{current_inventory}" 
+              never_timed_out_zones="{never_timed_out_zones}" 
+              current_inventory="{current_inventory}" 
             />
           </Sequence>
 

@@ -6,172 +6,186 @@
       <KeepRunningUntilFailure>
         <Fallback name="ZoneSelector">
           <!-- ZONE 3 LOGIC -->
-          <Sequence>
-            <!-- Check if can go zone 3, SUCCESS = true, FAILURE = false -->
-            <!-- <CanGoToZone 
-              zone="2" 
-              MAX_INVENTORY="{MAX_INVENTORY}"
-              current_inventory="{current_inventory}"
-              MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
-              TOTAL_ZONES="{TOTAL_ZONES}"
-              current_grabbed_zones="{current_grabbed_zones}"
-              never_timed_out_zones="{never_timed_out_zones}"
-              /> -->
+          <Inverter>
+            <Sequence>
+              <!-- Check if can go zone 3, SUCCESS = true, FAILURE = false -->
+              <!-- <CanGoToZone 
+                zone="2" 
+                MAX_INVENTORY="{MAX_INVENTORY}"
+                current_inventory="{current_inventory}"
+                MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
+                TOTAL_ZONES="{TOTAL_ZONES}"
+                current_grabbed_zones="{current_grabbed_zones}"
+                never_timed_out_zones="{never_timed_out_zones}"
+                /> -->
 
-            <!-- GO TO ZONE 3 LOGIC -->
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <!-- GO TO ZONE 3 LOGIC -->
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="go_to_open_button" loc_poses="{loc_poses}" loc="button_robot_position" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <RetryUntilSuccessful num_attempts="3">
-              <Sequence>
-                <!-- Activate button routine -->
-                <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="20.0" pulse_duration="1.5" wait_after_duration="15.0" />
-                                        
-                <!-- Return FAILURE if not open and SUCCESS if open -->
-                <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
-              </Sequence>
-            </RetryUntilSuccessful>
-         
-            <!-- OPENING DOOR LOGIC -->
-            <!-- Check if door is not open, if not try to open -->
-            <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->             
+              <RetryUntilSuccessful num_attempts="3">
+                <Sequence>
+                  <!-- Activate button routine -->
+                  <BlockingGPIO gpio_name="button" interface_name="active" timeout_duration="20.0" pulse_duration="1.5" wait_after_duration="15.0" />
+                                          
+                  <!-- Return FAILURE if not open and SUCCESS if open -->
+                  <IsDoorOpen timeout_duration="5.0" is_door_open="{is_door_open}"/>
+                </Sequence>
+              </RetryUntilSuccessful>
+          
+              <!-- OPENING DOOR LOGIC -->
+              <!-- Check if door is not open, if not try to open -->
+              <!-- Return SUCCESS if zone 3 accessible and FAILURE if zone 3 not accessible -->             
 
-            <!-- ENTER ZONE 3 LOGIC -->
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="enter_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <!-- ENTER ZONE 3 LOGIC -->
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="enter_zone3" loc_poses="{loc_poses}" loc="zone3_inside_entry" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-              <!-- GRAB ZONE 3 LOGIC -->
-            <SearchAndGrab 
-              zone="2" 
-              timeout_duration="120" 
-              current_grabbed_zones="{current_grabbed_zones}" 
-              never_timed_out_zones="{never_timed_out_zones}" 
-              current_inventory="{current_inventory}" 
-              second_pose_x="1"
-              second_pose_y="6"
-              second_pose_yaw="0"
-            />
-          </Sequence>
+                <!-- GRAB ZONE 3 LOGIC -->
+              <SearchAndGrab 
+                zone="2" 
+                timeout_duration="120" 
+                current_grabbed_zones="{current_grabbed_zones}" 
+                never_timed_out_zones="{never_timed_out_zones}" 
+                current_inventory="{current_inventory}" 
+                second_pose_x="1"
+                second_pose_y="6"
+                second_pose_yaw="0"
+              />
+            </Sequence>
+          </Inverter>
 
           <!-- ZONE 5 LOGIC -->
+          <Inverter>
+            <Sequence>
+                <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+                <GoToPose name="go_to_zone5_start" loc_poses="{loc_poses}" loc="zone5_start" />
+                <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-          <Sequence>
+                <SearchAndGrab 
+                  zone="4" 
+                  timeout_duration="60" 
+                  current_grabbed_zones="{current_grabbed_zones}" 
+                  never_timed_out_zones="{never_timed_out_zones}" 
+                  current_inventory="{current_inventory}" 
+                  second_pose_x="3.50"
+                  second_pose_y="5.0"
+                  second_pose_yaw="0"
+                />
+            </Sequence>
+          </Inverter>
+
+          <!-- RETURN TO BASE -->
+          <Inverter>
+            <Sequence>
               <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-              <GoToPose name="go_to_zone5_start" loc_poses="{loc_poses}" loc="zone5_start" />
+              <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
+            </Sequence>
+          </Inverter>
+
+          
+          <!-- ZONE 6 LOGIC -->
+          <Inverter>
+            <Sequence>
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="go_to_zone6" loc_poses="{loc_poses}" loc="zone6_start" />
               <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
               <SearchAndGrab 
-                zone="4" 
+                zone="5" 
                 timeout_duration="60" 
                 current_grabbed_zones="{current_grabbed_zones}" 
                 never_timed_out_zones="{never_timed_out_zones}" 
                 current_inventory="{current_inventory}" 
-                second_pose_x="3.50"
-                second_pose_y="5.0"
+                second_pose_x="4.9"
+                second_pose_y="2.7"
                 second_pose_yaw="0"
               />
-          </Sequence>
-
-          <!-- RETURN TO BASE -->
-          <Sequence>
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
-            <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
-          </Sequence>
-
-          
-          <!-- ZONE 6 LOGIC -->
-          <Sequence>
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_zone6" loc_poses="{loc_poses}" loc="zone6_start" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
-
-            <SearchAndGrab 
-              zone="5" 
-              timeout_duration="60" 
-              current_grabbed_zones="{current_grabbed_zones}" 
-              never_timed_out_zones="{never_timed_out_zones}" 
-              current_inventory="{current_inventory}" 
-              second_pose_x="4.9"
-              second_pose_y="2.7"
-              second_pose_yaw="0"
-            />
-          </Sequence>
+            </Sequence>
+          </Inverter>
 
           <!-- Return to base -->
-          <Sequence>
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
-            <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
-          </Sequence>
+          <Inverter>
+            <Sequence>
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
+            </Sequence>
+          </Inverter>
 
           <!-- ZONE 4 LOGIC -->
-          <Sequence>
-            <!-- Check if can go zone 4, SUCCESS = true, FAILURE = false -->
-            <!-- <CanGoToZone 
-              zone="3" 
-              MAX_INVENTORY="{MAX_INVENTORY}"
-              current_inventory="{current_inventory}"
-              MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
-              TOTAL_ZONES="{TOTAL_ZONES}"
-              current_grabbed_zones="{current_grabbed_zones}"
-              never_timed_out_zones="{never_timed_out_zones}"
-              /> -->
+          <Inverter>
+            <Sequence>
+              <!-- Check if can go zone 4, SUCCESS = true, FAILURE = false -->
+              <!-- <CanGoToZone 
+                zone="3" 
+                MAX_INVENTORY="{MAX_INVENTORY}"
+                current_inventory="{current_inventory}"
+                MIN_TO_GO_ZONES="{MIN_TO_GO_ZONES}"
+                TOTAL_ZONES="{TOTAL_ZONES}"
+                current_grabbed_zones="{current_grabbed_zones}"
+                never_timed_out_zones="{never_timed_out_zones}"
+                /> -->
 
-            <!-- GO TO ZONE 4 LOGIC -->
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <!-- GO TO ZONE 4 LOGIC -->
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="go_to_zone4" loc_poses="{loc_poses}" loc="zone4_outside_entry" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <!-- ENTER ZONE 4 LOGIC -->
-            <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
-            <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}" />
+              <!-- ENTER ZONE 4 LOGIC -->
+              <BlockingGPIO gpio_name="slope_up" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
+              <SetPose name="set_pose_zone4_top" pose="{zone4_inside_entry}" />
 
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_start_zone4" loc_poses="{loc_poses}" loc="zone4_start" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="go_to_start_zone4" loc_poses="{loc_poses}" loc="zone4_start" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <!-- GRAB ZONE 4 LOGIC -->
-            <GoToPose name="zone4_checkpoint_1" loc_poses="{loc_poses}" loc="zone4_checkpoint_1" />
-            <GoToPose name="zone4_checkpoint_2" loc_poses="{loc_poses}" loc="zone4_checkpoint_2" />
-            <GoToPose name="zone4_checkpoint_3" loc_poses="{loc_poses}" loc="zone4_checkpoint_3" />
-            <GoToPose name="zone4_checkpoint_4" loc_poses="{loc_poses}" loc="zone4_checkpoint_4" />
+              <!-- GRAB ZONE 4 LOGIC -->
+              <GoToPose name="zone4_checkpoint_1" loc_poses="{loc_poses}" loc="zone4_checkpoint_1" />
+              <GoToPose name="zone4_checkpoint_2" loc_poses="{loc_poses}" loc="zone4_checkpoint_2" />
+              <GoToPose name="zone4_checkpoint_3" loc_poses="{loc_poses}" loc="zone4_checkpoint_3" />
+              <GoToPose name="zone4_checkpoint_4" loc_poses="{loc_poses}" loc="zone4_checkpoint_4" />
 
-            <!-- LEAVE ZONE 4 LOGIC -->
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_exit" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+              <!-- LEAVE ZONE 4 LOGIC -->
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="exit_position_zone4" loc_poses="{loc_poses}" loc="zone4_inside_exit" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
-            <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_exit}" />
-          </Sequence>
+              <BlockingGPIO gpio_name="slope_down" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="0.0"/>
+              <SetPose name="set_pose_zone4_bottom" pose="{zone4_outside_exit}" />
+            </Sequence>
+          </Inverter>
 
           <!-- RETURN TO BASE -->
-          <Sequence>
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+          <Inverter>
+            <Sequence>
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="return_base" loc_poses="{loc_poses}" loc="drop_point" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
-          </Sequence>
+              <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
+            </Sequence>
+          </Inverter>
 
           <!-- Zone 1 -->
           
           <!-- <SearchAndGrab zone="1" /> -->
 
           <!-- Default Fallback: Drop point -->
-          <Sequence>
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
-            <GoToPose name="go_to_drop_point" loc_poses="{loc_poses}" loc="drop_point" />
-            <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
+          <Inverter>
+            <Sequence>
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="1"/>
+              <GoToPose name="go_to_drop_point" loc_poses="{loc_poses}" loc="drop_point" />
+              <NonBlockingGPIO gpio_name="capture" interface_name="active" active="0"/>
 
-            <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
-          </Sequence>
-          
+              <BlockingGPIO gpio_name="unload" interface_name="active" timeout_duration="15.0" pulse_duration="1.5" wait_after_duration="1.0"/>
+            </Sequence>
+          </Inverter>
         </Fallback>
       </KeepRunningUntilFailure>
     </Sequence>

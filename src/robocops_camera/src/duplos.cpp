@@ -37,7 +37,7 @@
 
 #define BUFFER_SIZE 2000
 #define TOLERANCE_CM 3
-#define MIN_COUNT 1
+#define MIN_COUNT 5
 #define SCORE_THRESHOLD 0.90
 
 #define ZONE_2_X_MIN 4.9

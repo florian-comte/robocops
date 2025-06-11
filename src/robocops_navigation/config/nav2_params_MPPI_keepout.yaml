@@ -232,8 +232,8 @@ local_costmap:
       plugins: ["obstacle_layer", "denoise_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0 # inflation radius
-        cost_scaling_factor: 12.0 # exponential decay factor through infaltion radius
+        inflation_radius: 0.80 # inflation radius
+        cost_scaling_factor: 10.0 # exponential decay factor through infaltion radius
         inflate_unknown: false # inflate unknown cells
         inflate_around_unknown: false
       denoise_layer: # denoise layer for lidar in costmap

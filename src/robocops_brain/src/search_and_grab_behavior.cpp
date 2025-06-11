@@ -35,6 +35,13 @@ SearchAndGrab::SearchAndGrab(const std::string &name, const BT::NodeConfiguratio
         node_->get_node_waitables_interface(),
         "navigate_to_pose");
 
+    // backup_client_ = rclcpp_action::create_client<nav2_msgs::action::BackUp>(
+    //     node_->get_node_base_interface(),
+    //     node_->get_node_graph_interface(),
+    //     node_->get_node_logging_interface(),
+    //     node_->get_node_waitables_interface(),
+    //     "backup");
+
     spin_client_ = rclcpp_action::create_client<nav2_msgs::action::Spin>(
         node_->get_node_base_interface(),
         node_->get_node_graph_interface(),
@@ -319,6 +326,7 @@ void SearchAndGrab::spin(float angle)
         else
         {
             RCLCPP_WARN(node_->get_logger(), "Spin action failed or was canceled.");
+            
         }
         is_moving = false;
     };

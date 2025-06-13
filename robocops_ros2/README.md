@@ -1,4 +1,4 @@
-# Development workspace of team RoboCops (EPFL Robot competition 2025)
+# robocops_ros2 - Development workspace of team RoboCops (EPFL Robot competition 2025)
 
 This workspace contains the packages for the Robocops team. All of our packages can be found in the `/src` directory. 
 

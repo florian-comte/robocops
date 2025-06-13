@@ -1,4 +1,4 @@
-### How we trained our model (tested with yolov11n model)
+# robocops_computervision - How we trained our duplo's detection model (tested with yolov11n model)
 
 1. **Create a Dataset on Roboflow**  
    - Ensure the dataset includes a version within the project. Feel free to use the dataset we created based on the previous years one with some data augmentation: https://app.roboflow.com/robocops/duplo-merged-v3/2

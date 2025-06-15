@@ -149,7 +149,7 @@ Next, customization can be done in the URDF and the ROS 2 control configuration 
 
 ## robocops_brain
 
-This package will handle high-level decision-making and robot task coordination.
+This package handle high-level decision-making and robot task coordination on a behaviortree.cpp base.
 
 ## robocops_msgs
 
